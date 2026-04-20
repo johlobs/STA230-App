@@ -4,7 +4,7 @@ project:
 
 website:
   title: "STA230 — Statistical Learning"
-  page-footer: "STA230 · Göteborg University · Built with Quarto + WebR"
+  page-footer: "STA230 · University of Gothenburg · Built with Quarto + WebR"
   page-navigation: true
   navbar:
     left:
