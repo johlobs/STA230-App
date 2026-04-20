@@ -1,0 +1,395 @@
+[
+  {
+    "objectID": "unsupervised/03-hierarchical-clustering.html",
+    "href": "unsupervised/03-hierarchical-clustering.html",
+    "title": "U — Hierarchical Clustering",
+    "section": "",
+    "text": "Coming soon — Block 3: Unsupervised",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U — Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "unsupervised/01-pca.html",
+    "href": "unsupervised/01-pca.html",
+    "title": "U — Pca",
+    "section": "",
+    "text": "Coming soon — Block 3: Unsupervised",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U — Pca"
+    ]
+  },
+  {
+    "objectID": "regression/04-lasso.html",
+    "href": "regression/04-lasso.html",
+    "title": "R — Lasso",
+    "section": "",
+    "text": "Coming soon — Block 1: Regression",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R — Lasso"
+    ]
+  },
+  {
+    "objectID": "regression/02-variable-selection.html",
+    "href": "regression/02-variable-selection.html",
+    "title": "R — Variable Selection",
+    "section": "",
+    "text": "Coming soon — Block 1: Regression",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R — Variable Selection"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "STA230 — Statistical Learning",
+    "section": "",
+    "text": "Welcome to the interactive learning companion for STA230 Statistical Learning at Göteborg University.\nThis site covers all three course blocks — with concept explanations, multiple-choice quizzes, and interactive R code you can run and modify directly in the browser."
+  },
+  {
+    "objectID": "index.html#course-structure",
+    "href": "index.html#course-structure",
+    "title": "STA230 — Statistical Learning",
+    "section": "1 Course structure",
+    "text": "1 Course structure\n\n\n\n\n\n\n\nBlock\nTopics\n\n\n\n\nFoundations\nWhat is statistical learning? Bias-variance tradeoff, training vs test error, cross-validation\n\n\nBlock 1: Regression\nOLS, variable selection, ridge regression, LASSO\n\n\nBlock 2: Classification\nLogistic regression, LDA/kNN, decision trees, random forests, boosting, ROC/AUC\n\n\nBlock 3: Unsupervised\nPCA, k-means clustering, hierarchical clustering"
+  },
+  {
+    "objectID": "index.html#how-to-use-this-site",
+    "href": "index.html#how-to-use-this-site",
+    "title": "STA230 — Statistical Learning",
+    "section": "2 How to use this site",
+    "text": "2 How to use this site\n\nRead the concept section — short and focused\nAnswer the quiz — tests comprehension before you see code\nRun and modify the code — the key learning step\nUse the Guided Practice exercises with real datasets\nClick Mark as complete when done — your progress is saved in the browser\n\n\n\n\n\n\n\nTipCoding is the way to learn\n\n\n\nThe central principle of STA230: understanding comes from doing, not reading. Every section ends with hands-on exercises using real datasets (Hitters, NHANES, SWP_CTW)."
+  },
+  {
+    "objectID": "foundations/04-resampling-overview.html",
+    "href": "foundations/04-resampling-overview.html",
+    "title": "F4 — Resampling Methods Overview",
+    "section": "",
+    "text": "We established that training error is optimistic. A single train/test split gives an unbiased but noisy estimate. Resampling methods use the available data more efficiently by repeatedly fitting models on subsets and averaging the results.\n\n\n\n\n\n\n\n\n\n\n\n\n\nMethod\nIdea\nBias\nVariance\nUse when\n\n\n\n\nValidation set\nSingle 70/30 split\nLow\nHigh\nVery large n\n\n\nk-fold CV\nRotate through k folds\nModerate\nModerate\nStandard choice\n\n\nLOOCV\nk = n\nVery low\nHigh\nSmall n, cheap models\n\n\nBootstrap\nSample with replacement\nLow\nLow\nAlso estimates parameter uncertainty\n\n\n\n\n\n\n\nRandomly divide data into \\(k\\) equal folds\nFor \\(j = 1, \\ldots, k\\): fit model on all folds except \\(j\\), predict on fold \\(j\\)\nAverage the \\(k\\) test errors: \\(\\text{CV}_{(k)} = \\frac{1}{k}\\sum_{j=1}^k \\text{MSE}_j\\)\n\nTypical choices: \\(k=5\\) or \\(k=10\\). These balance bias (LOOCV has lowest) and variance (smaller \\(k\\) has lower variance because training sets are less similar).\n\n\n\nDraw \\(B\\) samples of size \\(n\\) with replacement from the training data. Fit the model on each bootstrap sample, evaluate on the original data (out-of-bag observations). Useful for estimating both test error and parameter uncertainty.",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F4 — Resampling Methods Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/04-resampling-overview.html#why-resampling",
+    "href": "foundations/04-resampling-overview.html#why-resampling",
+    "title": "F4 — Resampling Methods Overview",
+    "section": "",
+    "text": "We established that training error is optimistic. A single train/test split gives an unbiased but noisy estimate. Resampling methods use the available data more efficiently by repeatedly fitting models on subsets and averaging the results.",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F4 — Resampling Methods Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/04-resampling-overview.html#three-approaches",
+    "href": "foundations/04-resampling-overview.html#three-approaches",
+    "title": "F4 — Resampling Methods Overview",
+    "section": "",
+    "text": "Method\nIdea\nBias\nVariance\nUse when\n\n\n\n\nValidation set\nSingle 70/30 split\nLow\nHigh\nVery large n\n\n\nk-fold CV\nRotate through k folds\nModerate\nModerate\nStandard choice\n\n\nLOOCV\nk = n\nVery low\nHigh\nSmall n, cheap models\n\n\nBootstrap\nSample with replacement\nLow\nLow\nAlso estimates parameter uncertainty",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F4 — Resampling Methods Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/04-resampling-overview.html#k-fold-cross-validation",
+    "href": "foundations/04-resampling-overview.html#k-fold-cross-validation",
+    "title": "F4 — Resampling Methods Overview",
+    "section": "",
+    "text": "Randomly divide data into \\(k\\) equal folds\nFor \\(j = 1, \\ldots, k\\): fit model on all folds except \\(j\\), predict on fold \\(j\\)\nAverage the \\(k\\) test errors: \\(\\text{CV}_{(k)} = \\frac{1}{k}\\sum_{j=1}^k \\text{MSE}_j\\)\n\nTypical choices: \\(k=5\\) or \\(k=10\\). These balance bias (LOOCV has lowest) and variance (smaller \\(k\\) has lower variance because training sets are less similar).",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F4 — Resampling Methods Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/04-resampling-overview.html#the-bootstrap",
+    "href": "foundations/04-resampling-overview.html#the-bootstrap",
+    "title": "F4 — Resampling Methods Overview",
+    "section": "",
+    "text": "Draw \\(B\\) samples of size \\(n\\) with replacement from the training data. Fit the model on each bootstrap sample, evaluate on the original data (out-of-bag observations). Useful for estimating both test error and parameter uncertainty.",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F4 — Resampling Methods Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/02-bias-variance-tradeoff.html#decomposing-prediction-error",
+    "href": "foundations/02-bias-variance-tradeoff.html#decomposing-prediction-error",
+    "title": "F2 — Bias-Variance Tradeoff",
+    "section": "1.1 Decomposing prediction error",
+    "text": "1.1 Decomposing prediction error\nFor a fixed test point \\(x_0\\), the expected test MSE decomposes as:\n\\[\\underbrace{\\mathbb{E}\\left[(y_0 - \\hat{f}(x_0))^2\\right]}_{\\text{Expected test MSE}} = \\underbrace{\\left[\\text{Bias}(\\hat{f}(x_0))\\right]^2}_{\\text{Bias}^2} + \\underbrace{\\text{Var}(\\hat{f}(x_0))}_{\\text{Variance}} + \\underbrace{\\sigma^2_\\varepsilon}_{\\text{Irreducible}}\\]\nwhere the expectation is over repeated training sets.\n\n\n\n\n\n\n\n\nComponent\nDefinition\nChanges with complexity?\n\n\n\n\nBias²\nHow far \\(\\mathbb{E}[\\hat{f}(x_0)]\\) is from \\(f(x_0)\\)\nDecreases as complexity increases\n\n\nVariance\nHow much \\(\\hat{f}(x_0)\\) varies across training sets\nIncreases as complexity increases\n\n\nIrreducible\n\\(\\sigma^2_\\varepsilon\\) — noise floor\nFixed, never changes",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F2 — Bias-Variance Tradeoff"
+    ]
+  },
+  {
+    "objectID": "foundations/02-bias-variance-tradeoff.html#the-u-shaped-test-error-curve-esl-figure-7.1",
+    "href": "foundations/02-bias-variance-tradeoff.html#the-u-shaped-test-error-curve-esl-figure-7.1",
+    "title": "F2 — Bias-Variance Tradeoff",
+    "section": "1.2 The U-shaped test error curve (ESL Figure 7.1)",
+    "text": "1.2 The U-shaped test error curve (ESL Figure 7.1)\nThis is the central figure of the course:\n\nTraining error (blue): monotonically decreasing — more complex models always fit the training data better\nTest error (red): U-shaped — first decreases as we reduce bias, then increases as variance dominates\nThe minimum of the test error curve is the sweet spot: not too simple, not too complex\n\n\n\n\n\n\n\nImportantKey message\n\n\n\nA model that fits the training data perfectly is not necessarily a good model. The goal is to generalise to new data — and that requires balancing bias against variance.",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F2 — Bias-Variance Tradeoff"
+    ]
+  },
+  {
+    "objectID": "foundations/02-bias-variance-tradeoff.html#two-approaches-to-finding-the-sweet-spot",
+    "href": "foundations/02-bias-variance-tradeoff.html#two-approaches-to-finding-the-sweet-spot",
+    "title": "F2 — Bias-Variance Tradeoff",
+    "section": "1.3 Two approaches to finding the sweet spot",
+    "text": "1.3 Two approaches to finding the sweet spot\n\nAnalytical — penalise model complexity in the selection criterion (AIC, BIC, adjusted R²)\nData-driven (resampling) — directly estimate test error from data (cross-validation, train/test split)\n\nBlock 1 uses both. Cross-validation is covered in F5.",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F2 — Bias-Variance Tradeoff"
+    ]
+  },
+  {
+    "objectID": "classification/06-roc-auc.html",
+    "href": "classification/06-roc-auc.html",
+    "title": "C — Roc Auc",
+    "section": "",
+    "text": "Coming soon — Block 2: Classification",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C — Roc Auc"
+    ]
+  },
+  {
+    "objectID": "classification/04-random-forests.html",
+    "href": "classification/04-random-forests.html",
+    "title": "C — Random Forests",
+    "section": "",
+    "text": "Coming soon — Block 2: Classification",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C — Random Forests"
+    ]
+  },
+  {
+    "objectID": "classification/02-lda-knn.html",
+    "href": "classification/02-lda-knn.html",
+    "title": "C — Lda Knn",
+    "section": "",
+    "text": "Coming soon — Block 2: Classification",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C — Lda Knn"
+    ]
+  },
+  {
+    "objectID": "classification/01-logistic-regression.html",
+    "href": "classification/01-logistic-regression.html",
+    "title": "C — Logistic Regression",
+    "section": "",
+    "text": "Coming soon — Block 2: Classification",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C — Logistic Regression"
+    ]
+  },
+  {
+    "objectID": "classification/03-decision-trees.html",
+    "href": "classification/03-decision-trees.html",
+    "title": "C — Decision Trees",
+    "section": "",
+    "text": "Coming soon — Block 2: Classification",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C — Decision Trees"
+    ]
+  },
+  {
+    "objectID": "classification/05-boosting-xgboost.html",
+    "href": "classification/05-boosting-xgboost.html",
+    "title": "C — Boosting Xgboost",
+    "section": "",
+    "text": "Coming soon — Block 2: Classification",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C — Boosting Xgboost"
+    ]
+  },
+  {
+    "objectID": "foundations/01-what-is-statistical-learning.html#the-statistical-learning-framework",
+    "href": "foundations/01-what-is-statistical-learning.html#the-statistical-learning-framework",
+    "title": "F1 — What is Statistical Learning?",
+    "section": "1.1 The statistical learning framework",
+    "text": "1.1 The statistical learning framework\nWe observe data \\((x_1, y_1), \\ldots, (x_n, y_n)\\) and assume:\n\\[Y = f(\\mathbf{X}) + \\varepsilon\\]\nwhere \\(f\\) is the true unknown function we want to estimate, and \\(\\varepsilon\\) is irreducible noise with \\(\\mathbb{E}[\\varepsilon] = 0\\).\nStatistical learning is the task of estimating \\(\\hat{f}\\) from data, so that:\n\\[\\hat{Y} = \\hat{f}(\\mathbf{X})\\]\ngives useful predictions for new observations.",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F1 — What is Statistical Learning?"
+    ]
+  },
+  {
+    "objectID": "foundations/01-what-is-statistical-learning.html#two-goals-inference-vs-prediction",
+    "href": "foundations/01-what-is-statistical-learning.html#two-goals-inference-vs-prediction",
+    "title": "F1 — What is Statistical Learning?",
+    "section": "1.2 Two goals: inference vs prediction",
+    "text": "1.2 Two goals: inference vs prediction\n\n\n\n\n\n\n\n\nGoal\nQuestion\nInterpretability needed?\n\n\n\n\nInference\nHow does \\(X_j\\) affect \\(Y\\)?\nYes — coefficient meaning matters\n\n\nPrediction\nWhat is \\(\\hat{Y}\\) for new \\(X\\)?\nNo — accuracy is the criterion\n\n\n\nIn STA230, we move toward prediction: we evaluate models by how well they perform on unseen data, not how well they fit the data they were trained on.",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F1 — What is Statistical Learning?"
+    ]
+  },
+  {
+    "objectID": "foundations/01-what-is-statistical-learning.html#supervised-vs-unsupervised",
+    "href": "foundations/01-what-is-statistical-learning.html#supervised-vs-unsupervised",
+    "title": "F1 — What is Statistical Learning?",
+    "section": "1.3 Supervised vs unsupervised",
+    "text": "1.3 Supervised vs unsupervised\n\nSupervised: we have both \\(\\mathbf{X}\\) and \\(Y\\). Regression (continuous \\(Y\\)) or classification (categorical \\(Y\\)).\nUnsupervised: no \\(Y\\). We look for structure in \\(\\mathbf{X}\\) alone — clusters, principal components.\n\nThe course covers all three: supervised regression (Block 1), supervised classification (Block 2), unsupervised methods (Block 3).",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F1 — What is Statistical Learning?"
+    ]
+  },
+  {
+    "objectID": "foundations/01-what-is-statistical-learning.html#the-irreducible-error",
+    "href": "foundations/01-what-is-statistical-learning.html#the-irreducible-error",
+    "title": "F1 — What is Statistical Learning?",
+    "section": "1.4 The irreducible error",
+    "text": "1.4 The irreducible error\nNo matter how good \\(\\hat{f}\\) is, we cannot reduce the prediction error below:\n\\[\\text{Var}(\\varepsilon) = \\sigma^2_\\varepsilon\\]\nThis is the irreducible error — noise inherent in the data generating process. The reducible part is \\(\\mathbb{E}[(f(\\mathbf{X}) - \\hat{f}(\\mathbf{X}))^2]\\), which we can minimise by choosing \\(\\hat{f}\\) well.",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F1 — What is Statistical Learning?"
+    ]
+  },
+  {
+    "objectID": "foundations/03-training-vs-test-error.html#optimism-of-training-error",
+    "href": "foundations/03-training-vs-test-error.html#optimism-of-training-error",
+    "title": "F3 — Training vs Test Error",
+    "section": "1.1 Optimism of training error",
+    "text": "1.1 Optimism of training error\nWhen we fit \\(\\hat{f}\\) on training data and then evaluate on the same data, the estimate is optimistically biased. The model has already adapted to the specific noise in the training set.\nThe expected optimism is:\n\\[\\text{Optimism} = \\mathbb{E}[\\text{Test MSE}] - \\mathbb{E}[\\text{Train MSE}] = \\frac{2}{n} \\sum_{i=1}^n \\text{Cov}(\\hat{y}_i, y_i)\\]\nFor OLS with \\(p\\) predictors: \\(\\text{Optimism} = 2p\\sigma^2 / n\\). This is why AIC and Mallow’s \\(C_p\\) add a penalty of \\(2p\\hat\\sigma^2 / n\\) to the training RSS.",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F3 — Training vs Test Error"
+    ]
+  },
+  {
+    "objectID": "foundations/03-training-vs-test-error.html#traintest-split-as-the-direct-approach",
+    "href": "foundations/03-training-vs-test-error.html#traintest-split-as-the-direct-approach",
+    "title": "F3 — Training vs Test Error",
+    "section": "1.2 Train/test split as the direct approach",
+    "text": "1.2 Train/test split as the direct approach\nThe simplest approach: split data once into training and test sets (e.g., 70/30). Fit on training, evaluate on test.\nAdvantage: Simple, unbiased estimate of test error.\nDisadvantage: Wastes data; test MSE estimate has high variance (depends on which observations ended up in the test set).\nCross-validation (F5) improves on this by reusing all data.",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F3 — Training vs Test Error"
+    ]
+  },
+  {
+    "objectID": "foundations/05-cross-validation.html#the-one-standard-error-rule",
+    "href": "foundations/05-cross-validation.html#the-one-standard-error-rule",
+    "title": "F5 — Cross-Validation in Practice",
+    "section": "1.1 The one-standard-error rule",
+    "text": "1.1 The one-standard-error rule\nWhen selecting the best model via CV, the minimum CV error may not be the best choice. The 1-SE rule selects the simplest model whose CV error is within one standard error of the minimum.\n\\[d^* = \\min \\{d : \\text{CV}(d) \\leq \\text{CV}(d_{\\min}) + \\text{SE}(d_{\\min})\\}\\]\nThis guards against selecting an unnecessarily complex model when a simpler one performs nearly as well.",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F5 — Cross-Validation in Practice"
+    ]
+  },
+  {
+    "objectID": "foundations/05-cross-validation.html#cv-in-glmnet-choosing-λ",
+    "href": "foundations/05-cross-validation.html#cv-in-glmnet-choosing-λ",
+    "title": "F5 — Cross-Validation in Practice",
+    "section": "1.2 CV in glmnet: choosing λ",
+    "text": "1.2 CV in glmnet: choosing λ\nFor ridge and LASSO regression, cv.glmnet() automates k-fold CV over a grid of \\(\\lambda\\) values and returns:\n\nlambda.min: the \\(\\lambda\\) minimising CV error\nlambda.1se: the largest \\(\\lambda\\) within 1 SE of the minimum (more regularisation, simpler model)\n\nIn practice, lambda.1se is often preferred for parsimony.",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F5 — Cross-Validation in Practice"
+    ]
+  },
+  {
+    "objectID": "foundations/05-cross-validation.html#pitfalls",
+    "href": "foundations/05-cross-validation.html#pitfalls",
+    "title": "F5 — Cross-Validation in Practice",
+    "section": "1.3 Pitfalls",
+    "text": "1.3 Pitfalls\n\nInformation leakage: never standardise predictors on all data before CV — standardise inside each fold\nNested CV: if you select both the model class and its hyperparameters, you need outer CV for honest evaluation\nClassification: use stratified folds to preserve class proportions across folds",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F5 — Cross-Validation in Practice"
+    ]
+  },
+  {
+    "objectID": "regression/01-ols-review.html",
+    "href": "regression/01-ols-review.html",
+    "title": "R1 — OLS Review & Diagnostics",
+    "section": "",
+    "text": "Coming soon — Block 1: Regression",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R1 — OLS Review & Diagnostics"
+    ]
+  },
+  {
+    "objectID": "regression/03-ridge-regression.html",
+    "href": "regression/03-ridge-regression.html",
+    "title": "R — Ridge Regression",
+    "section": "",
+    "text": "Coming soon — Block 1: Regression",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R — Ridge Regression"
+    ]
+  },
+  {
+    "objectID": "regression/05-model-comparison.html",
+    "href": "regression/05-model-comparison.html",
+    "title": "R — Model Comparison",
+    "section": "",
+    "text": "Coming soon — Block 1: Regression",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R — Model Comparison"
+    ]
+  },
+  {
+    "objectID": "unsupervised/02-clustering-kmeans.html",
+    "href": "unsupervised/02-clustering-kmeans.html",
+    "title": "U — Clustering Kmeans",
+    "section": "",
+    "text": "Coming soon — Block 3: Unsupervised",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U — Clustering Kmeans"
+    ]
+  }
+]
