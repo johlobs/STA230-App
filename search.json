@@ -24,27 +24,111 @@
     ]
   },
   {
-    "objectID": "regression/04-lasso.html",
-    "href": "regression/04-lasso.html",
-    "title": "R — Lasso",
-    "section": "",
-    "text": "Coming soon — Block 1: Regression",
+    "objectID": "regression/04-lasso.html#the-lasso-objective",
+    "href": "regression/04-lasso.html#the-lasso-objective",
+    "title": "R4 — LASSO",
+    "section": "1.1 The LASSO objective",
+    "text": "1.1 The LASSO objective\nLASSO (Least Absolute Shrinkage and Selection Operator) uses an \\(L_1\\) penalty:\n\\[\\hat{\\boldsymbol{\\beta}}^{\\text{lasso}} = \\arg\\min_{\\boldsymbol{\\beta}} \\left\\{ \\sum_{i=1}^n (y_i - \\mathbf{x}_i^\\top\\boldsymbol{\\beta})^2 + \\lambda \\sum_{j=1}^p |\\beta_j| \\right\\}\\]\nThe key difference from ridge: the \\(L_1\\) penalty produces sparse solutions — many \\(\\hat{\\beta}_j = 0\\) exactly. LASSO does variable selection automatically.",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R — Lasso"
+      "R4 — LASSO"
     ]
   },
   {
-    "objectID": "regression/02-variable-selection.html",
-    "href": "regression/02-variable-selection.html",
-    "title": "R — Variable Selection",
-    "section": "",
-    "text": "Coming soon — Block 1: Regression",
+    "objectID": "regression/04-lasso.html#why-does-l1-produce-zeros",
+    "href": "regression/04-lasso.html#why-does-l1-produce-zeros",
+    "title": "R4 — LASSO",
+    "section": "1.2 Why does L1 produce zeros?",
+    "text": "1.2 Why does L1 produce zeros?\nGeometrically, the \\(L_1\\) constraint region (a diamond in 2D) has corners on the axes. The OLS ellipsoidal contours are likely to first touch one of these corners, where one or more \\(\\beta_j = 0\\). The \\(L_2\\) constraint (a circle) has no corners, so the solution is rarely exactly zero.",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R — Variable Selection"
+      "R4 — LASSO"
+    ]
+  },
+  {
+    "objectID": "regression/04-lasso.html#lasso-vs-ridge",
+    "href": "regression/04-lasso.html#lasso-vs-ridge",
+    "title": "R4 — LASSO",
+    "section": "1.3 LASSO vs Ridge",
+    "text": "1.3 LASSO vs Ridge\n\n\n\n\n\n\n\n\n\nLASSO\nRidge\n\n\n\n\nPenalty\n\\(\\lambda \\sum |\\beta_j|\\)\n\\(\\lambda \\sum \\beta_j^2\\)\n\n\nSparsity\nYes — sets coefficients to exactly 0\nNo — shrinks toward 0 but not to 0\n\n\nVariable selection\nYes\nNo\n\n\nBest when\nFew predictors truly matter\nMany predictors with small effects\n\n\nCorrelated predictors\nSelects one arbitrarily\nShrinks all equally",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R4 — LASSO"
+    ]
+  },
+  {
+    "objectID": "regression/04-lasso.html#elastic-net",
+    "href": "regression/04-lasso.html#elastic-net",
+    "title": "R4 — LASSO",
+    "section": "1.4 Elastic Net",
+    "text": "1.4 Elastic Net\nThe elastic net combines both penalties:\n\\[\\lambda \\left[\\alpha \\sum |\\beta_j| + (1-\\alpha) \\sum \\beta_j^2 \\right]\\]\nWith \\(\\alpha=1\\) this is LASSO; \\(\\alpha=0\\) is ridge. Elastic net handles correlated predictors better than pure LASSO. In glmnet(), alpha controls the mix.",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R4 — LASSO"
+    ]
+  },
+  {
+    "objectID": "regression/02-variable-selection.html#why-not-include-everything",
+    "href": "regression/02-variable-selection.html#why-not-include-everything",
+    "title": "R2 — Variable Selection",
+    "section": "1.1 Why not include everything?",
+    "text": "1.1 Why not include everything?\nAdding predictors always reduces training error but increases variance. With \\(p\\) predictors, OLS has \\(p+1\\) parameters to estimate. When \\(p\\) is large:\n\nVariance of \\(\\hat{\\beta}\\) increases\nTest MSE may be higher than a model with fewer predictors\nInterpretation becomes harder\n\nVariable selection finds the subset of predictors that minimises test error.",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R2 — Variable Selection"
+    ]
+  },
+  {
+    "objectID": "regression/02-variable-selection.html#best-subset-selection",
+    "href": "regression/02-variable-selection.html#best-subset-selection",
+    "title": "R2 — Variable Selection",
+    "section": "1.2 Best subset selection",
+    "text": "1.2 Best subset selection\nFit all \\(2^p\\) possible models, evaluate each by CV or an information criterion, pick the best. Exact but computationally infeasible for large \\(p\\) — for \\(p=20\\) there are over one million models.",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R2 — Variable Selection"
+    ]
+  },
+  {
+    "objectID": "regression/02-variable-selection.html#forward-stepwise-selection",
+    "href": "regression/02-variable-selection.html#forward-stepwise-selection",
+    "title": "R2 — Variable Selection",
+    "section": "1.3 Forward stepwise selection",
+    "text": "1.3 Forward stepwise selection\n\nStart with the null model (intercept only)\nAt each step, add the predictor that most improves fit\nStop when adding more predictors no longer helps (by CV or AIC)\n\nMuch faster than best subset (\\(O(p^2)\\) models), but not guaranteed to find the globally best subset.",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R2 — Variable Selection"
+    ]
+  },
+  {
+    "objectID": "regression/02-variable-selection.html#backward-stepwise-selection",
+    "href": "regression/02-variable-selection.html#backward-stepwise-selection",
+    "title": "R2 — Variable Selection",
+    "section": "1.4 Backward stepwise selection",
+    "text": "1.4 Backward stepwise selection\nStart with the full model, remove the least useful predictor at each step. Requires \\(n &gt; p\\) to fit the full model.",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R2 — Variable Selection"
+    ]
+  },
+  {
+    "objectID": "regression/02-variable-selection.html#criteria-for-stopping",
+    "href": "regression/02-variable-selection.html#criteria-for-stopping",
+    "title": "R2 — Variable Selection",
+    "section": "1.5 Criteria for stopping",
+    "text": "1.5 Criteria for stopping\n\n\n\n\n\n\n\n\nCriterion\nFormula\nPenalises\n\n\n\n\nAIC\n\\(-2\\ell + 2p\\)\nPredictive accuracy\n\n\nBIC\n\\(-2\\ell + p\\log(n)\\)\nHarder penalty, simpler models\n\n\nAdjusted R²\n\\(1 - \\frac{\\text{RSS}/(n-p-1)}{\\text{TSS}/(n-1)}\\)\nExtra parameters\n\n\nCV error\nEstimated test MSE\nDirectly estimates generalisation",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R2 — Variable Selection"
     ]
   },
   {
@@ -345,11 +429,11 @@
     ]
   },
   {
-    "objectID": "regression/01-ols-review.html",
-    "href": "regression/01-ols-review.html",
+    "objectID": "regression/01-ols-review.html#the-ols-estimator",
+    "href": "regression/01-ols-review.html#the-ols-estimator",
     "title": "R1 — OLS Review & Diagnostics",
-    "section": "",
-    "text": "Coming soon — Block 1: Regression",
+    "section": "1.1 The OLS estimator",
+    "text": "1.1 The OLS estimator\nFor \\(Y = \\mathbf{X}\\boldsymbol{\\beta} + \\boldsymbol{\\varepsilon}\\), OLS minimises the residual sum of squares:\n\\[\\hat{\\boldsymbol{\\beta}} = \\arg\\min_{\\boldsymbol{\\beta}} \\|\\mathbf{y} - \\mathbf{X}\\boldsymbol{\\beta}\\|^2 = (\\mathbf{X}^\\top\\mathbf{X})^{-1}\\mathbf{X}^\\top\\mathbf{y}\\]\nProperties (when assumptions hold):\n\nUnbiased: \\(\\mathbb{E}[\\hat{\\boldsymbol{\\beta}}] = \\boldsymbol{\\beta}\\)\nBLUE: Best Linear Unbiased Estimator (Gauss-Markov)\nVariance: \\(\\text{Var}(\\hat{\\boldsymbol{\\beta}}) = \\sigma^2 (\\mathbf{X}^\\top\\mathbf{X})^{-1}\\)",
     "crumbs": [
       "Home",
       "Block 1: Regression",
@@ -357,27 +441,111 @@
     ]
   },
   {
-    "objectID": "regression/03-ridge-regression.html",
-    "href": "regression/03-ridge-regression.html",
-    "title": "R — Ridge Regression",
-    "section": "",
-    "text": "Coming soon — Block 1: Regression",
+    "objectID": "regression/01-ols-review.html#when-ols-struggles",
+    "href": "regression/01-ols-review.html#when-ols-struggles",
+    "title": "R1 — OLS Review & Diagnostics",
+    "section": "1.2 When OLS struggles",
+    "text": "1.2 When OLS struggles\n\n\n\n\n\n\n\n\nProblem\nSymptom\nConsequence\n\n\n\n\n\\(p \\approx n\\)\nMany predictors, small sample\nHigh variance, unstable \\(\\hat{\\beta}\\)\n\n\n\\(p &gt; n\\)\nMore predictors than observations\n\\((\\mathbf{X}^\\top\\mathbf{X})\\) singular — OLS undefined\n\n\nMulticollinearity\nPredictors correlated\nInflated SE, unreliable coefficients\n\n\nIrrelevant predictors\nNoise variables included\nHigher variance, worse prediction",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R — Ridge Regression"
+      "R1 — OLS Review & Diagnostics"
     ]
   },
   {
-    "objectID": "regression/05-model-comparison.html",
-    "href": "regression/05-model-comparison.html",
-    "title": "R — Model Comparison",
-    "section": "",
-    "text": "Coming soon — Block 1: Regression",
+    "objectID": "regression/01-ols-review.html#assumptions-and-diagnostics",
+    "href": "regression/01-ols-review.html#assumptions-and-diagnostics",
+    "title": "R1 — OLS Review & Diagnostics",
+    "section": "1.3 Assumptions and diagnostics",
+    "text": "1.3 Assumptions and diagnostics\n\n\n\nPlot\nWhat to look for\n\n\n\n\nResiduals vs fitted\nRandom scatter (linearity + homoskedasticity)\n\n\nQQ-plot\nPoints on diagonal (normality)\n\n\nScale-location\nFlat line (constant variance)\n\n\nResiduals vs leverage\nNo high-leverage + high-residual outliers",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R — Model Comparison"
+      "R1 — OLS Review & Diagnostics"
+    ]
+  },
+  {
+    "objectID": "regression/03-ridge-regression.html#the-ridge-objective",
+    "href": "regression/03-ridge-regression.html#the-ridge-objective",
+    "title": "R3 — Ridge Regression",
+    "section": "1.1 The ridge objective",
+    "text": "1.1 The ridge objective\nRidge regression adds an \\(L_2\\) penalty to the OLS loss:\n\\[\\hat{\\boldsymbol{\\beta}}^{\\text{ridge}} = \\arg\\min_{\\boldsymbol{\\beta}} \\left\\{ \\sum_{i=1}^n (y_i - \\mathbf{x}_i^\\top\\boldsymbol{\\beta})^2 + \\lambda \\sum_{j=1}^p \\beta_j^2 \\right\\}\\]\nThe penalty \\(\\lambda \\sum \\beta_j^2\\) shrinks all coefficients toward zero. The tuning parameter \\(\\lambda \\geq 0\\) controls the amount of shrinkage:\n\n\\(\\lambda = 0\\): OLS (no shrinkage)\n\\(\\lambda \\to \\infty\\): all \\(\\hat{\\beta}_j \\to 0\\)",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R3 — Ridge Regression"
+    ]
+  },
+  {
+    "objectID": "regression/03-ridge-regression.html#closed-form-solution",
+    "href": "regression/03-ridge-regression.html#closed-form-solution",
+    "title": "R3 — Ridge Regression",
+    "section": "1.2 Closed-form solution",
+    "text": "1.2 Closed-form solution\n\\[\\hat{\\boldsymbol{\\beta}}^{\\text{ridge}} = (\\mathbf{X}^\\top\\mathbf{X} + \\lambda\\mathbf{I})^{-1}\\mathbf{X}^\\top\\mathbf{y}\\]\nAdding \\(\\lambda\\mathbf{I}\\) makes the matrix invertible even when \\(\\mathbf{X}^\\top\\mathbf{X}\\) is singular or near-singular — this is why ridge works when \\(p \\geq n\\).",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R3 — Ridge Regression"
+    ]
+  },
+  {
+    "objectID": "regression/03-ridge-regression.html#bias-variance-effect",
+    "href": "regression/03-ridge-regression.html#bias-variance-effect",
+    "title": "R3 — Ridge Regression",
+    "section": "1.3 Bias-variance effect",
+    "text": "1.3 Bias-variance effect\n\n\n\n\\(\\lambda\\)\nBias\nVariance\nTest MSE\n\n\n\n\n0 (OLS)\n0\nHigh\nMay be high\n\n\nSmall\nLow\nLower\nOften lower\n\n\nLarge\nHigh\nVery low\nMay be high\n\n\n\nKey insight: Ridge introduces bias but reduces variance. The optimal \\(\\lambda\\) minimises test MSE — found via cross-validation.",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R3 — Ridge Regression"
+    ]
+  },
+  {
+    "objectID": "regression/03-ridge-regression.html#important-standardise-predictors",
+    "href": "regression/03-ridge-regression.html#important-standardise-predictors",
+    "title": "R3 — Ridge Regression",
+    "section": "1.4 Important: standardise predictors",
+    "text": "1.4 Important: standardise predictors\nRidge shrinks coefficients, but the amount of shrinkage depends on predictor scale. Always standardise predictors before applying ridge (and LASSO). glmnet() does this automatically by default.",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R3 — Ridge Regression"
+    ]
+  },
+  {
+    "objectID": "regression/05-model-comparison.html#the-complete-regression-workflow",
+    "href": "regression/05-model-comparison.html#the-complete-regression-workflow",
+    "title": "R5 — Model Comparison & Workflow",
+    "section": "1.1 The complete regression workflow",
+    "text": "1.1 The complete regression workflow\n1. Explore data          → distributions, missingness, outliers\n2. Pre-process           → log-transform skewed outcomes, standardise predictors\n3. Split data            → train (70%) / test (30%) — or use CV throughout\n4. Fit candidate models  → OLS, forward stepwise, ridge, LASSO\n5. Select model          → by CV RMSPE on training data only\n6. Evaluate              → test RMSPE on held-out test set (once, at the end)\n7. Report                → coefficients, CIs, test performance, clinical interpretation\n\n\n\n\n\n\nWarningThe golden rule\n\n\n\nThe test set is used exactly once — at the end. If you look at the test set to make model choices, it is no longer a clean test set.",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R5 — Model Comparison & Workflow"
+    ]
+  },
+  {
+    "objectID": "regression/05-model-comparison.html#which-method-to-choose",
+    "href": "regression/05-model-comparison.html#which-method-to-choose",
+    "title": "R5 — Model Comparison & Workflow",
+    "section": "1.2 Which method to choose?",
+    "text": "1.2 Which method to choose?\n\n\n\nSituation\nRecommended method\n\n\n\n\n\\(p\\) small, inference goal\nOLS with stepwise/AIC selection\n\n\n\\(p\\) moderate, prediction goal\nLASSO or elastic net\n\n\n\\(p\\) large, many small effects\nRidge\n\n\nCorrelated predictors\nRidge or elastic net\n\n\nNeed sparse, interpretable model\nLASSO",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R5 — Model Comparison & Workflow"
+    ]
+  },
+  {
+    "objectID": "regression/05-model-comparison.html#reporting-test-performance",
+    "href": "regression/05-model-comparison.html#reporting-test-performance",
+    "title": "R5 — Model Comparison & Workflow",
+    "section": "1.3 Reporting test performance",
+    "text": "1.3 Reporting test performance\nReport RMSPE (or MAE) on the test set with a confidence interval:\n\\[\\text{RMSPE} \\pm 1.96 \\times \\frac{\\text{SD of squared errors}}{\\sqrt{n_{\\text{test}}}}\\]\nNever report only training performance. Always compare to a baseline (e.g., predicting the mean: \\(\\text{RMSPE}_{\\text{null}} = \\text{SD}(Y)\\)).",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R5 — Model Comparison & Workflow"
     ]
   },
   {
