@@ -1,0 +1,10 @@
+---
+title: "C — Random Forests"
+engine: knitr
+---
+
+```{=html}
+<script>document.body.classList.add("classification");</script>
+```
+
+*Coming soon — Block 2: Classification*

@@ -1,0 +1,108 @@
+<script>
+(function () {
+  var STORAGE_KEY = 'sta230_progress';
+
+  function getProgress() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch (e) { return {}; }
+  }
+
+  function saveProgress(p) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+  }
+
+  function pageKey() {
+    var path = window.location.pathname;
+    return path.replace(/\/index\.html$/, '/').replace(/\.html$/, '');
+  }
+
+  function hrefToKey(href) {
+    if (!href || href === '#' || href.startsWith('#')) return '';
+    try {
+      var url = new URL(href, window.location.href);
+      var key = url.pathname.replace(/\/index\.html$/, '/').replace(/\.html$/, '');
+      if (key.endsWith('/')) return '';
+      return key;
+    } catch (e) { return ''; }
+  }
+
+  function updateSidebar() {
+    var progress = getProgress();
+    document.querySelectorAll('#quarto-sidebar a').forEach(function (link) {
+      var key = hrefToKey(link.getAttribute('href') || '');
+      if (!key) return;
+      var existing = link.querySelector('.sta230-check');
+      if (progress[key]) {
+        if (!existing) {
+          var span = document.createElement('span');
+          span.className = 'sta230-check';
+          span.textContent = ' ✓';
+          span.style.cssText = 'color:#28a745;font-weight:bold;margin-left:2px;';
+          link.appendChild(span);
+        }
+      } else {
+        if (existing) existing.remove();
+      }
+    });
+  }
+
+  function addButton() {
+    var key = pageKey();
+    if (key.endsWith('/')) return;
+    var done  = !!getProgress()[key];
+
+    var div = document.createElement('div');
+    div.style.cssText = 'margin:2rem 0 1rem;text-align:center;';
+
+    var btn = document.createElement('button');
+    btn.id  = 'sta230-progress-btn';
+    btn.style.cssText = 'padding:0.45rem 1.4rem;border-radius:6px;font-size:0.88rem;' +
+      'cursor:pointer;border:2px solid;transition:all 0.15s;';
+
+    function render(d) {
+      if (d) {
+        btn.textContent = '✓ Completed — click to undo';
+        btn.style.background   = '#d4edda';
+        btn.style.borderColor  = '#28a745';
+        btn.style.color        = '#155724';
+      } else {
+        btn.textContent = 'Mark as complete';
+        btn.style.background   = '#f8f9fa';
+        btn.style.borderColor  = '#6c757d';
+        btn.style.color        = '#495057';
+      }
+    }
+
+    render(done);
+
+    btn.addEventListener('click', function () {
+      var p = getProgress();
+      p[pageKey()] = !p[pageKey()];
+      saveProgress(p);
+      render(p[pageKey()]);
+      updateSidebar();
+    });
+
+    div.appendChild(btn);
+
+    var nav  = document.querySelector('.page-navigation');
+    var main = document.querySelector('#quarto-document-content');
+    if (nav && nav.parentNode) {
+      nav.parentNode.insertBefore(div, nav);
+    } else if (main) {
+      main.appendChild(div);
+    }
+  }
+
+  function init() {
+    addButton();
+    updateSidebar();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>

@@ -1,0 +1,29 @@
+---
+title: "STA230 — Statistical Learning"
+---
+
+Welcome to the interactive learning companion for **STA230 Statistical Learning** at Göteborg University.
+
+This site covers all three course blocks — with concept explanations, multiple-choice quizzes, and interactive R code you can run and modify directly in the browser.
+
+## Course structure
+
+| Block | Topics |
+|-------|--------|
+| **Foundations** | What is statistical learning? Bias-variance tradeoff, training vs test error, cross-validation |
+| **Block 1: Regression** | OLS, variable selection, ridge regression, LASSO |
+| **Block 2: Classification** | Logistic regression, LDA/kNN, decision trees, random forests, boosting, ROC/AUC |
+| **Block 3: Unsupervised** | PCA, k-means clustering, hierarchical clustering |
+
+## How to use this site
+
+1. Read the **concept** section — short and focused
+2. Answer the **quiz** — tests comprehension before you see code
+3. Run and modify the **code** — the key learning step
+4. Use the **Guided Practice** exercises with real datasets
+5. Click **Mark as complete** when done — your progress is saved in the browser
+
+::: {.callout-tip}
+## Coding is the way to learn
+The central principle of STA230: understanding comes from *doing*, not reading. Every section ends with hands-on exercises using real datasets (Hitters, NHANES, SWP_CTW).
+:::

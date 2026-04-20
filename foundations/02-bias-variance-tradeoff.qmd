@@ -1,0 +1,442 @@
+---
+title: "F2 — Bias-Variance Tradeoff"
+engine: knitr
+---
+
+```{=html}
+<script>document.body.classList.add("foundations");</script>
+```
+
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Shared simulation: true f, one training set
+set.seed(7)
+f_true <- function(x) sin(pi * x)
+n_train <- 30
+x_train <- sort(runif(n_train, 0, 1))
+y_train <- f_true(x_train) + rnorm(n_train, 0, 0.4)
+train_dat <- data.frame(x = x_train, y = y_train)
+
+# Test grid
+x_grid <- seq(0, 1, length.out=300)
+f_grid <- f_true(x_grid)
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+set.seed(7)
+f_true <- function(x) sin(pi * x)
+n_train <- 30
+x_train <- sort(runif(n_train, 0, 1))
+y_train <- f_true(x_train) + rnorm(n_train, 0, 0.4)
+train_dat <- data.frame(x = x_train, y = y_train)
+x_grid <- seq(0, 1, length.out=300)
+f_grid <- f_true(x_grid)
+```
+
+# Concept: The Most Important Trade-off in Statistical Learning
+
+## Decomposing prediction error
+
+For a fixed test point $x_0$, the expected test MSE decomposes as:
+
+$$\underbrace{\mathbb{E}\left[(y_0 - \hat{f}(x_0))^2\right]}_{\text{Expected test MSE}} = \underbrace{\left[\text{Bias}(\hat{f}(x_0))\right]^2}_{\text{Bias}^2} + \underbrace{\text{Var}(\hat{f}(x_0))}_{\text{Variance}} + \underbrace{\sigma^2_\varepsilon}_{\text{Irreducible}}$$
+
+where the expectation is over repeated training sets.
+
+| Component | Definition | Changes with complexity? |
+|-----------|------------|--------------------------|
+| **Bias²** | How far $\mathbb{E}[\hat{f}(x_0)]$ is from $f(x_0)$ | Decreases as complexity increases |
+| **Variance** | How much $\hat{f}(x_0)$ varies across training sets | Increases as complexity increases |
+| **Irreducible** | $\sigma^2_\varepsilon$ — noise floor | Fixed, never changes |
+
+## The U-shaped test error curve (ESL Figure 7.1)
+
+This is the central figure of the course:
+
+- **Training error** (blue): monotonically decreasing — more complex models always fit the training data better
+- **Test error** (red): U-shaped — first decreases as we reduce bias, then increases as variance dominates
+- The minimum of the test error curve is the **sweet spot**: not too simple, not too complex
+
+::: {.callout-important}
+## Key message
+A model that fits the training data perfectly is not necessarily a good model. The goal is to generalise to new data — and that requires balancing bias against variance.
+:::
+
+## Two approaches to finding the sweet spot
+
+1. **Analytical** — penalise model complexity in the selection criterion (AIC, BIC, adjusted R²)
+2. **Data-driven (resampling)** — directly estimate test error from data (cross-validation, train/test split)
+
+Block 1 uses both. Cross-validation is covered in F5.
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="As model complexity increases (e.g. higher polynomial degree), what happens to bias and variance?">
+  <div class="q-opt" data-correct="false">Both bias and variance increase</div>
+  <div class="q-opt" data-correct="false">Bias increases, variance decreases</div>
+  <div class="q-opt" data-correct="true">Bias decreases, variance increases</div>
+  <div class="q-opt" data-correct="false">Both bias and variance decrease</div>
+  <div class="q-exp">A simple model (e.g. linear) may be too rigid to capture the true f — it has high bias but low variance (similar fit across training sets). A complex model (e.g. poly(20)) can capture f closely but is sensitive to which training data it saw — it has low bias but high variance. This is the fundamental trade-off.</div>
+</div>
+
+<div class="sta230-quiz" data-question="The training error of a model is 0.05 and the test error is 0.38. What is the most likely problem?">
+  <div class="q-opt" data-correct="false">High bias — the model is too simple</div>
+  <div class="q-opt" data-correct="true">High variance — the model is overfitting the training data</div>
+  <div class="q-opt" data-correct="false">High irreducible error — the noise level is too large</div>
+  <div class="q-opt" data-correct="false">The test set is too small to give a reliable estimate</div>
+  <div class="q-exp">A very low training error paired with a much higher test error is the classic signature of overfitting (high variance). The model memorised the training data, including its noise, rather than learning the underlying pattern f. The large train-test gap is the diagnostic.</div>
+</div>
+
+<div class="sta230-quiz" data-question="Which component of test MSE can NEVER be reduced, regardless of how good the model is?">
+  <div class="q-opt" data-correct="false">Bias²</div>
+  <div class="q-opt" data-correct="false">Variance</div>
+  <div class="q-opt" data-correct="true">Irreducible error σ²ε</div>
+  <div class="q-opt" data-correct="false">All three can be reduced with enough data</div>
+  <div class="q-exp">Irreducible error σ²ε is the variance of ε — noise inherent in the data-generating process. Even if f̂ = f exactly, predictions still have error Var(ε). Bias² → 0 as the model becomes flexible enough to approximate f. Variance → 0 with infinite training data. But σ²ε is fixed by nature.</div>
+</div>
+```
+
+---
+
+# Worked Example: Reproducing ESL Figure 7.1
+
+The code below simulates many training sets, fits polynomial models of increasing degree, and plots **training error vs test error vs complexity** — reproducing the key figure from Hastie, Tibshirani & Friedman (2009).
+
+```{r}
+#| label: bv-simulation
+#| fig-width: 9
+#| fig-height: 4.5
+set.seed(42)
+sigma_eps <- 0.4     # true noise SD
+n_sims    <- 200     # number of training sets
+n_train   <- 30
+n_test    <- 500
+degrees   <- 1:12
+
+# Fixed test set (large, to get accurate estimate of test error)
+x_test <- seq(0, 1, length.out=n_test)
+y_test <- f_true(x_test) + rnorm(n_test, 0, sigma_eps)
+
+results <- lapply(degrees, function(d) {
+  train_errs <- test_errs <- numeric(n_sims)
+  for (i in seq_len(n_sims)) {
+    # New training set each simulation
+    x_tr <- sort(runif(n_train, 0, 1))
+    y_tr <- f_true(x_tr) + rnorm(n_train, 0, sigma_eps)
+    fit  <- lm(y_tr ~ poly(x_tr, d))
+    # Training MSE
+    train_errs[i] <- mean(residuals(fit)^2)
+    # Test MSE on fixed test set
+    x_poly <- poly(x_test, d, coefs=attr(poly(x_tr, d), "coefs"))
+    test_errs[i]  <- mean((y_test - cbind(1, x_poly) %*% coef(fit))^2)
+  }
+  data.frame(degree=d,
+             train_mse = mean(train_errs),
+             test_mse  = mean(test_errs))
+})
+res <- do.call(rbind, results)
+
+# Add irreducible error baseline
+irred <- sigma_eps^2
+
+# Plot: training vs test error
+ggplot(res, aes(x=degree)) +
+  geom_line(aes(y=train_mse), colour="#2980b9", linewidth=1.4) +
+  geom_point(aes(y=train_mse), colour="#2980b9", size=2.5) +
+  geom_line(aes(y=test_mse), colour="#e74c3c", linewidth=1.4) +
+  geom_point(aes(y=test_mse), colour="#e74c3c", size=2.5) +
+  geom_hline(yintercept=irred, linetype="dashed", colour="#888", linewidth=0.8) +
+  annotate("text", x=10, y=irred+0.01, label=paste0("σ² = ", irred),
+           colour="#666", size=3.5) +
+  annotate("text", x=11, y=res$train_mse[11]+0.03, label="Training",
+           colour="#2980b9", size=3.5, fontface="bold") +
+  annotate("text", x=11, y=res$test_mse[11]+0.03, label="Test",
+           colour="#e74c3c", size=3.5, fontface="bold") +
+  scale_x_continuous(breaks=degrees) +
+  labs(title="Bias-Variance Trade-off (ESL Figure 7.1)",
+       subtitle=paste0("Blue = training error (decreasing) | Red = test error (U-shaped) | ",
+                       "n_train=", n_train, ", σ=", sigma_eps, ", n_sims=", n_sims),
+       x="Model Complexity (polynomial degree)",
+       y="Mean Squared Error") +
+  theme_minimal(base_size=12)
+```
+
+```{r}
+#| label: bv-decomposition
+#| fig-width: 9
+#| fig-height: 4.5
+# Show all three components: Bias², Variance, Irreducible
+set.seed(42)
+bv_decomp <- lapply(degrees, function(d) {
+  preds_mat <- matrix(NA, nrow=n_sims, ncol=n_test)
+  for (i in seq_len(n_sims)) {
+    x_tr <- sort(runif(n_train, 0, 1))
+    y_tr <- f_true(x_tr) + rnorm(n_train, 0, sigma_eps)
+    fit  <- lm(y_tr ~ poly(x_tr, d))
+    x_poly <- poly(x_test, d, coefs=attr(poly(x_tr, d), "coefs"))
+    preds_mat[i, ] <- cbind(1, x_poly) %*% coef(fit)
+  }
+  mean_pred <- colMeans(preds_mat)
+  bias2     <- mean((mean_pred - f_true(x_test))^2)
+  variance  <- mean(apply(preds_mat, 2, var))
+  data.frame(degree=d, bias2=bias2, variance=variance, irreducible=irred,
+             test_mse=bias2+variance+irred)
+})
+bv <- do.call(rbind, bv_decomp)
+
+bv_long <- tidyr::pivot_longer(bv, c(bias2, variance, irreducible),
+                                names_to="component", values_to="mse")
+bv_long$component <- factor(bv_long$component,
+                             levels=c("irreducible","variance","bias2"),
+                             labels=c("Irreducible σ²","Variance","Bias²"))
+
+ggplot(bv_long, aes(x=degree, y=mse, fill=component)) +
+  geom_area(alpha=0.8, position="stack") +
+  geom_line(data=bv, aes(x=degree, y=test_mse), inherit.aes=FALSE,
+            colour="black", linewidth=1.2, linetype="dashed") +
+  scale_fill_manual(values=c("Irreducible σ²"="#bdc3c7",
+                              "Variance"="#e74c3c",
+                              "Bias²"="#2980b9")) +
+  scale_x_continuous(breaks=degrees) +
+  labs(title="Decomposition of Test MSE",
+       subtitle="Stacked = Bias² + Variance + σ²  |  Dashed line = Total test MSE",
+       x="Model Complexity (polynomial degree)",
+       y="Mean Squared Error",
+       fill="Component") +
+  theme_minimal(base_size=12)
+```
+
+---
+
+# Interactive Exploration: Build the Figure Yourself
+
+::: {.webr-loading-note}
+**R is loading in the background** — the exercises below will be interactive once the status bar disappears.
+:::
+
+The blocks below let you change parameters and immediately see how the bias-variance curve changes. Run each block, then modify the parameters to compare different settings.
+
+```{webr-r}
+#| label: bv-interactive-params
+# === PARAMETERS — change these and re-run ===
+sigma_eps <- 0.4   # noise level (try: 0.1, 0.4, 0.8)
+n_train   <- 30    # training set size (try: 15, 30, 100)
+n_sims    <- 150   # simulations (more = smoother, slower)
+degrees   <- 1:10  # complexity range
+
+# Fixed test set
+set.seed(42)
+x_test <- seq(0, 1, length.out=300)
+y_test <- f_true(x_test) + rnorm(300, 0, sigma_eps)
+irred  <- sigma_eps^2
+
+cat("Parameters: sigma =", sigma_eps, "| n_train =", n_train, "| n_sims =", n_sims, "\n")
+cat("Irreducible error floor:", irred, "\n")
+```
+
+```{webr-r}
+#| label: bv-interactive-run
+# Run the simulation with the parameters above
+# (Run the params block first, then this one)
+results <- lapply(degrees, function(d) {
+  tr_e <- te_e <- numeric(n_sims)
+  for (i in seq_len(n_sims)) {
+    x_tr <- sort(runif(n_train, 0, 1))
+    y_tr <- f_true(x_tr) + rnorm(n_train, 0, sigma_eps)
+    fit  <- lm(y_tr ~ poly(x_tr, d))
+    tr_e[i] <- mean(residuals(fit)^2)
+    xp <- poly(x_test, d, coefs=attr(poly(x_tr, d), "coefs"))
+    te_e[i] <- mean((y_test - cbind(1, xp) %*% coef(fit))^2)
+  }
+  data.frame(degree=d, train=mean(tr_e), test=mean(te_e))
+})
+res <- do.call(rbind, results)
+
+cat("\n--- Results ---\n")
+cat(sprintf("%-8s %-12s %-12s\n", "Degree", "Train MSE", "Test MSE"))
+for (i in seq_len(nrow(res))) {
+  cat(sprintf("%-8d %-12.4f %-12.4f\n", res$degree[i], res$train[i], res$test[i]))
+}
+cat("\nBest test MSE at degree:", res$degree[which.min(res$test)], "\n")
+```
+
+```{webr-r}
+#| label: bv-interactive-plot
+# Plot training vs test error for your current parameters
+ggplot(res, aes(x=degree)) +
+  geom_line(aes(y=train), colour="#2980b9", linewidth=1.4) +
+  geom_point(aes(y=train), colour="#2980b9", size=3) +
+  geom_line(aes(y=test),  colour="#e74c3c", linewidth=1.4) +
+  geom_point(aes(y=test),  colour="#e74c3c", size=3) +
+  geom_hline(yintercept=irred, linetype="dashed", colour="#888") +
+  annotate("text", x=max(degrees)-0.5, y=irred+0.01,
+           label=paste0("σ² = ", round(irred,3)), colour="#666", size=3.5) +
+  scale_x_continuous(breaks=degrees) +
+  labs(title=paste0("Bias-Variance  |  σ=", sigma_eps, "  n_train=", n_train),
+       subtitle="Blue = training error  |  Red = test error",
+       x="Polynomial degree", y="MSE") +
+  theme_minimal(base_size=12)
+```
+
+::: {.callout-tip collapse="true"}
+## What to try
+1. **More data** (`n_train = 100`): Does the U-shape shift right? Why?
+   *More data reduces variance → higher complexity becomes viable.*
+
+2. **More noise** (`sigma_eps = 0.8`): Does the test error floor rise? Does the optimal degree change?
+   *Higher σ² raises the irreducible floor. The bias-variance tradeoff shape stays the same.*
+
+3. **Less noise** (`sigma_eps = 0.1`): Can you get a test error close to the irreducible floor?
+   *With low noise a flexible model can nearly recover f perfectly.*
+
+4. **Small training set** (`n_train = 15`): Does the optimal degree drop? Why?
+   *Small n → high variance for complex models → simple models preferred.*
+:::
+
+---
+
+# Guided Practice: Fitting multiple degrees side by side
+
+The next blocks fit degree 1, 3, 6, and 12 models to the **same training data** and plot them together so you can see the fit directly.
+
+```{webr-r}
+#| label: fit-comparison
+# Fit four models to the training set
+set.seed(7)
+x_tr <- sort(runif(30, 0, 1))
+y_tr <- f_true(x_tr) + rnorm(30, 0, 0.4)
+
+x_g <- seq(0, 1, length.out=200)
+
+fits <- list(
+  d1  = lm(y_tr ~ poly(x_tr, 1)),
+  d3  = lm(y_tr ~ poly(x_tr, 3)),
+  d6  = lm(y_tr ~ poly(x_tr, 6)),
+  d12 = lm(y_tr ~ poly(x_tr, 12))
+)
+
+# Collect predictions
+pred_df <- data.frame(x = x_g, truth = f_true(x_g))
+for (nm in names(fits)) {
+  xp <- poly(x_g, as.integer(sub("d","",nm)),
+             coefs=attr(poly(x_tr, as.integer(sub("d","",nm))), "coefs"))
+  pred_df[[nm]] <- as.vector(cbind(1, xp) %*% coef(fits[[nm]]))
+}
+pred_long <- tidyr::pivot_longer(pred_df, -x, names_to="model", values_to="y")
+
+ggplot() +
+  geom_point(data=data.frame(x=x_tr, y=y_tr), aes(x, y),
+             alpha=0.5, size=2, colour="#666") +
+  geom_line(data=pred_long, aes(x, y, colour=model, linewidth=model)) +
+  scale_colour_manual(values=c(truth="#333", d1="#3498db",
+                                d3="#27ae60", d6="#e67e22", d12="#e74c3c"),
+                      labels=c(truth="True f", d1="Degree 1", d3="Degree 3",
+                               d6="Degree 6", d12="Degree 12")) +
+  scale_linewidth_manual(values=c(truth=1.5, d1=0.9, d3=0.9, d6=0.9, d12=0.9),
+                         guide="none") +
+  labs(title="Four polynomial fits on the same training data",
+       subtitle="Grey points = training data  |  Dark line = true f",
+       x="X", y="Y", colour="Model") +
+  theme_minimal(base_size=12)
+```
+
+```{webr-r}
+#| label: train-test-compare
+# Compare training and test MSE for these four models
+set.seed(99)
+x_te <- sort(runif(500, 0, 1))
+y_te <- f_true(x_te) + rnorm(500, 0, 0.4)
+
+for (nm in names(fits)) {
+  d <- as.integer(sub("d","",nm))
+  xp_test <- poly(x_te, d, coefs=attr(poly(x_tr, d), "coefs"))
+  train_mse <- mean(residuals(fits[[nm]])^2)
+  test_mse  <- mean((y_te - cbind(1, xp_test) %*% coef(fits[[nm]]))^2)
+  cat(sprintf("Degree %2d  |  Train MSE: %.4f  |  Test MSE: %.4f\n",
+              d, train_mse, test_mse))
+}
+cat("\nIrreducible error (σ²):", 0.4^2, "\n")
+```
+
+::: {.callout-tip collapse="true"}
+## Tasks
+- **TASK 1**: Which degree has the lowest training MSE? Is that the best model?
+- **TASK 2**: Which degree is closest to the irreducible error floor on the test set?
+- **TASK 3**: Change `set.seed(7)` to `set.seed(123)` and re-run both blocks.
+  Does the ranking change? What does this tell you about variance?
+- **TASK 4**: The degree-12 fit looks very wiggly. What would happen to its test MSE with 300 training observations instead of 30?
+:::
+
+---
+
+# Retrieval Challenge
+
+```{webr-r}
+#| label: challenge
+# The bias-variance decomposition:
+# E[test MSE] = Bias² + Variance + σ²
+
+# Given: a model with Bias²=0.02, Variance=0.15, σ²=0.16
+# Q1: What is the expected test MSE?
+bias2 <- 0.02
+variance <- 0.15
+irred <- 0.16
+cat("Expected test MSE:", bias2 + variance + irred, "\n")
+
+# Q2: We collect 4x more training data. Which component decreases?
+# (Uncomment and fill in your answer)
+# cat("Answer: variance decreases — more data reduces how much f̂ varies across samples\n")
+
+# Q3: We switch to a simpler model. Which component increases?
+# cat("Answer: bias² increases — simpler model may not capture the true f shape\n")
+
+# Q4: Compute: what fraction of the test MSE is irreducible?
+cat("Irreducible fraction:", round(irred / (bias2 + variance + irred), 3), "\n")
+```
+
+::: {.callout-note collapse="true"}
+## Model answers
+**Q1:** $0.02 + 0.15 + 0.16 = 0.33$
+
+**Q2:** Variance decreases. More training data makes $\hat{f}$ more stable across samples.
+
+**Q3:** Bias² increases. A simpler model cannot approximate $f$ as closely.
+
+**Q4:** $0.16 / 0.33 \approx 0.485$ — nearly half the test error is irreducible.
+:::
+
+---
+
+# Why-Questions
+
+::: {.callout-caution collapse="true"}
+## Q: "If I average many complex models, does that help?"
+
+Yes — this is the idea behind **ensemble methods** (Random Forests, Boosting). Averaging reduces variance without increasing bias much. A single poly(12) model has high variance. The average of 500 independently trained poly(12) models has nearly zero variance (the averages converge to $\mathbb{E}[\hat{f}]$). Bagging exploits exactly this property.
+:::
+
+::: {.callout-caution collapse="true"}
+## Q: "My training error is 0.01. Is my model good?"
+
+Training error alone tells you almost nothing. You need the **test error** to know if the model generalises. A training error of 0.01 is consistent with either: (a) a great model that approximates $f$ well, or (b) severe overfitting where the model memorised the training data. Only the test error distinguishes these.
+:::
+
+::: {.callout-note}
+## Further reading
+- Hastie, Tibshirani & Friedman (2009). *The Elements of Statistical Learning*. Springer. — Chapter 7 (Figure 7.1 is on p. 224)
+- James et al. (2021). *An Introduction to Statistical Learning*. Springer. — Chapter 2.2
+:::

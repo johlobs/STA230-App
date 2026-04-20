@@ -1,0 +1,153 @@
+---
+title: "F3 — Training vs Test Error"
+engine: knitr
+---
+
+```{=html}
+<script>document.body.classList.add("foundations");</script>
+```
+
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+set.seed(42)
+f_true <- function(x) sin(pi * x)
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+set.seed(42)
+f_true <- function(x) sin(pi * x)
+```
+
+# Concept: Why Training Error is Optimistic
+
+## Optimism of training error
+
+When we fit $\hat{f}$ on training data and then evaluate on the **same** data, the estimate is **optimistically biased**. The model has already adapted to the specific noise in the training set.
+
+The expected optimism is:
+
+$$\text{Optimism} = \mathbb{E}[\text{Test MSE}] - \mathbb{E}[\text{Train MSE}] = \frac{2}{n} \sum_{i=1}^n \text{Cov}(\hat{y}_i, y_i)$$
+
+For OLS with $p$ predictors: $\text{Optimism} = 2p\sigma^2 / n$. This is why AIC and Mallow's $C_p$ add a penalty of $2p\hat\sigma^2 / n$ to the training RSS.
+
+## Train/test split as the direct approach
+
+The simplest approach: split data once into training and test sets (e.g., 70/30). Fit on training, evaluate on test.
+
+**Advantage:** Simple, unbiased estimate of test error.
+
+**Disadvantage:** Wastes data; test MSE estimate has high variance (depends on which observations ended up in the test set).
+
+Cross-validation (F5) improves on this by reusing all data.
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="You fit a linear model with p=10 predictors on n=50 training observations. The training MSE is 4.2. Approximately what is the optimism (expected gap to test MSE)?">
+  <div class="q-opt" data-correct="false">0.42</div>
+  <div class="q-opt" data-correct="false">4.2</div>
+  <div class="q-opt" data-correct="true">Cannot be computed without knowing σ²; the formula is 2pσ²/n</div>
+  <div class="q-opt" data-correct="false">The optimism is always zero for OLS</div>
+  <div class="q-exp">The optimism formula for OLS is 2pσ²/n. With σ² unknown, we must estimate it. If σ̂² ≈ 4.2 (MSE ≈ variance), then optimism ≈ 2·10·4.2/50 = 1.68 — a 40% underestimate of true test error. The key insight: more predictors → more optimism → training MSE more misleading.</div>
+</div>
+
+<div class="sta230-quiz" data-question="You randomly split your dataset 70/30 and get a test MSE of 12.3. You repeat the split with a different random seed and get 9.1. What is the main problem demonstrated here?">
+  <div class="q-opt" data-correct="false">The model is overfit</div>
+  <div class="q-opt" data-correct="false">The training set is too large</div>
+  <div class="q-opt" data-correct="true">High variance of the test MSE estimate due to a single random split</div>
+  <div class="q-opt" data-correct="false">The true test error is undefined</div>
+  <div class="q-exp">A single train/test split gives an unbiased but noisy estimate of the true test error. The variance of the estimate depends on which observations happened to be in the test set. Cross-validation averages over many splits, reducing this variance substantially.</div>
+</div>
+```
+
+---
+
+# Worked Example
+
+```{r}
+#| label: train-test-optimism
+set.seed(42)
+n <- 100
+x <- sort(runif(n, 0, 1))
+y <- f_true(x) + rnorm(n, 0, 0.4)
+
+# Fit models of increasing degrees and compute both train and test error
+n_test <- 500
+x_te <- seq(0, 1, length.out=n_test)
+y_te <- f_true(x_te) + rnorm(n_test, 0, 0.4)
+
+degrees <- 1:12
+errors <- lapply(degrees, function(d) {
+  fit <- lm(y ~ poly(x, d))
+  xp_test <- poly(x_te, d, coefs=attr(poly(x, d), "coefs"))
+  data.frame(
+    degree = d,
+    train  = mean(residuals(fit)^2),
+    test   = mean((y_te - cbind(1, xp_test) %*% coef(fit))^2)
+  )
+})
+err_df <- do.call(rbind, errors)
+
+ggplot(err_df, aes(x=degree)) +
+  geom_line(aes(y=train), colour="#2980b9", linewidth=1.3) +
+  geom_point(aes(y=train), colour="#2980b9", size=2.5) +
+  geom_line(aes(y=test),  colour="#e74c3c", linewidth=1.3) +
+  geom_point(aes(y=test),  colour="#e74c3c", size=2.5) +
+  geom_hline(yintercept=0.16, linetype="dashed", colour="#888") +
+  scale_x_continuous(breaks=degrees) +
+  labs(title="Training vs test error on a single dataset",
+       subtitle="Blue = training  |  Red = test  |  Dashed = σ² = 0.16",
+       x="Polynomial degree", y="MSE") +
+  theme_minimal()
+```
+
+---
+
+# Guided Practice
+
+::: {.webr-loading-note}
+**R is loading in the background** — exercises below will be interactive once ready.
+:::
+
+```{webr-r}
+#| label: guided-split
+set.seed(42)
+n <- 200
+x <- sort(runif(n, 0, 1))
+y <- f_true(x) + rnorm(n, 0, 0.4)
+
+# TASK 1: Split 70/30 and compute test MSE for poly(1), poly(3), poly(8)
+train_idx <- sample(n, 140)
+train_dat <- data.frame(x=x[train_idx], y=y[train_idx])
+test_dat  <- data.frame(x=x[-train_idx], y=y[-train_idx])
+
+for (d in c(1, 3, 8)) {
+  fit <- lm(y ~ poly(x, d), data=train_dat)
+  xp <- poly(test_dat$x, d, coefs=attr(poly(train_dat$x, d), "coefs"))
+  test_mse <- mean((test_dat$y - cbind(1, xp) %*% coef(fit))^2)
+  cat(sprintf("poly(%d) — Test MSE: %.4f\n", d, test_mse))
+}
+
+# TASK 2: Repeat with seed=123 and seed=456 — how much does test MSE vary?
+```
+
+::: {.callout-tip collapse="true"}
+## Hints
+- Change `set.seed(42)` to `set.seed(123)` and `set.seed(456)` and re-run
+- Record the test MSE for poly(3) across the three seeds — note the variability
+- This variability is exactly what cross-validation reduces
+:::
+
+::: {.callout-note}
+## Further reading
+James et al. (2021). *An Introduction to Statistical Learning*. — Chapter 5.1
+:::

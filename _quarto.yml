@@ -1,0 +1,71 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "STA230 — Statistical Learning"
+  page-footer: "STA230 · Göteborg University · Built with Quarto + WebR"
+  page-navigation: true
+  navbar:
+    left:
+      - text: "Home"
+        href: index.qmd
+  sidebar:
+    style: "docked"
+    search: true
+    contents:
+      - section: "Foundations"
+        contents:
+          - foundations/01-what-is-statistical-learning.qmd
+          - foundations/02-bias-variance-tradeoff.qmd
+          - foundations/03-training-vs-test-error.qmd
+          - foundations/04-resampling-overview.qmd
+          - foundations/05-cross-validation.qmd
+      - section: "Block 1: Regression"
+        contents:
+          - regression/01-ols-review.qmd
+          - regression/02-variable-selection.qmd
+          - regression/03-ridge-regression.qmd
+          - regression/04-lasso.qmd
+          - regression/05-model-comparison.qmd
+      - section: "Block 2: Classification"
+        contents:
+          - classification/01-logistic-regression.qmd
+          - classification/02-lda-knn.qmd
+          - classification/03-decision-trees.qmd
+          - classification/04-random-forests.qmd
+          - classification/05-boosting-xgboost.qmd
+          - classification/06-roc-auc.qmd
+      - section: "Block 3: Unsupervised"
+        contents:
+          - unsupervised/01-pca.qmd
+          - unsupervised/02-clustering-kmeans.qmd
+          - unsupervised/03-hierarchical-clustering.qmd
+
+format:
+  html:
+    theme: flatly
+    css: custom.css
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    self-contained: false
+    include-after-body:
+      - _progress.html
+      - _quiz.html
+
+engine: knitr
+
+filters:
+  - webr
+
+webr:
+  packages:
+    - ggplot2
+    - dplyr
+    - tidyr
+    - glmnet
+    - Matrix
+    - MASS
+    - pROC
+    - class

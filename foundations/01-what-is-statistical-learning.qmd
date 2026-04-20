@@ -1,0 +1,247 @@
+---
+title: "F1 — What is Statistical Learning?"
+engine: knitr
+---
+
+```{=html}
+<script>document.body.classList.add("foundations");</script>
+```
+
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+set.seed(42)
+n <- 80
+x <- sort(runif(n, 0, 10))
+f_true <- function(x) 2 + 0.5*x + 0.3*sin(2*x)
+y <- f_true(x) + rnorm(n, 0, 0.9)
+dat <- data.frame(x = x, y = y)
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+set.seed(42)
+n <- 80
+x <- sort(runif(n, 0, 10))
+f_true <- function(x) 2 + 0.5*x + 0.3*sin(2*x)
+y <- f_true(x) + rnorm(n, 0, 0.9)
+dat <- data.frame(x = x, y = y)
+```
+
+# Concept: The Learning Problem
+
+## The statistical learning framework
+
+We observe data $(x_1, y_1), \ldots, (x_n, y_n)$ and assume:
+
+$$Y = f(\mathbf{X}) + \varepsilon$$
+
+where $f$ is the **true unknown function** we want to estimate, and $\varepsilon$ is irreducible noise with $\mathbb{E}[\varepsilon] = 0$.
+
+Statistical learning is the task of estimating $\hat{f}$ from data, so that:
+
+$$\hat{Y} = \hat{f}(\mathbf{X})$$
+
+gives useful predictions for new observations.
+
+## Two goals: inference vs prediction
+
+| Goal | Question | Interpretability needed? |
+|------|----------|--------------------------|
+| **Inference** | How does $X_j$ affect $Y$? | Yes — coefficient meaning matters |
+| **Prediction** | What is $\hat{Y}$ for new $X$? | No — accuracy is the criterion |
+
+In STA230, we move toward **prediction**: we evaluate models by how well they perform on *unseen* data, not how well they fit the data they were trained on.
+
+## Supervised vs unsupervised
+
+- **Supervised**: we have both $\mathbf{X}$ and $Y$. Regression (continuous $Y$) or classification (categorical $Y$).
+- **Unsupervised**: no $Y$. We look for structure in $\mathbf{X}$ alone — clusters, principal components.
+
+The course covers all three: supervised regression (Block 1), supervised classification (Block 2), unsupervised methods (Block 3).
+
+## The irreducible error
+
+No matter how good $\hat{f}$ is, we cannot reduce the prediction error below:
+
+$$\text{Var}(\varepsilon) = \sigma^2_\varepsilon$$
+
+This is the **irreducible error** — noise inherent in the data generating process. The reducible part is $\mathbb{E}[(f(\mathbf{X}) - \hat{f}(\mathbf{X}))^2]$, which we *can* minimise by choosing $\hat{f}$ well.
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="We observe data and fit ŷ = f̂(x). What is the 'irreducible error'?">
+  <div class="q-opt" data-correct="false">The error caused by choosing the wrong model class</div>
+  <div class="q-opt" data-correct="true">The variance of ε — noise in Y that cannot be removed even with a perfect f̂</div>
+  <div class="q-opt" data-correct="false">The difference between training error and test error</div>
+  <div class="q-opt" data-correct="false">The error from not having enough training data</div>
+  <div class="q-exp">The model is Y = f(X) + ε. Even if we recover f exactly (f̂ = f), our predictions still have error Var(ε). This cannot be reduced — it reflects genuine randomness in the outcome. The reducible error E[(f(X) − f̂(X))²] is what better models, more data, or better features can address.</div>
+</div>
+
+<div class="sta230-quiz" data-question="When is interpretability of f̂ most critical?">
+  <div class="q-opt" data-correct="false">When we want to minimise test MSE on future data</div>
+  <div class="q-opt" data-correct="true">When the goal is inference — understanding how predictors affect the outcome</div>
+  <div class="q-opt" data-correct="false">When n is very large relative to p</div>
+  <div class="q-opt" data-correct="false">When we use cross-validation for model selection</div>
+  <div class="q-exp">If the goal is prediction, a black-box model with low test error is fine. If the goal is inference — "does X₂ affect Y after adjusting for X₁?" — we need interpretable models (linear regression, LASSO) where coefficients have clear meaning. In clinical or policy applications, inference often matters as much as prediction accuracy.</div>
+</div>
+
+<div class="sta230-quiz" data-question="What distinguishes supervised from unsupervised learning?">
+  <div class="q-opt" data-correct="false">Supervised learning uses all available predictors; unsupervised uses only a subset</div>
+  <div class="q-opt" data-correct="false">Supervised methods always require more data</div>
+  <div class="q-opt" data-correct="true">Supervised learning has a response variable Y; unsupervised only has X</div>
+  <div class="q-opt" data-correct="false">Unsupervised methods are always simpler than supervised ones</div>
+  <div class="q-exp">In supervised learning we use (X, Y) pairs to learn f. In unsupervised learning there is no Y — we search for structure in X alone (clusters, latent dimensions). Unsupervised is harder to evaluate because there is no ground truth to compare predictions against.</div>
+</div>
+```
+
+---
+
+# Worked Example
+
+```{r}
+#| label: true-vs-estimated
+# The true f (we know it because we simulated the data)
+# In real life f is unknown — we only see the noisy Y
+x_grid <- seq(0, 10, length.out=200)
+f_vals <- f_true(x_grid)
+
+ggplot(dat, aes(x, y)) +
+  geom_point(alpha=0.5, size=1.8, colour="#555") +
+  geom_line(data=data.frame(x=x_grid, y=f_vals),
+            aes(x, y), colour="#e74c3c", linewidth=1.2) +
+  labs(title="Observed data (grey) and true f (red)",
+       subtitle="We only see the noisy points — f is what we try to estimate",
+       x="X", y="Y") +
+  theme_minimal()
+```
+
+```{r}
+#| label: three-estimates
+# Three estimates with different complexity
+fit_linear <- lm(y ~ x, data=dat)
+fit_poly5  <- lm(y ~ poly(x, 5), data=dat)
+fit_poly15 <- lm(y ~ poly(x, 15), data=dat)
+
+preds <- data.frame(
+  x     = x_grid,
+  true  = f_vals,
+  linear = predict(fit_linear, newdata=data.frame(x=x_grid)),
+  poly5  = predict(fit_poly5,  newdata=data.frame(x=x_grid)),
+  poly15 = predict(fit_poly15, newdata=data.frame(x=x_grid))
+)
+
+ggplot(dat, aes(x, y)) +
+  geom_point(alpha=0.3, size=1.5, colour="#999") +
+  geom_line(data=preds, aes(x, true),   colour="#e74c3c", linewidth=1.2, linetype="dashed") +
+  geom_line(data=preds, aes(x, linear), colour="#2980b9", linewidth=1)  +
+  geom_line(data=preds, aes(x, poly5),  colour="#27ae60", linewidth=1)  +
+  geom_line(data=preds, aes(x, poly15), colour="#8e44ad", linewidth=1)  +
+  labs(title="Three estimates of f",
+       subtitle="Red dashed = true f  |  Blue = linear  |  Green = poly(5)  |  Purple = poly(15)",
+       x="X", y="Y") +
+  theme_minimal()
+```
+
+---
+
+# Guided Practice
+
+::: {.webr-loading-note}
+**R is loading in the background** — the exercises below will be interactive once the status bar disappears.
+:::
+
+```{webr-r}
+#| label: guided
+# TASK 1: Compute training MSE for each of the three estimates
+# Hint: mean((y - fitted(model))^2)
+fit_l  <- lm(y ~ x, data=dat)
+fit_p5 <- lm(y ~ poly(x, 5), data=dat)
+fit_p15 <- lm(y ~ poly(x, 15), data=dat)
+
+mse_train <- function(m) mean(residuals(m)^2)
+cat("Training MSE — linear:  ", round(mse_train(fit_l),  4), "\n")
+cat("Training MSE — poly(5): ", round(mse_train(fit_p5), 4), "\n")
+cat("Training MSE — poly(15):", round(mse_train(fit_p15), 4), "\n")
+
+# TASK 2: Generate 200 new test observations from the same true f
+# and compute test MSE for each model
+set.seed(99)
+x_test <- sort(runif(200, 0, 10))
+y_test <- f_true(x_test) + rnorm(200, 0, 0.9)
+test_dat <- data.frame(x = x_test)
+
+mse_test <- function(m) mean((y_test - predict(m, newdata=test_dat))^2)
+cat("\nTest MSE — linear:  ", round(mse_test(fit_l),  4), "\n")
+cat("Test MSE — poly(5): ", round(mse_test(fit_p5), 4), "\n")
+cat("Test MSE — poly(15):", round(mse_test(fit_p15), 4), "\n")
+
+# TASK 3: Which model has the lowest training MSE?
+#         Which model has the lowest test MSE?
+#         What does this tell you?
+```
+
+::: {.callout-tip collapse="true"}
+## Hints
+- `mean((y_test - predict(fit_l, newdata=data.frame(x=x_test)))^2)` for test MSE
+- The model with the lowest *training* MSE is not necessarily the best model
+- This is the core tension of statistical learning — which the next section formalises
+:::
+
+---
+
+# Retrieval Challenge
+
+```{webr-r}
+#| label: challenge
+# Q1: What is the irreducible error in this simulation?
+# The true noise sd was 0.9, so σ² = ?
+cat("Irreducible error (σ²):", 0.9^2, "\n")
+
+# Q2: Can any model achieve a test MSE below σ²? Why or why not?
+# Write your answer as a comment below:
+# YOUR ANSWER:
+
+# Q3: Fit a poly(20) model and compute its training and test MSE.
+# Is it better or worse than poly(15)?
+fit_p20 <- lm(y ~ poly(x, 20), data=dat)
+cat("\nTraining MSE poly(20):", round(mean(residuals(fit_p20)^2), 4), "\n")
+cat("Test MSE poly(20):    ", round(mean((y_test - predict(fit_p20, newdata=data.frame(x=x_test)))^2), 4), "\n")
+```
+
+::: {.callout-note collapse="true"}
+## Model answers
+**Q1:** $\sigma^2 = 0.9^2 = 0.81$
+
+**Q2:** No. The expected test MSE for any estimator is at least $\sigma^2 = \text{Var}(\varepsilon)$. Perfect knowledge of $f$ cannot remove the noise in $Y$.
+
+**Q3:** poly(20) will have lower *training* MSE than poly(15) — more flexibility always reduces training error. But test MSE will likely be higher — the model overfits the training noise.
+:::
+
+---
+
+# Why-Questions
+
+::: {.callout-caution collapse="true"}
+## Q: "We evaluate models on test data. What counts as 'test data'?"
+
+Test data is any data that was **not used to fit the model**. This includes:
+- A held-out portion of your dataset (train/test split)
+- Future real observations
+- Data from a different study (external validation)
+
+The key requirement: the model never saw this data during training. If you use test data to make model choices (e.g., selecting which polynomial degree is best), that data is no longer a clean test set — it becomes part of your model selection process.
+:::
+
+::: {.callout-note}
+## Further reading
+James et al. (2021). *An Introduction to Statistical Learning*. Springer. — Chapter 2.
+:::

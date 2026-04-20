@@ -1,0 +1,10 @@
+---
+title: "R1 — OLS Review & Diagnostics"
+engine: knitr
+---
+
+```{=html}
+<script>document.body.classList.add("regression");</script>
+```
+
+*Coming soon — Block 1: Regression*

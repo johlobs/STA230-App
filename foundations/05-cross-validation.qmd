@@ -1,0 +1,161 @@
+---
+title: "F5 — Cross-Validation in Practice"
+engine: knitr
+---
+
+```{=html}
+<script>document.body.classList.add("foundations");</script>
+```
+
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(glmnet)
+set.seed(42)
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(glmnet)
+set.seed(42)
+```
+
+# Concept: Using CV for Model Selection
+
+## The one-standard-error rule
+
+When selecting the best model via CV, the **minimum CV error** may not be the best choice. The **1-SE rule** selects the simplest model whose CV error is within one standard error of the minimum.
+
+$$d^* = \min \{d : \text{CV}(d) \leq \text{CV}(d_{\min}) + \text{SE}(d_{\min})\}$$
+
+This guards against selecting an unnecessarily complex model when a simpler one performs nearly as well.
+
+## CV in glmnet: choosing λ
+
+For ridge and LASSO regression, `cv.glmnet()` automates k-fold CV over a grid of $\lambda$ values and returns:
+
+- `lambda.min`: the $\lambda$ minimising CV error
+- `lambda.1se`: the largest $\lambda$ within 1 SE of the minimum (more regularisation, simpler model)
+
+In practice, `lambda.1se` is often preferred for parsimony.
+
+## Pitfalls
+
+1. **Information leakage**: never standardise predictors on all data before CV — standardise inside each fold
+2. **Nested CV**: if you select both the model class *and* its hyperparameters, you need outer CV for honest evaluation
+3. **Classification**: use stratified folds to preserve class proportions across folds
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="The 1-SE rule selects a simpler model than the one minimising CV error. Why might this be preferred?">
+  <div class="q-opt" data-correct="false">It always gives lower test MSE</div>
+  <div class="q-opt" data-correct="true">When CV errors differ by less than one SE, they are statistically indistinguishable — preferring the simpler model avoids unnecessary complexity</div>
+  <div class="q-opt" data-correct="false">It corrects for optimism in the CV estimate</div>
+  <div class="q-opt" data-correct="false">It is required by glmnet and cannot be disabled</div>
+  <div class="q-exp">CV error estimates have uncertainty (measured by the SE across folds). If two models' CV errors are within 1 SE of each other, we cannot distinguish them statistically. The 1-SE rule then picks the simpler one — Occam's razor applied to model selection. This is often more robust when deployed on new data.</div>
+</div>
+
+<div class="sta240-quiz" data-question="You run cv.glmnet() for LASSO and see lambda.min = 0.01, lambda.1se = 0.08. What does this tell you?">
+  <div class="q-opt" data-correct="false">The minimum CV error occurs at lambda = 0.08</div>
+  <div class="q-opt" data-correct="true">The most regularised model within 1 SE of the best uses lambda = 0.08 — it's sparser than the optimal-MSE model</div>
+  <div class="q-opt" data-correct="false">The model at lambda = 0.01 has higher test error than at 0.08</div>
+  <div class="q-opt" data-correct="false">lambda.1se is always larger than lambda.min by definition of LASSO</div>
+  <div class="q-exp">lambda.min = 0.01 minimises the cross-validated MSE. lambda.1se = 0.08 is the largest lambda whose CV MSE is within 1 SE of the minimum — meaning it produces a sparser (more zeros) but statistically comparable model. Higher lambda → more shrinkage → fewer non-zero coefficients in LASSO.</div>
+</div>
+```
+
+---
+
+# Worked Example: cv.glmnet on Hitters
+
+```{r}
+#| label: cv-lasso-hitters
+library(ISLR2)
+library(glmnet)
+
+data(Hitters)
+Hitters <- na.omit(Hitters)
+
+X <- model.matrix(Salary ~ ., data=Hitters)[, -1]
+y <- Hitters$Salary
+
+set.seed(42)
+cv_lasso <- cv.glmnet(X, y, alpha=1, nfolds=10)
+
+cat("lambda.min:", round(cv_lasso$lambda.min, 4), "\n")
+cat("lambda.1se:", round(cv_lasso$lambda.1se, 4), "\n")
+cat("\nNumber of non-zero coefficients:\n")
+cat("  at lambda.min:", sum(coef(cv_lasso, s="lambda.min") != 0) - 1, "\n")
+cat("  at lambda.1se:", sum(coef(cv_lasso, s="lambda.1se") != 0) - 1, "\n")
+
+plot(cv_lasso)
+```
+
+```{r}
+#| label: cv-ridge-hitters
+cv_ridge <- cv.glmnet(X, y, alpha=0, nfolds=10)
+cat("Ridge lambda.min:", round(cv_ridge$lambda.min, 4), "\n")
+cat("Ridge lambda.1se:", round(cv_ridge$lambda.1se, 4), "\n")
+
+# Compare LASSO vs Ridge test MSE
+cat("\nTest MSE (LASSO, lambda.min):",
+    round(min(cv_lasso$cvm), 2), "\n")
+cat("Test MSE (Ridge, lambda.min):",
+    round(min(cv_ridge$cvm), 2), "\n")
+```
+
+---
+
+# Guided Practice
+
+::: {.webr-loading-note}
+**R is loading** — exercises interactive once ready.
+:::
+
+```{webr-r}
+#| label: guided-cv-glmnet
+# TASK: Apply cv.glmnet (LASSO) to predict Salary from Hitters
+# and answer the questions below
+library(glmnet)
+
+# Simulated dataset with same structure (ISLR2 not available in WebR by default)
+set.seed(42)
+n <- 263; p <- 19
+X_sim <- matrix(rnorm(n*p), n, p)
+colnames(X_sim) <- paste0("X", 1:p)
+# True model: only X1, X3, X7 matter
+beta_true <- c(50, 0, 30, rep(0, 5), -20, rep(0, 10))
+y_sim <- 500 + X_sim %*% beta_true + rnorm(n, 0, 80)
+
+# TASK 1: Run 10-fold CV LASSO
+cv_fit <- cv.glmnet(X_sim, y_sim, alpha=1, nfolds=10)
+plot(cv_fit)
+
+# TASK 2: How many non-zero coefficients at lambda.min vs lambda.1se?
+cat("Non-zero at lambda.min:", sum(coef(cv_fit, s="lambda.min") != 0) - 1, "\n")
+cat("Non-zero at lambda.1se:", sum(coef(cv_fit, s="lambda.1se") != 0) - 1, "\n")
+
+# TASK 3: Which predictors are selected at lambda.1se?
+coef_1se <- coef(cv_fit, s="lambda.1se")
+selected <- rownames(coef_1se)[coef_1se[,1] != 0]
+cat("Selected at lambda.1se:", paste(selected[-1], collapse=", "), "\n")
+# Do they match the true model (X1, X3, X7)?
+```
+
+::: {.callout-tip collapse="true"}
+## Hints
+- `coef(cv_fit, s="lambda.1se")` returns a sparse matrix — use `!=0` to find non-zero entries
+- The true model has non-zero coefficients at X1 (β=50), X3 (β=30), X9 (β=−20)
+- Does LASSO recover them? Compare with lambda.min
+:::
+
+::: {.callout-note}
+## Further reading
+James et al. (2021). *An Introduction to Statistical Learning*. — Chapter 6.2 (LASSO + CV) and Chapter 5.1 (CV theory)
+:::
