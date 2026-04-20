@@ -1,5 +1,5 @@
 ---
-title: "R — Model Comparison"
+title: "R5 — Model Comparison & Workflow"
 engine: knitr
 ---
 
@@ -7,4 +7,234 @@ engine: knitr
 <script>document.body.classList.add("regression");</script>
 ```
 
-*Coming soon — Block 1: Regression*
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(glmnet)
+library(tidyr)
+nhanes <- readRDS(here::here("data/nhanes.rds"))
+nhanes_cc <- nhanes |> filter(!is.na(Diabetes), !is.na(Smoker))
+X <- model.matrix(SBP ~ Age + Sex + BMI + Waist + Cholesterol +
+                    factor(Diabetes) + factor(Smoker), data = nhanes_cc)[, -1]
+y <- nhanes_cc$SBP
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(glmnet)
+library(tidyr)
+nhanes <- readRDS("https://johlobs.github.io/STA230-App/data/nhanes.rds")
+nhanes_cc <- nhanes |> filter(!is.na(Diabetes), !is.na(Smoker))
+X <- model.matrix(SBP ~ Age + Sex + BMI + Waist + Cholesterol +
+                    factor(Diabetes) + factor(Smoker), data = nhanes_cc)[, -1]
+y <- nhanes_cc$SBP
+```
+
+# Concept: Putting It All Together
+
+## The complete regression workflow
+
+```
+1. Explore data          → distributions, missingness, outliers
+2. Pre-process           → log-transform skewed outcomes, standardise predictors
+3. Split data            → train (70%) / test (30%) — or use CV throughout
+4. Fit candidate models  → OLS, forward stepwise, ridge, LASSO
+5. Select model          → by CV RMSPE on training data only
+6. Evaluate              → test RMSPE on held-out test set (once, at the end)
+7. Report                → coefficients, CIs, test performance, clinical interpretation
+```
+
+::: {.callout-warning}
+## The golden rule
+The test set is used **exactly once** — at the end. If you look at the test set to make model choices, it is no longer a clean test set.
+:::
+
+## Which method to choose?
+
+| Situation | Recommended method |
+|-----------|-------------------|
+| $p$ small, inference goal | OLS with stepwise/AIC selection |
+| $p$ moderate, prediction goal | LASSO or elastic net |
+| $p$ large, many small effects | Ridge |
+| Correlated predictors | Ridge or elastic net |
+| Need sparse, interpretable model | LASSO |
+
+## Reporting test performance
+
+Report RMSPE (or MAE) on the test set with a confidence interval:
+
+$$\text{RMSPE} \pm 1.96 \times \frac{\text{SD of squared errors}}{\sqrt{n_{\text{test}}}}$$
+
+Never report only training performance. Always compare to a baseline (e.g., predicting the mean: $\text{RMSPE}_{\text{null}} = \text{SD}(Y)$).
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="You use the test set to compare OLS, ridge, and LASSO, then report the test RMSPE of the winner. What is wrong with this?">
+  <div class="q-opt" data-correct="false">Nothing — comparing methods on the test set is the correct approach</div>
+  <div class="q-opt" data-correct="true">The test set was used for model selection, so the reported RMSPE is optimistically biased</div>
+  <div class="q-opt" data-correct="false">You cannot compare different model classes on the same test set</div>
+  <div class="q-opt" data-correct="false">The test RMSPE is only valid if all models use the same lambda</div>
+  <div class="q-exp">If you pick the model with the lowest test RMSPE, the reported performance is optimistic — you effectively selected the model that happened to fit the test data best. This is a subtle form of overfitting. The fix: use cross-validation on training data for model selection, then report performance on a truly held-out test set that was never used during model building.</div>
+</div>
+
+<div class="sta230-quiz" data-question="The null model (predicting the mean for every observation) gives RMSPE = 18 mmHg. Your LASSO model gives RMSPE = 16 mmHg. How should you interpret this?">
+  <div class="q-opt" data-correct="false">LASSO is an excellent model — 16 < 18</div>
+  <div class="q-opt" data-correct="false">The model is useless since it doesn't predict perfectly</div>
+  <div class="q-opt" data-correct="true">LASSO reduces RMSPE by about 11% over the null — modest improvement, worth interpreting in clinical context</div>
+  <div class="q-opt" data-correct="false">The null model should never be used as a baseline for RMSPE</div>
+  <div class="q-exp">The null RMSPE (SD of Y) is the natural baseline — it's what you get by ignoring all predictors. Going from 18 to 16 mmHg (~11% reduction) is a meaningful but modest improvement. Whether it's clinically useful depends on the application. For individual patient risk prediction, 16 mmHg error may still be too imprecise. Always contextualise RMSPE against domain-specific requirements.</div>
+</div>
+```
+
+---
+
+# Worked Example: Full Comparison on NHANES
+
+```{r}
+#| label: full-comparison
+set.seed(42)
+tr_idx <- sample(nrow(nhanes_cc), round(0.7 * nrow(nhanes_cc)))
+X_tr <- X[tr_idx, ];  y_tr <- y[tr_idx]
+X_te <- X[-tr_idx, ]; y_te <- y[-tr_idx]
+
+# Null model baseline
+null_rmspe <- sqrt(mean((y_te - mean(y_tr))^2))
+
+# OLS
+ols <- lm(y_tr ~ X_tr)
+ols_rmspe <- sqrt(mean((y_te - cbind(1, X_te) %*% coef(ols))^2))
+
+# Forward stepwise (AIC) — refit on training data
+tr_df <- as.data.frame(cbind(SBP = y_tr, X_tr))
+fwd <- step(lm(SBP ~ 1, data=tr_df),
+            scope = list(upper = lm(SBP ~ ., data=tr_df)),
+            direction = "forward", trace = FALSE)
+te_df <- as.data.frame(cbind(SBP = y_te, X_te))
+fwd_rmspe <- sqrt(mean((y_te - predict(fwd, newdata=te_df))^2))
+
+# Ridge and LASSO via CV
+cv_ridge <- cv.glmnet(X_tr, y_tr, alpha = 0, nfolds = 10)
+cv_lasso <- cv.glmnet(X_tr, y_tr, alpha = 1, nfolds = 10)
+ridge_rmspe <- sqrt(mean((y_te - predict(cv_ridge, X_te, s="lambda.min"))^2))
+lasso_rmspe <- sqrt(mean((y_te - predict(cv_lasso, X_te, s="lambda.min"))^2))
+
+# Summary table
+results <- data.frame(
+  Method = c("Null (mean)", "OLS", "Forward (AIC)", "Ridge", "LASSO"),
+  Test_RMSPE = round(c(null_rmspe, ols_rmspe, fwd_rmspe, ridge_rmspe, lasso_rmspe), 3)
+)
+results$vs_Null <- round(100 * (1 - results$Test_RMSPE / null_rmspe), 1)
+names(results)[3] <- "% better than null"
+print(results)
+```
+
+```{r}
+#| label: comparison-plot
+#| fig-width: 8
+#| fig-height: 4
+ggplot(results, aes(x = reorder(Method, Test_RMSPE),
+                     y = Test_RMSPE, fill = Method == "Null (mean)")) +
+  geom_col(alpha = 0.85) +
+  geom_hline(yintercept = null_rmspe, linetype = "dashed", colour = "#888") +
+  geom_text(aes(label = round(Test_RMSPE, 2)), hjust = -0.2, size = 3.5) +
+  coord_flip() +
+  scale_fill_manual(values = c("TRUE" = "#bdc3c7", "FALSE" = "#2980b9"),
+                    guide = "none") +
+  labs(title = "Test RMSPE by method (NHANES → SBP, mmHg)",
+       subtitle = "Dashed = null model (predict mean). Lower is better.",
+       x = NULL, y = "Test RMSPE (mmHg)") +
+  theme_minimal()
+```
+
+---
+
+# Guided Practice: Full Workflow
+
+::: {.webr-loading-note}
+**R is loading in the background** — exercises below will be interactive once ready.
+:::
+
+```{webr-r}
+#| label: guided-workflow
+# Complete regression workflow on NHANES
+# STEP 1: Check the data
+cat("=== Data overview ===\n")
+cat("n =", nrow(nhanes_cc), "\n")
+cat("Outcome SBP: mean =", round(mean(y), 1), "SD =", round(sd(y), 1), "\n")
+cat("Null RMSPE (SD of SBP):", round(sd(y), 2), "mmHg\n\n")
+
+# STEP 2: 70/30 split
+set.seed(42)
+tr <- sample(nrow(nhanes_cc), round(0.7 * nrow(nhanes_cc)))
+te <- setdiff(seq_len(nrow(nhanes_cc)), tr)
+X_tr <- X[tr,]; y_tr <- y[tr]
+X_te <- X[te,]; y_te <- y[te]
+cat("Training set:", length(tr), "| Test set:", length(te), "\n")
+```
+
+```{webr-r}
+#| label: guided-select
+# STEP 3: Select model via CV on training data
+# (Never touch X_te / y_te until the final evaluation)
+set.seed(42)
+cv_lasso <- cv.glmnet(X_tr, y_tr, alpha = 1, nfolds = 10)
+cv_ridge <- cv.glmnet(X_tr, y_tr, alpha = 0, nfolds = 10)
+
+cat("LASSO CV RMSPE (lambda.min):", round(sqrt(min(cv_lasso$cvm)), 3), "\n")
+cat("Ridge CV RMSPE (lambda.min):", round(sqrt(min(cv_ridge$cvm)), 3), "\n")
+
+# Which model do you choose based on CV?
+```
+
+```{webr-r}
+#| label: guided-evaluate
+# STEP 4: Evaluate chosen model on test set (do this only once!)
+rmspe <- function(pred, ytrue) sqrt(mean((ytrue - pred)^2))
+
+cat("=== Final test set evaluation ===\n")
+cat("Null RMSPE:   ", round(rmspe(rep(mean(y_tr), length(y_te)), y_te), 3), "\n")
+cat("LASSO RMSPE:  ", round(rmspe(predict(cv_lasso, X_te, s="lambda.min"), y_te), 3), "\n")
+cat("Ridge RMSPE:  ", round(rmspe(predict(cv_ridge, X_te, s="lambda.min"), y_te), 3), "\n")
+
+# STEP 5: Interpret the selected model
+cat("\n=== LASSO coefficients at lambda.min ===\n")
+coef_final <- coef(cv_lasso, s = "lambda.min")
+print(round(coef_final, 4))
+```
+
+::: {.callout-tip collapse="true"}
+## Questions to answer
+1. Does regularisation (ridge or LASSO) outperform plain OLS on this dataset? Why or why not?
+2. Which predictors does LASSO select? Are they clinically plausible?
+3. How much better is the best model vs the null baseline (in % RMSPE reduction)?
+4. Is an RMSPE of ~16 mmHg clinically useful for individual SBP prediction?
+:::
+
+---
+
+# Why-Questions
+
+::: {.callout-caution collapse="true"}
+## Q: "Should I report OLS p-values after doing LASSO selection?"
+
+No — this is **selective inference**, and p-values are invalid after model selection. LASSO selected the variables partly based on the data, so performing OLS inference on the selected subset gives inflated Type I error. Options: (1) report only prediction performance from LASSO; (2) use a pre-specified confirmatory model for inference; (3) use methods designed for post-selection inference (e.g., the `selectiveInference` package).
+:::
+
+::: {.callout-caution collapse="true"}
+## Q: "My train and test RMSPE are nearly identical. Is that good?"
+
+It means the model generalises well — no overfitting. With n=3500 training and p=7, OLS already has low variance, so regularisation adds little. Large train-test gaps indicate overfitting; nearly equal performance indicates good generalisation.
+:::
+
+::: {.callout-note}
+## Further reading
+James et al. (2021). *An Introduction to Statistical Learning*. — Chapter 6 (full chapter)
+:::

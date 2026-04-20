@@ -7,4 +7,225 @@ engine: knitr
 <script>document.body.classList.add("regression");</script>
 ```
 
-*Coming soon — Block 1: Regression*
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+nhanes <- readRDS(here::here("data/nhanes.rds"))
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+nhanes <- readRDS("https://johlobs.github.io/STA230-App/data/nhanes.rds")
+```
+
+# Concept: OLS as the Baseline
+
+## The OLS estimator
+
+For $Y = \mathbf{X}\boldsymbol{\beta} + \boldsymbol{\varepsilon}$, OLS minimises the residual sum of squares:
+
+$$\hat{\boldsymbol{\beta}} = \arg\min_{\boldsymbol{\beta}} \|\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\|^2 = (\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{y}$$
+
+**Properties (when assumptions hold):**
+
+- **Unbiased**: $\mathbb{E}[\hat{\boldsymbol{\beta}}] = \boldsymbol{\beta}$
+- **BLUE**: Best Linear Unbiased Estimator (Gauss-Markov)
+- **Variance**: $\text{Var}(\hat{\boldsymbol{\beta}}) = \sigma^2 (\mathbf{X}^\top\mathbf{X})^{-1}$
+
+## When OLS struggles
+
+| Problem | Symptom | Consequence |
+|---------|---------|-------------|
+| $p \approx n$ | Many predictors, small sample | High variance, unstable $\hat{\beta}$ |
+| $p > n$ | More predictors than observations | $(\mathbf{X}^\top\mathbf{X})$ singular — OLS undefined |
+| Multicollinearity | Predictors correlated | Inflated SE, unreliable coefficients |
+| Irrelevant predictors | Noise variables included | Higher variance, worse prediction |
+
+## Assumptions and diagnostics
+
+| Plot | What to look for |
+|------|-----------------|
+| Residuals vs fitted | Random scatter (linearity + homoskedasticity) |
+| QQ-plot | Points on diagonal (normality) |
+| Scale-location | Flat line (constant variance) |
+| Residuals vs leverage | No high-leverage + high-residual outliers |
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="OLS is BLUE — Best Linear Unbiased Estimator. What does 'best' mean here?">
+  <div class="q-opt" data-correct="false">Lowest test MSE among all estimators</div>
+  <div class="q-opt" data-correct="true">Lowest variance among all linear unbiased estimators</div>
+  <div class="q-opt" data-correct="false">Lowest bias among all estimators</div>
+  <div class="q-opt" data-correct="false">Highest R² on training data</div>
+  <div class="q-exp">Gauss-Markov: among estimators of the form β̂ = Cy (linear in Y) that are unbiased (E[β̂] = β), OLS has minimum variance. But 'best' is restricted to this class. A biased estimator (Ridge, LASSO) can have lower MSE if the variance reduction outweighs the bias introduced — exactly the bias-variance tradeoff.</div>
+</div>
+
+<div class="sta230-quiz" data-question="You add 10 irrelevant noise predictors to an OLS model. What happens to training R² and test MSE?">
+  <div class="q-opt" data-correct="false">Both training R² and test MSE decrease</div>
+  <div class="q-opt" data-correct="false">Training R² decreases, test MSE increases</div>
+  <div class="q-opt" data-correct="true">Training R² increases (or stays the same), test MSE increases</div>
+  <div class="q-opt" data-correct="false">Both stay the same since the predictors are irrelevant</div>
+  <div class="q-exp">Adding any predictor (even pure noise) can only increase or maintain training R² — OLS finds a non-zero coefficient that fits the training noise. On test data those noise coefficients hurt. Training fit improves, generalisation worsens — the classic overfitting pattern.</div>
+</div>
+
+<div class="sta230-quiz" data-question="A residual vs fitted plot shows a U-shaped pattern. What assumption is violated?">
+  <div class="q-opt" data-correct="false">Normality of residuals</div>
+  <div class="q-opt" data-correct="false">Independence of observations</div>
+  <div class="q-opt" data-correct="true">Linearity — the true relationship is non-linear</div>
+  <div class="q-opt" data-correct="false">Homoskedasticity — variance changes with fitted values</div>
+  <div class="q-exp">A U-shape (systematic curve) in residuals vs fitted means the model consistently over- or underpredicts in certain ranges — a sign of non-linearity. A funnel shape (widening spread) would indicate heteroskedasticity instead. Both can appear together.</div>
+</div>
+```
+
+---
+
+# Worked Example: Predicting Systolic Blood Pressure (NHANES)
+
+The dataset is NHANES 2015–2016 (n = 5 005 adults). Outcome: mean systolic blood pressure (SBP, mmHg). Predictors: age, sex, BMI, waist circumference, total cholesterol, diabetes, smoking status.
+
+```{r}
+#| label: ols-summary
+fit <- lm(SBP ~ Age + Sex + BMI + Waist + Cholesterol + factor(Diabetes) + factor(Smoker),
+          data = nhanes)
+summary(fit)
+```
+
+```{r}
+#| label: ols-diagnostics
+#| fig-width: 10
+#| fig-height: 5
+par(mfrow = c(1, 2))
+plot(fit, which = 1, main = "Residuals vs Fitted")
+plot(fit, which = 2, main = "Normal Q-Q")
+par(mfrow = c(1, 1))
+```
+
+```{r}
+#| label: ols-train-test
+set.seed(42)
+train_idx <- sample(nrow(nhanes), round(0.7 * nrow(nhanes)))
+train <- nhanes[train_idx, ]
+test  <- nhanes[-train_idx, ]
+
+fit_tr <- lm(SBP ~ Age + Sex + BMI + Waist + Cholesterol + factor(Diabetes) + factor(Smoker),
+             data = train)
+
+rmspe_train <- sqrt(mean(residuals(fit_tr)^2))
+rmspe_test  <- sqrt(mean((test$SBP - predict(fit_tr, newdata = test))^2, na.rm = TRUE))
+
+cat("Training RMSPE:", round(rmspe_train, 2), "mmHg\n")
+cat("Test RMSPE:    ", round(rmspe_test,  2), "mmHg\n")
+```
+
+---
+
+# Guided Practice
+
+::: {.webr-loading-note}
+**R is loading in the background** — the exercises below will be interactive once the status bar disappears.
+:::
+
+```{webr-r}
+#| label: guided-explore
+# TASK 1: Explore the dataset
+cat("Dimensions:", nrow(nhanes), "x", ncol(nhanes), "\n")
+summary(nhanes[, c("SBP", "Age", "BMI", "Waist", "Cholesterol")])
+```
+
+```{webr-r}
+#| label: guided-ols
+# TASK 2: Fit OLS of SBP on age, sex, and BMI
+fit_small <- lm(SBP ~ Age + Sex + BMI, data = nhanes)
+summary(fit_small)
+
+# TASK 3: Add Waist, Cholesterol, Diabetes, Smoker — does R² improve much?
+fit_full <- lm(SBP ~ Age + Sex + BMI + Waist + Cholesterol +
+                 factor(Diabetes) + factor(Smoker), data = nhanes)
+
+cat("\nSmall model R²:", round(summary(fit_small)$r.squared, 4), "\n")
+cat("Full model R²: ", round(summary(fit_full)$r.squared, 4), "\n")
+```
+
+```{webr-r}
+#| label: guided-split
+# TASK 4: 70/30 train/test split — compare RMSPE for small vs full model
+set.seed(42)
+tr <- sample(nrow(nhanes), round(0.7 * nrow(nhanes)))
+te <- setdiff(seq_len(nrow(nhanes)), tr)
+
+fit_s <- lm(SBP ~ Age + Sex + BMI, data = nhanes[tr, ])
+fit_f <- lm(SBP ~ Age + Sex + BMI + Waist + Cholesterol +
+              factor(Diabetes) + factor(Smoker), data = nhanes[tr, ])
+
+rmspe <- function(m, newdat)
+  sqrt(mean((newdat$SBP - predict(m, newdata = newdat))^2, na.rm = TRUE))
+
+cat("Small model — Train RMSPE:", round(sqrt(mean(residuals(fit_s)^2)), 2),
+    " Test RMSPE:", round(rmspe(fit_s, nhanes[te, ]), 2), "\n")
+cat("Full model  — Train RMSPE:", round(sqrt(mean(residuals(fit_f)^2)), 2),
+    " Test RMSPE:", round(rmspe(fit_f, nhanes[te, ]), 2), "\n")
+```
+
+::: {.callout-tip collapse="true"}
+## What to look for
+- Does the full model have lower training RMSPE than the small model?
+- Does it also have lower *test* RMSPE? How large is the optimism gap?
+- Clinically: how precise are these predictions in mmHg? Is the model useful?
+:::
+
+---
+
+# Retrieval Challenge
+
+```{webr-r}
+#| label: challenge
+# Q1: Interpret the Age coefficient
+fit <- lm(SBP ~ Age + Sex + BMI + Waist + Cholesterol +
+            factor(Diabetes) + factor(Smoker), data = nhanes)
+coef_age <- coef(fit)["Age"]
+cat("Age coefficient:", round(coef_age, 3),
+    "mmHg per year (holding other predictors constant)\n")
+
+# Q2: Is BMI or Waist more strongly associated with SBP?
+# (Compare t-statistics, not raw coefficients — different scales!)
+s <- summary(fit)$coefficients
+cat("\nBMI t-stat:   ", round(s["BMI",   "t value"], 2), "\n")
+cat("Waist t-stat: ", round(s["Waist", "t value"], 2), "\n")
+cat("Note: BMI and Waist are correlated — multicollinearity may affect both\n")
+
+# Q3: Compute VIF manually for BMI
+xj <- nhanes$BMI
+others <- nhanes[, c("Age","Waist","Cholesterol")]
+others$Sex <- as.numeric(nhanes$Sex == "Male")
+r2_bmi <- summary(lm(xj ~ ., data = others))$r.squared
+cat("\nVIF for BMI:", round(1 / (1 - r2_bmi), 2), "\n")
+```
+
+---
+
+# Why-Questions
+
+::: {.callout-caution collapse="true"}
+## Q: "Both BMI and waist circumference are in the model. Is that OK?"
+
+Both measure adiposity and are strongly correlated — this is multicollinearity. Including both inflates their standard errors, making individual coefficients less reliable. Options: (1) include only one (waist is often preferred as it captures central adiposity better), (2) use PCA to create a composite, (3) use Ridge/LASSO which handle multicollinearity automatically. For prediction, multicollinearity is less of a problem than for inference.
+:::
+
+::: {.callout-caution collapse="true"}
+## Q: "My RMSPE is 17 mmHg. Is that a good model?"
+
+It depends on context. A clinically meaningful difference in SBP is typically 5–10 mmHg. An RMSPE of 17 mmHg means individual predictions are off by ~17 mmHg on average — likely too imprecise for individual-level clinical decisions. However, the model may still be useful for population-level inference about which factors are associated with SBP. Precision and interpretability are separate goals.
+:::
+
+::: {.callout-note}
+## Further reading
+James et al. (2021). *An Introduction to Statistical Learning*. — Chapter 3
+:::

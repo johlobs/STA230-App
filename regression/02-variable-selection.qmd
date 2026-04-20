@@ -1,5 +1,5 @@
 ---
-title: "R — Variable Selection"
+title: "R2 — Variable Selection"
 engine: knitr
 ---
 
@@ -7,4 +7,243 @@ engine: knitr
 <script>document.body.classList.add("regression");</script>
 ```
 
-*Coming soon — Block 1: Regression*
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+nhanes <- readRDS(here::here("data/nhanes.rds"))
+nhanes_cc <- nhanes |> filter(!is.na(Diabetes), !is.na(Smoker))
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+nhanes <- readRDS("https://johlobs.github.io/STA230-App/data/nhanes.rds")
+nhanes_cc <- nhanes |> filter(!is.na(Diabetes), !is.na(Smoker))
+```
+
+# Concept: Choosing Which Predictors to Include
+
+## Why not include everything?
+
+Adding predictors always reduces training error but increases variance. With $p$ predictors, OLS has $p+1$ parameters to estimate. When $p$ is large:
+
+- Variance of $\hat{\beta}$ increases
+- Test MSE may be higher than a model with fewer predictors
+- Interpretation becomes harder
+
+Variable selection finds the subset of predictors that minimises test error.
+
+## Best subset selection
+
+Fit all $2^p$ possible models, evaluate each by CV or an information criterion, pick the best. Exact but computationally infeasible for large $p$ — for $p=20$ there are over one million models.
+
+## Forward stepwise selection
+
+1. Start with the null model (intercept only)
+2. At each step, add the predictor that most improves fit
+3. Stop when adding more predictors no longer helps (by CV or AIC)
+
+Much faster than best subset ($O(p^2)$ models), but not guaranteed to find the globally best subset.
+
+## Backward stepwise selection
+
+Start with the full model, remove the least useful predictor at each step. Requires $n > p$ to fit the full model.
+
+## Criteria for stopping
+
+| Criterion | Formula | Penalises |
+|-----------|---------|-----------|
+| AIC | $-2\ell + 2p$ | Predictive accuracy |
+| BIC | $-2\ell + p\log(n)$ | Harder penalty, simpler models |
+| Adjusted R² | $1 - \frac{\text{RSS}/(n-p-1)}{\text{TSS}/(n-1)}$ | Extra parameters |
+| CV error | Estimated test MSE | Directly estimates generalisation |
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="Forward stepwise selection adds predictors one at a time. What is the main limitation compared to best subset selection?">
+  <div class="q-opt" data-correct="false">It is slower than best subset selection</div>
+  <div class="q-opt" data-correct="true">It is greedy — it cannot undo earlier choices, so it may miss the globally optimal subset</div>
+  <div class="q-opt" data-correct="false">It requires n > p to work</div>
+  <div class="q-opt" data-correct="false">It always selects more predictors than best subset</div>
+  <div class="q-exp">Forward stepwise is greedy: each step picks the best predictor to add given what's already in the model. But a predictor that looks unhelpful early may become important once other predictors are added. Best subset avoids this by exhaustively trying all combinations, but is only feasible for small p (≤20 or so). In practice, LASSO is often preferred over both for large p.</div>
+</div>
+
+<div class="sta230-quiz" data-question="BIC penalises complexity more harshly than AIC for large n. Why?">
+  <div class="q-opt" data-correct="false">BIC uses the test set; AIC uses the training set</div>
+  <div class="q-opt" data-correct="true">BIC's penalty per parameter is log(n) vs 2 for AIC — for n > 8, log(n) > 2</div>
+  <div class="q-opt" data-correct="false">BIC corrects for the optimism of training R²; AIC does not</div>
+  <div class="q-opt" data-correct="false">AIC is only valid for linear models; BIC works for all models</div>
+  <div class="q-exp">AIC penalty = 2p, BIC penalty = p·log(n). For n=5000 (like NHANES), log(n)≈8.5 — BIC penalises each extra predictor more than 4 times as hard as AIC. This makes BIC select much sparser models. BIC is consistent (selects true model as n→∞ under certain conditions); AIC aims for predictive accuracy and may overfit slightly.</div>
+</div>
+
+<div class="sta230-quiz" data-question="You compare models using adjusted R². A model with p=6 has adj-R²=0.42 and a model with p=3 has adj-R²=0.41. Which do you prefer?">
+  <div class="q-opt" data-correct="false">The p=6 model — higher adjusted R² is always better</div>
+  <div class="q-opt" data-correct="false">The p=3 model — fewer predictors always wins</div>
+  <div class="q-opt" data-correct="true">The p=6 model is slightly better by this criterion, but the difference is small — verify with CV</div>
+  <div class="q-opt" data-correct="false">Cannot compare — adjusted R² requires the same number of predictors</div>
+  <div class="q-exp">Adjusted R² accounts for the number of predictors, so comparing across model sizes is valid. A difference of 0.01 is small and may not reflect a meaningful improvement in test performance. Cross-validation would give a more direct estimate of generalisation. In practice, use adjusted R² as a quick screening tool, CV for final model selection.</div>
+</div>
+```
+
+---
+
+# Worked Example
+
+```{r}
+#| label: forward-stepwise
+# Forward stepwise selection with AIC using step()
+fit_null <- lm(SBP ~ 1, data = nhanes_cc)
+fit_full <- lm(SBP ~ Age + Sex + BMI + Waist + Cholesterol +
+                 factor(Diabetes) + factor(Smoker), data = nhanes_cc)
+
+fit_forward <- step(fit_null,
+                    scope = list(lower = fit_null, upper = fit_full),
+                    direction = "forward", trace = FALSE)
+
+cat("Selected model formula:\n")
+print(formula(fit_forward))
+cat("\nAIC:", round(AIC(fit_forward), 2), "\n")
+cat("BIC:", round(BIC(fit_forward), 2), "\n")
+```
+
+```{r}
+#| label: backward-stepwise
+fit_backward <- step(fit_full, direction = "backward", trace = FALSE)
+cat("Backward stepwise selected formula:\n")
+print(formula(fit_backward))
+
+# Do forward and backward agree?
+cat("\nForward and backward select the same model:",
+    identical(sort(names(coef(fit_forward))),
+              sort(names(coef(fit_backward)))), "\n")
+```
+
+```{r}
+#| label: cv-model-comparison
+#| fig-width: 8
+#| fig-height: 4
+# Compare test RMSPE for models with 1–6 predictors (forward order)
+set.seed(42)
+k <- 10
+folds <- sample(rep(1:k, length.out = nrow(nhanes_cc)))
+
+predictor_sets <- list(
+  "Age only"              = "SBP ~ Age",
+  "Age + Sex"             = "SBP ~ Age + Sex",
+  "Age + Sex + BMI"       = "SBP ~ Age + Sex + BMI",
+  "Age + Sex + BMI + Waist" = "SBP ~ Age + Sex + BMI + Waist",
+  "Age + Sex + BMI + Waist + Chol" = "SBP ~ Age + Sex + BMI + Waist + Cholesterol",
+  "Full model"            = "SBP ~ Age + Sex + BMI + Waist + Cholesterol + factor(Diabetes) + factor(Smoker)"
+)
+
+cv_rmspe <- sapply(predictor_sets, function(fmla) {
+  sqrt(mean(sapply(1:k, function(j) {
+    tr <- nhanes_cc[folds != j, ]
+    te <- nhanes_cc[folds == j, ]
+    fit <- lm(as.formula(fmla), data = tr)
+    mean((te$SBP - predict(fit, newdata = te))^2, na.rm = TRUE)
+  })))
+})
+
+res <- data.frame(Model = factor(names(cv_rmspe), levels = names(cv_rmspe)),
+                  RMSPE = cv_rmspe)
+
+ggplot(res, aes(x = Model, y = RMSPE)) +
+  geom_col(fill = "#2980b9", alpha = 0.8) +
+  geom_text(aes(label = round(RMSPE, 2)), vjust = -0.4, size = 3.5) +
+  labs(title = "10-fold CV RMSPE by model size (NHANES, outcome = SBP)",
+       x = NULL, y = "RMSPE (mmHg)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))
+```
+
+---
+
+# Guided Practice
+
+::: {.webr-loading-note}
+**R is loading in the background** — exercises below will be interactive once ready.
+:::
+
+```{webr-r}
+#| label: guided-forward
+# TASK 1: Run forward stepwise selection using step()
+nhanes_cc <- nhanes |> filter(!is.na(Diabetes), !is.na(Smoker))
+
+fit_null <- lm(SBP ~ 1, data = nhanes_cc)
+fit_full <- lm(SBP ~ Age + Sex + BMI + Waist + Cholesterol +
+                 factor(Diabetes) + factor(Smoker), data = nhanes_cc)
+
+fit_fwd <- step(fit_null,
+                scope = list(lower = fit_null, upper = fit_full),
+                direction = "forward", trace = TRUE)  # trace=TRUE shows steps
+
+cat("\nFinal model:\n")
+print(formula(fit_fwd))
+```
+
+```{webr-r}
+#| label: guided-cv
+# TASK 2: Manually compare 3-predictor vs full model via 5-fold CV
+set.seed(42)
+nhanes_cc <- nhanes |> filter(!is.na(Diabetes), !is.na(Smoker))
+k <- 5
+folds <- sample(rep(1:k, length.out = nrow(nhanes_cc)))
+
+cv_rmspe <- function(fmla) {
+  sqrt(mean(sapply(1:k, function(j) {
+    tr <- nhanes_cc[folds != j, ]
+    te <- nhanes_cc[folds == j, ]
+    fit <- lm(as.formula(fmla), data = tr)
+    mean((te$SBP - predict(fit, newdata = te))^2, na.rm = TRUE)
+  })))
+}
+
+cat("3-predictor CV RMSPE:", round(cv_rmspe("SBP ~ Age + Sex + BMI"), 3), "mmHg\n")
+cat("Full model CV RMSPE: ", round(cv_rmspe("SBP ~ Age + Sex + BMI + Waist + Cholesterol + factor(Diabetes) + factor(Smoker)"), 3), "mmHg\n")
+
+# TASK 3: Which model would you choose? Does adding Waist and Cholesterol meaningfully help?
+```
+
+::: {.callout-tip collapse="true"}
+## Hints
+- Look at the AIC trace from `step()` — it shows which predictor was added at each step and the AIC change
+- A RMSPE difference of <0.5 mmHg between models is probably not clinically meaningful
+- The 1-SE rule: if the simpler model is within 1 SE of the best, prefer it
+:::
+
+---
+
+# Retrieval Challenge
+
+```{webr-r}
+#| label: challenge
+# Q1: How many models does best subset selection fit for p=7 predictors?
+cat("Best subset models for p=7:", 2^7, "\n")
+
+# Q2: Compute AIC and BIC manually for a fitted model
+nhanes_cc <- nhanes |> filter(!is.na(Diabetes), !is.na(Smoker))
+fit <- lm(SBP ~ Age + Sex + BMI + Waist, data = nhanes_cc)
+n <- nrow(nhanes_cc)
+p <- length(coef(fit))
+ll <- logLik(fit)
+
+cat("\nLog-likelihood:", round(as.numeric(ll), 2), "\n")
+cat("AIC (manual):", round(-2 * as.numeric(ll) + 2 * p, 2),
+    "| AIC():", round(AIC(fit), 2), "\n")
+cat("BIC (manual):", round(-2 * as.numeric(ll) + log(n) * p, 2),
+    "| BIC():", round(BIC(fit), 2), "\n")
+cat("BIC penalty per param:", round(log(n), 2), "(vs AIC: 2)\n")
+```
+
+::: {.callout-note}
+## Further reading
+James et al. (2021). *An Introduction to Statistical Learning*. — Chapter 6.1 (Subset selection)
+:::

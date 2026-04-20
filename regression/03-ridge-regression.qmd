@@ -1,5 +1,5 @@
 ---
-title: "R — Ridge Regression"
+title: "R3 — Ridge Regression"
 engine: knitr
 ---
 
@@ -7,4 +7,208 @@ engine: knitr
 <script>document.body.classList.add("regression");</script>
 ```
 
-*Coming soon — Block 1: Regression*
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(glmnet)
+nhanes <- readRDS(here::here("data/nhanes.rds"))
+nhanes_cc <- nhanes |> filter(!is.na(Diabetes), !is.na(Smoker))
+X <- model.matrix(SBP ~ Age + Sex + BMI + Waist + Cholesterol +
+                    factor(Diabetes) + factor(Smoker), data = nhanes_cc)[, -1]
+y <- nhanes_cc$SBP
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(glmnet)
+nhanes <- readRDS("https://johlobs.github.io/STA230-App/data/nhanes.rds")
+nhanes_cc <- nhanes |> filter(!is.na(Diabetes), !is.na(Smoker))
+X <- model.matrix(SBP ~ Age + Sex + BMI + Waist + Cholesterol +
+                    factor(Diabetes) + factor(Smoker), data = nhanes_cc)[, -1]
+y <- nhanes_cc$SBP
+```
+
+# Concept: Regularisation via L2 Penalty
+
+## The ridge objective
+
+Ridge regression adds an $L_2$ penalty to the OLS loss:
+
+$$\hat{\boldsymbol{\beta}}^{\text{ridge}} = \arg\min_{\boldsymbol{\beta}} \left\{ \sum_{i=1}^n (y_i - \mathbf{x}_i^\top\boldsymbol{\beta})^2 + \lambda \sum_{j=1}^p \beta_j^2 \right\}$$
+
+The penalty $\lambda \sum \beta_j^2$ shrinks all coefficients toward zero. The **tuning parameter** $\lambda \geq 0$ controls the amount of shrinkage:
+
+- $\lambda = 0$: OLS (no shrinkage)
+- $\lambda \to \infty$: all $\hat{\beta}_j \to 0$
+
+## Closed-form solution
+
+$$\hat{\boldsymbol{\beta}}^{\text{ridge}} = (\mathbf{X}^\top\mathbf{X} + \lambda\mathbf{I})^{-1}\mathbf{X}^\top\mathbf{y}$$
+
+Adding $\lambda\mathbf{I}$ makes the matrix invertible even when $\mathbf{X}^\top\mathbf{X}$ is singular or near-singular — this is why ridge works when $p \geq n$.
+
+## Bias-variance effect
+
+| $\lambda$ | Bias | Variance | Test MSE |
+|-----------|------|----------|---------|
+| 0 (OLS)   | 0    | High     | May be high |
+| Small     | Low  | Lower    | Often lower |
+| Large     | High | Very low | May be high |
+
+**Key insight:** Ridge introduces bias but reduces variance. The optimal $\lambda$ minimises test MSE — found via cross-validation.
+
+## Important: standardise predictors
+
+Ridge shrinks coefficients, but the amount of shrinkage depends on predictor scale. **Always standardise** predictors before applying ridge (and LASSO). `glmnet()` does this automatically by default.
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="Why does ridge regression shrink coefficients but never set them exactly to zero?">
+  <div class="q-opt" data-correct="false">Because the L2 penalty is not large enough to force coefficients to zero</div>
+  <div class="q-opt" data-correct="true">The L2 penalty (β²) has a gradient that never reaches zero except at β=0, so it continuously shrinks but doesn't force exact zeros</div>
+  <div class="q-opt" data-correct="false">Because ridge uses a smooth penalty that cannot produce sparse solutions</div>
+  <div class="q-opt" data-correct="false">Ridge sets small coefficients to zero but not large ones</div>
+  <div class="q-exp">The L2 penalty contributes a gradient of 2λβ_j to each coefficient. As β_j gets small, the gradient also gets small — so the optimum is at some small but non-zero value. In contrast, the L1 penalty (LASSO) has a constant subgradient of λ near zero, which forces the optimum to exactly zero for small enough coefficients. This is why LASSO performs variable selection and ridge does not.</div>
+</div>
+
+<div class="sta230-quiz" data-question="Ridge is preferred over LASSO when you believe...">
+  <div class="q-opt" data-correct="false">Only a few predictors truly affect the outcome</div>
+  <div class="q-opt" data-correct="true">Many predictors each have a small true effect</div>
+  <div class="q-opt" data-correct="false">Predictors are independent of each other</div>
+  <div class="q-opt" data-correct="false">You need an interpretable sparse solution</div>
+  <div class="q-exp">Ridge is best when the true signal is spread across many predictors — it shrinks all coefficients moderately. LASSO is best when only a few predictors truly matter — it zeros out the rest. In GWAS (genetic association studies), for example, many thousands of SNPs each have tiny effects — ridge is often preferred. For clinical risk scores, LASSO is preferred for sparsity.</div>
+</div>
+
+<div class="sta230-quiz" data-question="You fit ridge regression on unstandardised predictors where Age is in years (0–80) and Cholesterol is in mg/dL (100–300). What problem arises?">
+  <div class="q-opt" data-correct="false">Ridge cannot handle variables on different scales</div>
+  <div class="q-opt" data-correct="true">The penalty shrinks large-scale predictors more than small-scale ones, unfairly penalising Cholesterol more than Age</div>
+  <div class="q-opt" data-correct="false">The model will fail to converge</div>
+  <div class="q-opt" data-correct="false">No problem — ridge is scale-invariant</div>
+  <div class="q-exp">The L2 penalty is λΣβ_j². A predictor measured in large units (like Cholesterol in mg/dL) will have a small coefficient even for a strong association — so its coefficient gets penalised less. A predictor in small units has a large coefficient even for a weak effect — and gets penalised more. Standardising removes this scale dependence. glmnet() standardises by default.</div>
+</div>
+```
+
+---
+
+# Worked Example
+
+```{r}
+#| label: ridge-fit
+set.seed(42)
+# glmnet with alpha=0 is ridge
+# By default standardises predictors and fits over a lambda grid
+ridge_fit <- glmnet(X, y, alpha = 0)
+
+# Coefficient paths
+plot(ridge_fit, xvar = "lambda", label = TRUE,
+     main = "Ridge coefficient paths (NHANES → SBP)")
+```
+
+```{r}
+#| label: ridge-cv
+# 10-fold CV to find optimal lambda
+set.seed(42)
+cv_ridge <- cv.glmnet(X, y, alpha = 0, nfolds = 10)
+plot(cv_ridge)
+
+cat("lambda.min:", round(cv_ridge$lambda.min, 4), "\n")
+cat("lambda.1se:", round(cv_ridge$lambda.1se, 4), "\n")
+cat("\nCV RMSPE at lambda.min:", round(sqrt(min(cv_ridge$cvm)), 3), "mmHg\n")
+```
+
+```{r}
+#| label: ridge-vs-ols
+# Compare ridge vs OLS on a train/test split
+set.seed(42)
+tr_idx <- sample(nrow(nhanes_cc), round(0.7 * nrow(nhanes_cc)))
+X_tr <- X[tr_idx, ];   y_tr <- y[tr_idx]
+X_te <- X[-tr_idx, ];  y_te <- y[-tr_idx]
+
+ols_fit   <- lm(y_tr ~ X_tr)
+ridge_cv  <- cv.glmnet(X_tr, y_tr, alpha = 0, nfolds = 10)
+
+ols_rmspe   <- sqrt(mean((y_te - cbind(1, X_te) %*% coef(ols_fit))^2))
+ridge_rmspe <- sqrt(mean((y_te - predict(ridge_cv, newx = X_te, s = "lambda.min"))^2))
+
+cat("OLS test RMSPE:   ", round(ols_rmspe,   3), "mmHg\n")
+cat("Ridge test RMSPE: ", round(ridge_rmspe, 3), "mmHg\n")
+```
+
+---
+
+# Guided Practice
+
+::: {.webr-loading-note}
+**R is loading in the background** — exercises below will be interactive once ready.
+:::
+
+```{webr-r}
+#| label: guided-ridge-path
+# TASK 1: Fit ridge and inspect coefficient paths
+ridge_fit <- glmnet(X, y, alpha = 0)
+
+# How do coefficients change with lambda?
+# Pick a few lambda values and inspect coefficients
+lambdas <- c(0.1, 1, 10, 100, 1000)
+coef_mat <- sapply(lambdas, function(l)
+  as.vector(coef(ridge_fit, s = l)))
+rownames(coef_mat) <- rownames(coef(ridge_fit, s = 1))
+colnames(coef_mat) <- paste0("λ=", lambdas)
+round(coef_mat, 4)
+```
+
+```{webr-r}
+#| label: guided-ridge-cv
+# TASK 2: Run 10-fold CV and find optimal lambda
+set.seed(42)
+cv_ridge <- cv.glmnet(X, y, alpha = 0, nfolds = 10)
+
+cat("lambda.min:", round(cv_ridge$lambda.min, 4), "\n")
+cat("lambda.1se:", round(cv_ridge$lambda.1se, 4), "\n")
+cat("CV RMSPE at lambda.min:", round(sqrt(min(cv_ridge$cvm)), 3), "mmHg\n")
+
+# TASK 3: Extract and interpret the ridge coefficients at lambda.min
+coef_ridge <- coef(cv_ridge, s = "lambda.min")
+print(round(coef_ridge, 4))
+
+# Compare to OLS coefficients
+ols <- lm(y ~ X)
+cat("\nOLS coefficients:\n")
+print(round(coef(ols), 4))
+```
+
+::: {.callout-tip collapse="true"}
+## What to compare
+- Are the ridge coefficients larger or smaller than OLS?
+- Which predictor is shrunk the most? Does that make sense?
+- Does the ridge RMSPE meaningfully beat OLS here? (With n=4000+ and p=7, shrinkage may help little)
+:::
+
+---
+
+# Why-Questions
+
+::: {.callout-caution collapse="true"}
+## Q: "Ridge keeps all predictors. How is that useful for interpretation?"
+
+Ridge is primarily a **prediction** method, not an inference method. If interpretation matters, report OLS coefficients (with SE and p-values) from a carefully selected model. Use ridge when your goal is accurate prediction with many correlated predictors — for example, predicting future SBP from a panel of biomarkers. The stability of ridge coefficients under collinearity is a feature, not a bug, for prediction purposes.
+:::
+
+::: {.callout-caution collapse="true"}
+## Q: "Does it matter if I standardise before or inside glmnet?"
+
+`glmnet()` standardises internally by default (standardize=TRUE), fits on the standardised scale, then returns coefficients on the *original* scale. This means you can pass raw data and interpret coefficients directly. If you standardise manually first, set standardize=FALSE. Never standardise the outcome y for ridge/LASSO regression — only the predictors X.
+:::
+
+::: {.callout-note}
+## Further reading
+James et al. (2021). *An Introduction to Statistical Learning*. — Chapter 6.2
+:::
