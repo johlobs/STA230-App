@@ -10,6 +10,9 @@ website:
     left:
       - text: "Home"
         href: index.qmd
+      - text: "All courses"
+        href: "https://johlobs.github.io/"
+        target: "_blank"
   sidebar:
     style: "docked"
     search: true
