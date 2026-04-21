@@ -1,5 +1,5 @@
 ---
-title: "C — Lda Knn"
+title: "C2 — LDA & kNN"
 engine: knitr
 ---
 
@@ -7,4 +7,184 @@ engine: knitr
 <script>document.body.classList.add("classification");</script>
 ```
 
-*Coming soon — Block 2: Classification*
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(MASS)
+library(class)
+swp <- readRDS(here::here("data/swp.rds"))
+set.seed(42)
+tr <- sample(nrow(swp), round(0.7 * nrow(swp)))
+train <- swp[tr, ]; test <- swp[-tr, ]
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(MASS)
+library(class)
+swp <- readRDS("https://johlobs.github.io/STA230-App/data/swp.rds")
+set.seed(42)
+tr <- sample(nrow(swp), round(0.7 * nrow(swp)))
+train <- swp[tr, ]; test <- swp[-tr, ]
+```
+
+# Concept: Generative Classifiers and Distance Methods
+
+## Linear Discriminant Analysis (LDA)
+
+LDA models the class-conditional distributions $P(\mathbf{X} \mid Y=k)$ as multivariate Gaussians with the **same covariance matrix** $\boldsymbol{\Sigma}$. Via Bayes' theorem, this gives a **linear** decision boundary. QDA relaxes equal-covariance, giving a quadratic boundary but estimating more parameters.
+
+## k-Nearest Neighbours (kNN)
+
+kNN is non-parametric — no distributional assumption:
+
+1. For a new point $\mathbf{x}_0$, find the $k$ closest training points
+2. Assign the majority class among those neighbours
+
+Small $k$ = flexible, low bias, high variance. Large $k$ = smooth, high bias, low variance. Optimal $k$ found by cross-validation.
+
+| Method | Boundary | Assumption | Scale-sensitive? |
+|--------|----------|------------|-----------------|
+| Logistic | Linear | None | No |
+| LDA | Linear | Gaussian, equal Σ | No |
+| QDA | Quadratic | Gaussian, different Σ | No |
+| kNN | Non-linear | None | **Yes — must standardise** |
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="LDA assumes equal covariance matrices across classes. What happens if this is violated?">
+  <div class="q-opt" data-correct="false">LDA becomes equivalent to logistic regression</div>
+  <div class="q-opt" data-correct="false">LDA fails completely and cannot produce predictions</div>
+  <div class="q-opt" data-correct="true">The linear boundary is misspecified — QDA or a flexible method may perform better</div>
+  <div class="q-opt" data-correct="false">LDA automatically corrects by estimating separate covariance matrices</div>
+  <div class="q-exp">If classes have different covariance structures, the true Bayes boundary is quadratic, not linear. LDA's linear boundary will then be suboptimal. QDA estimates a separate Σ_k per class, giving a quadratic boundary. However, QDA has more parameters and needs more data. With limited data, LDA's lower variance may still outweigh the bias from the wrong boundary shape.</div>
+</div>
+
+<div class="sta230-quiz" data-question="You use kNN with k=1 on training data. What is the training error?">
+  <div class="q-opt" data-correct="true">Zero — each training point is its own nearest neighbour</div>
+  <div class="q-opt" data-correct="false">Equal to the Bayes error rate</div>
+  <div class="q-opt" data-correct="false">Equal to 1/n</div>
+  <div class="q-opt" data-correct="false">Undefined — kNN cannot be evaluated on training data</div>
+  <div class="q-exp">With k=1, every training point is its own nearest neighbour and is classified perfectly — training error is 0. This is extreme overfitting. Test error with k=1 is much higher. As k increases, the model smooths out and test error first falls then rises — the same U-shape as the bias-variance tradeoff.</div>
+</div>
+
+<div class="sta230-quiz" data-question="Why must predictors be standardised before applying kNN?">
+  <div class="q-opt" data-correct="false">kNN requires normally distributed predictors</div>
+  <div class="q-opt" data-correct="true">Euclidean distance is dominated by predictors with large scales — age (range ~50) would overwhelm a predictor with range ~5 even if the latter is more informative</div>
+  <div class="q-opt" data-correct="false">Standardisation speeds up the kNN algorithm</div>
+  <div class="q-opt" data-correct="false">kNN requires integer-valued distances</div>
+  <div class="q-exp">kNN uses Euclidean distance. If Age ranges 18–70 and JobControl ranges 85–120, a 1-unit difference in Age contributes more to distance than a 1-unit difference in JobControl — even if JobControl is more informative. Standardising (subtract mean, divide by SD) puts all predictors on equal footing and is essential before kNN.</div>
+</div>
+```
+
+---
+
+# Worked Example
+
+```{r}
+#| label: lda-fit
+lda_fit  <- lda(SWP ~ Age + CTW + JobDemands + JobControl + JobSupport + MentalWB,
+                data = train)
+lda_pred <- predict(lda_fit, newdata = test)
+cm_lda   <- table(Predicted = lda_pred$class, Actual = test$SWP)
+print(cm_lda)
+cat("\nTest accuracy:      ", round(mean(lda_pred$class == test$SWP)*100, 1), "%\n")
+cat("Sensitivity (SWP=0):", round(cm_lda[1,1] / sum(cm_lda[,1])*100, 1), "%\n")
+cat("Specificity (SWP=1):", round(cm_lda[2,2] / sum(cm_lda[,2])*100, 1), "%\n")
+```
+
+```{r}
+#| label: knn-k-selection
+#| fig-width: 8
+#| fig-height: 4
+pred_vars <- c("Age","CTW","JobDemands","JobControl","JobSupport","MentalWB")
+mu  <- colMeans(train[, pred_vars])
+sds <- apply(train[, pred_vars], 2, sd)
+X_tr <- scale(train[, pred_vars], center = mu, scale = sds)
+X_te <- scale(test[, pred_vars],  center = mu, scale = sds)
+
+# Use a subset for speed during rendering (n=7000 kNN is slow)
+set.seed(7)
+sub <- sample(nrow(X_tr), 1500)
+X_tr_s <- X_tr[sub, ]; y_tr_s <- train$SWP[sub]
+
+ks        <- c(1, 5, 10, 25, 50, 100, 200)
+test_err  <- sapply(ks, function(k) mean(knn(X_tr_s, X_te, cl = y_tr_s, k=k) != test$SWP))
+
+ggplot(data.frame(k = ks, error = test_err), aes(k, error)) +
+  geom_line(colour="#e74c3c", linewidth=1.2) +
+  geom_point(size=3, colour="#e74c3c") +
+  geom_vline(xintercept=ks[which.min(test_err)], linetype="dashed", colour="#888") +
+  scale_x_log10(breaks=ks) +
+  labs(title="kNN test error vs k (SWP dataset)",
+       subtitle=paste0("Optimal k = ", ks[which.min(test_err)]),
+       x="k (log scale)", y="Test error rate") +
+  theme_minimal()
+```
+
+```{r}
+#| label: method-comparison
+logit    <- glm(SWP ~ Age + CTW + JobDemands + JobControl + JobSupport + MentalWB,
+                data=train, family=binomial)
+k_best   <- ks[which.min(test_err)]
+knn_pred <- knn(X_tr_s, X_te, cl=y_tr_s, k=k_best)
+
+cat("Test accuracy:\n")
+cat("  Null (always SWP=1):    ", round(mean(test$SWP==1)*100,1), "%\n")
+cat("  Logistic regression:    ", round(mean(ifelse(predict(logit,test,type="response")>0.5,1,0)==test$SWP)*100,1), "%\n")
+cat("  LDA:                    ", round(mean(lda_pred$class==test$SWP)*100,1), "%\n")
+cat("  kNN (k=", k_best, "):          ", round(mean(knn_pred==test$SWP)*100,1), "%\n")
+```
+
+---
+
+# Guided Practice
+
+::: {.webr-loading-note}
+**R is loading in the background** — exercises below will be interactive once ready.
+:::
+
+```{webr-r}
+#| label: guided-lda
+lda_fit <- lda(SWP ~ Age + CTW + JobDemands + JobControl + JobSupport + MentalWB,
+               data = train)
+cat("Class priors:\n"); print(round(lda_fit$prior, 4))
+cat("\nClass means:\n");  print(round(lda_fit$means, 3))
+
+# Which predictor differs most between SWP=0 and SWP=1?
+diffs <- abs(lda_fit$means[2,] - lda_fit$means[1,])
+cat("\nMean difference |SWP=1 - SWP=0|:\n")
+print(round(sort(diffs, decreasing=TRUE), 3))
+```
+
+```{webr-r}
+#| label: guided-knn
+pred_vars <- c("Age","CTW","JobDemands","JobControl","JobSupport","MentalWB")
+mu  <- colMeans(train[, pred_vars])
+sds <- apply(train[, pred_vars], 2, sd)
+X_tr <- scale(train[, pred_vars], center=mu, scale=sds)
+X_te <- scale(test[, pred_vars],  center=mu, scale=sds)
+
+for (k in c(5, 50, 200)) {
+  pred <- knn(X_tr, X_te, cl=train$SWP, k=k)
+  cm   <- table(Predicted=pred, Actual=test$SWP)
+  sens <- if (nrow(cm)==2) cm[1,1]/sum(cm[,1]) else 0
+  cat(sprintf("k=%3d  Acc=%.1f%%  Sens(SWP=0)=%.1f%%\n",
+              k, mean(pred==test$SWP)*100, sens*100))
+}
+# TASK: Why does larger k hurt sensitivity for the minority class?
+```
+
+::: {.callout-note}
+## Further reading
+James et al. (2021). *An Introduction to Statistical Learning*. — Chapter 4.4 (LDA), Chapter 3.5 (kNN)
+:::
+

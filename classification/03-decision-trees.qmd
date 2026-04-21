@@ -1,5 +1,5 @@
 ---
-title: "C — Decision Trees"
+title: "C3 — Decision Trees (CART)"
 engine: knitr
 ---
 
@@ -7,4 +7,195 @@ engine: knitr
 <script>document.body.classList.add("classification");</script>
 ```
 
-*Coming soon — Block 2: Classification*
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(rpart)
+swp <- readRDS(here::here("data/swp.rds"))
+swp$SWP <- factor(swp$SWP)
+set.seed(42)
+tr <- sample(nrow(swp), round(0.7 * nrow(swp)))
+train <- swp[tr, ]; test <- swp[-tr, ]
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+swp <- readRDS("https://johlobs.github.io/STA230-App/data/swp.rds")
+swp$SWP <- factor(swp$SWP)
+set.seed(42)
+tr <- sample(nrow(swp), round(0.7 * nrow(swp)))
+train <- swp[tr, ]; test <- swp[-tr, ]
+```
+
+# Concept: Recursive Partitioning
+
+## How CART works
+
+A classification tree recursively splits the predictor space into rectangular regions. At each node, it finds the predictor $X_j$ and split point $s$ that minimises the **Gini impurity** in the resulting child nodes:
+
+$$G = \sum_{k} \hat{p}_{mk}(1 - \hat{p}_{mk})$$
+
+where $\hat{p}_{mk}$ is the proportion of class $k$ observations in region $m$. $G=0$ means a pure node (all one class); $G=0.5$ is maximally impure for a binary outcome.
+
+## Pruning to avoid overfitting
+
+A fully grown tree overfits — it memorises the training data. **Cost-complexity pruning** adds a penalty $\alpha \cdot |\text{leaves}|$ to the tree size. The optimal $\alpha$ is found by cross-validation.
+
+## Strengths and weaknesses
+
+| Strength | Weakness |
+|---------|----------|
+| Interpretable — easy to visualise | High variance — small data changes give different trees |
+| Handles mixed variable types naturally | Usually outperformed by ensemble methods |
+| Captures interactions automatically | Axis-aligned splits only |
+| No need to standardise | Prone to overfitting without pruning |
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="A node has 90 SWP=1 and 10 SWP=0 observations. What is its Gini impurity?">
+  <div class="q-opt" data-correct="false">0.90</div>
+  <div class="q-opt" data-correct="false">0.10</div>
+  <div class="q-opt" data-correct="true">0.18  (= 0.9×0.1 + 0.1×0.9)</div>
+  <div class="q-opt" data-correct="false">0.50</div>
+  <div class="q-exp">Gini = Σ p_k(1−p_k) = 0.9×0.1 + 0.1×0.9 = 0.18. A pure node (all one class) has G=0. A completely mixed node (50/50 binary) has G=0.5. The tree algorithm searches for splits that most reduce G — it prefers splits that create pure child nodes.</div>
+</div>
+
+<div class="sta230-quiz" data-question="Why do decision trees have high variance?">
+  <div class="q-opt" data-correct="false">They use too many predictors at each split</div>
+  <div class="q-opt" data-correct="true">Small changes in the training data can completely change the tree structure — early splits affect all downstream splits</div>
+  <div class="q-opt" data-correct="false">The Gini criterion is sensitive to outliers</div>
+  <div class="q-opt" data-correct="false">Pruning introduces bias that destabilises the tree</div>
+  <div class="q-exp">Trees are hierarchical: the first split affects all subsequent splits. If a slightly different training set causes a different top-level split, the entire tree changes. This makes trees unstable — high variance. Random forests fix this by averaging many trees grown on bootstrap samples, dramatically reducing variance while keeping the bias low.</div>
+</div>
+
+<div class="sta230-quiz" data-question="The cp (complexity parameter) in rpart controls pruning. What does a larger cp value do?">
+  <div class="q-opt" data-correct="false">Grows a deeper, more complex tree</div>
+  <div class="q-opt" data-correct="true">Prunes more aggressively — produces a smaller, simpler tree</div>
+  <div class="q-opt" data-correct="false">Changes the splitting criterion from Gini to entropy</div>
+  <div class="q-opt" data-correct="false">Increases the minimum number of observations required per leaf</div>
+  <div class="q-exp">cp is the minimum improvement in fit required to add a split. Higher cp → harder to improve enough → fewer splits → smaller tree. Setting cp=0 grows the full tree (maximum overfit). The optimal cp is found by CV — rpart's plotcp() shows cross-validated error vs cp, and you pick the cp at the minimum (or within 1 SE of it).</div>
+</div>
+```
+
+---
+
+# Worked Example
+
+```{r}
+#| label: tree-fit
+#| fig-width: 10
+#| fig-height: 6
+library(rpart)
+
+tree_full <- rpart(SWP ~ Age + Sex + Fulltime + CTW + JobDemands +
+                     JobControl + JobSupport + MentalWB + DemandCtrl,
+                   data = train, method = "class",
+                   control = rpart.control(cp = 0.001, minsplit = 20))
+
+printcp(tree_full)
+```
+
+```{r}
+#| label: tree-prune
+#| fig-width: 10
+#| fig-height: 6
+# Prune at optimal cp (1-SE rule)
+cp_opt <- tree_full$cptable[which.min(tree_full$cptable[,"xerror"]), "CP"]
+tree_pruned <- prune(tree_full, cp = cp_opt)
+
+plot(tree_pruned, uniform = TRUE, main = "Pruned CART tree (SWP dataset)")
+text(tree_pruned, use.n = TRUE, cex = 0.75)
+```
+
+```{r}
+#| label: tree-performance
+pred_class <- predict(tree_pruned, newdata = test, type = "class")
+cm <- table(Predicted = pred_class, Actual = test$SWP)
+print(cm)
+cat("\nTest accuracy:      ", round(mean(pred_class == test$SWP)*100, 1), "%\n")
+cat("Sensitivity (SWP=0):", round(cm[1,1]/sum(cm[,1])*100, 1), "%\n")
+cat("Specificity (SWP=1):", round(cm[2,2]/sum(cm[,2])*100, 1), "%\n")
+
+# Variable importance
+cat("\nVariable importance:\n")
+print(round(sort(tree_pruned$variable.importance, decreasing=TRUE), 1))
+```
+
+---
+
+# Guided Practice
+
+::: {.webr-loading-note}
+**R is loading in the background** — exercises below will be interactive once ready.
+:::
+
+```{webr-r}
+#| label: guided-tree
+# Note: rpart is available in WebR
+# TASK 1: Fit a shallow tree (maxdepth=3) and inspect the splits
+tree3 <- rpart(SWP ~ Age + Sex + Fulltime + CTW + JobDemands +
+                 JobControl + JobSupport + MentalWB,
+               data = train, method = "class",
+               control = rpart.control(maxdepth = 3, cp = 0))
+print(tree3)
+
+# TASK 2: What is the first split? Which predictor and at what threshold?
+# TASK 3: Compare accuracy of depth-3 tree vs depth-10 tree
+tree10 <- rpart(SWP ~ Age + Sex + Fulltime + CTW + JobDemands +
+                  JobControl + JobSupport + MentalWB,
+                data = train, method = "class",
+                control = rpart.control(maxdepth = 10, cp = 0))
+
+acc <- function(m) mean(predict(m, test, type="class") == test$SWP)
+cat("Depth-3 test accuracy: ", round(acc(tree3)*100, 1), "%\n")
+cat("Depth-10 test accuracy:", round(acc(tree10)*100, 1), "%\n")
+```
+
+```{webr-r}
+#| label: guided-importance
+# TASK 4: Variable importance — which predictors drive the splits?
+tree_full <- rpart(SWP ~ Age + Sex + Fulltime + CTW + JobDemands +
+                     JobControl + JobSupport + MentalWB,
+                   data = train, method = "class",
+                   control = rpart.control(cp = 0.001))
+
+if (!is.null(tree_full$variable.importance)) {
+  imp <- sort(tree_full$variable.importance, decreasing = TRUE)
+  cat("Variable importance:\n")
+  print(round(imp, 1))
+} else {
+  cat("No variable importance (tree may be trivial)\n")
+}
+
+# Does this match the LDA class-mean differences from C2?
+```
+
+::: {.callout-tip collapse="true"}
+## What to look for
+- The top split predictor is the single most informative variable for SWP
+- Compare to CTW, MentalWB, JobControl — which one dominates?
+- Does the deep tree have lower test accuracy than the shallow one? (Overfitting)
+:::
+
+---
+
+# Why-Questions
+
+::: {.callout-caution collapse="true"}
+## Q: "The tree is interpretable but random forests are better. When would I still use a single tree?"
+
+Single trees are useful when: (1) you need to explain the decision logic to non-technical stakeholders (a tree can be printed as a flowchart), (2) you have regulatory constraints requiring transparent decisions (e.g., clinical triage rules), (3) the dataset is very small and ensemble methods overfit. For pure prediction, random forests almost always outperform single trees.
+:::
+
+::: {.callout-note}
+## Further reading
+James et al. (2021). *An Introduction to Statistical Learning*. — Chapter 8.1
+:::

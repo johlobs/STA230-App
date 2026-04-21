@@ -1,5 +1,5 @@
 ---
-title: "C — Random Forests"
+title: "C4 — Random Forests"
 engine: knitr
 ---
 
@@ -7,4 +7,207 @@ engine: knitr
 <script>document.body.classList.add("classification");</script>
 ```
 
-*Coming soon — Block 2: Classification*
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(randomForest)
+swp <- readRDS(here::here("data/swp.rds"))
+swp$SWP <- factor(swp$SWP)
+set.seed(42)
+tr <- sample(nrow(swp), round(0.7 * nrow(swp)))
+train <- swp[tr, ]; test <- swp[-tr, ]
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+swp <- readRDS("https://johlobs.github.io/STA230-App/data/swp.rds")
+swp$SWP <- factor(swp$SWP)
+set.seed(42)
+tr <- sample(nrow(swp), round(0.7 * nrow(swp)))
+train <- swp[tr, ]; test <- swp[-tr, ]
+```
+
+# Concept: Ensemble Learning via Bagging and Random Forests
+
+## Bagging: reducing variance by averaging
+
+A single tree has high variance. **Bagging** (Bootstrap Aggregating) reduces variance by averaging many trees:
+
+1. Draw $B$ bootstrap samples (size $n$ with replacement) from training data
+2. Fit a full tree on each bootstrap sample
+3. Predict by majority vote across all $B$ trees
+
+Since each tree is trained on a different sample, averaging $B$ uncorrelated trees reduces variance by factor $B$ — while keeping bias approximately constant.
+
+## Random forests: decorrelating trees
+
+In bagging, if one predictor is very strong, most trees will use it at the top split — the trees are **correlated**. Averaging correlated trees reduces variance less effectively.
+
+**Random forests** fix this by randomly selecting $m$ predictors at each split (default: $m = \sqrt{p}$ for classification). This decorrelates the trees and further reduces variance.
+
+## Key hyperparameters
+
+| Parameter | Default | Effect |
+|-----------|---------|--------|
+| `ntree` | 500 | More trees → more stable; diminishing returns |
+| `mtry` | √p | Smaller → more decorrelated, higher bias |
+| `nodesize` | 1 | Larger → shallower trees, less overfit |
+
+## Out-of-bag (OOB) error
+
+Each tree is trained on ~63% of data (the bootstrap sample). The remaining ~37% (out-of-bag) can be used to estimate test error **without a separate validation set**. OOB error is a nearly unbiased estimate of test error.
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="Random forests randomly select m predictors at each split. Why does this help?">
+  <div class="q-opt" data-correct="false">It reduces the computation time by considering fewer predictors</div>
+  <div class="q-opt" data-correct="true">It decorrelates the trees — without random selection, all trees would use the same strong predictor at the top and be highly correlated</div>
+  <div class="q-opt" data-correct="false">It introduces beneficial randomness that increases variance beneficially</div>
+  <div class="q-opt" data-correct="false">It prevents overfitting by limiting the depth of each tree</div>
+  <div class="q-exp">If one predictor is dominant (e.g., CTW strongly predicts SWP), all bagged trees will use it at the first split — making the trees highly correlated. Averaging correlated variables reduces variance by σ²/B + (1−1/B)·ρ·σ² — the ρ term prevents full variance reduction. Random forests reduce ρ by hiding the dominant predictor from some splits, making trees more independent and variance reduction more effective.</div>
+</div>
+
+<div class="sta230-quiz" data-question="The OOB error for a random forest is 12%. What does this estimate?">
+  <div class="q-opt" data-correct="false">The training error averaged over all trees</div>
+  <div class="q-opt" data-correct="true">The test error — each observation is predicted only by trees that did not see it during training</div>
+  <div class="q-opt" data-correct="false">The bias of the ensemble estimator</div>
+  <div class="q-opt" data-correct="false">The error on 12% of the training data that was held out</div>
+  <div class="q-exp">In each bootstrap sample, about 37% of observations are not included (out-of-bag). For each observation, we can predict it using only the trees trained without it — giving an honest test-like estimate. The average OOB error across all observations closely approximates the leave-one-out CV error and doesn't require a separate validation set.</div>
+</div>
+
+<div class="sta230-quiz" data-question="Variable importance in a random forest is measured by the 'mean decrease in Gini'. What does a high value mean?">
+  <div class="q-opt" data-correct="false">The variable has a large coefficient in a linear model fitted to the forest predictions</div>
+  <div class="q-opt" data-correct="true">Splits on this variable consistently create purer child nodes — it is frequently used and useful across many trees</div>
+  <div class="q-opt" data-correct="false">The variable is used in every tree's first split</div>
+  <div class="q-opt" data-correct="false">The variable has low correlation with the outcome</div>
+  <div class="q-exp">Variable importance = total decrease in Gini impurity from all splits on that variable, averaged over all trees. High importance means the variable is both frequently split on (it is useful) and creates pure splits (the classes are well-separated). Unlike a single tree's top split, this averages over many trees and is more stable. Note: it measures predictive importance, not causal importance.</div>
+</div>
+```
+
+---
+
+# Worked Example
+
+```{r}
+#| label: rf-fit
+library(randomForest)
+set.seed(42)
+rf_fit <- randomForest(SWP ~ Age + Sex + Fulltime + CTW + JobDemands +
+                         JobControl + JobSupport + MentalWB + DemandCtrl,
+                       data = train, ntree = 500,
+                       importance = TRUE)
+print(rf_fit)
+```
+
+```{r}
+#| label: rf-importance
+#| fig-width: 8
+#| fig-height: 5
+varImpPlot(rf_fit, main = "Variable Importance — Random Forest (SWP)")
+```
+
+```{r}
+#| label: rf-performance
+pred_rf <- predict(rf_fit, newdata = test)
+cm_rf   <- table(Predicted = pred_rf, Actual = test$SWP)
+print(cm_rf)
+cat("\nTest accuracy:      ", round(mean(pred_rf == test$SWP)*100, 1), "%\n")
+cat("Sensitivity (SWP=0):", round(cm_rf[1,1]/sum(cm_rf[,1])*100, 1), "%\n")
+cat("Specificity (SWP=1):", round(cm_rf[2,2]/sum(cm_rf[,2])*100, 1), "%\n")
+cat("OOB error:          ", round(rf_fit$err.rate[500,"OOB"]*100, 1), "%\n")
+```
+
+```{r}
+#| label: rf-oob-curve
+#| fig-width: 8
+#| fig-height: 4
+# OOB error vs number of trees
+oob_df <- data.frame(ntree = 1:500, oob = rf_fit$err.rate[,"OOB"])
+ggplot(oob_df, aes(ntree, oob)) +
+  geom_line(colour="#27ae60", linewidth=1) +
+  labs(title="OOB error vs number of trees",
+       subtitle="Stabilises around 200–300 trees",
+       x="Number of trees", y="OOB error rate") +
+  theme_minimal()
+```
+
+---
+
+# Guided Practice
+
+::: {.webr-loading-note}
+**R is loading in the background** — exercises below will be interactive once ready.
+:::
+
+```{webr-r}
+#| label: guided-rf
+# Note: randomForest package is available in WebR
+# TASK 1: Fit random forest and check OOB error
+set.seed(42)
+rf <- randomForest(SWP ~ Age + Sex + Fulltime + CTW + JobDemands +
+                     JobControl + JobSupport + MentalWB,
+                   data = train, ntree = 300, importance = TRUE)
+
+cat("OOB error:", round(rf$err.rate[300,"OOB"]*100, 1), "%\n")
+cat("OOB error (SWP=0):", round(rf$err.rate[300,"0"]*100, 1), "%\n")
+cat("OOB error (SWP=1):", round(rf$err.rate[300,"1"]*100, 1), "%\n")
+
+# TASK 2: Variable importance
+cat("\nVariable importance (Gini):\n")
+imp <- importance(rf, type=2)  # type=2 = Gini decrease
+print(round(imp[order(imp, decreasing=TRUE), , drop=FALSE], 2))
+```
+
+```{webr-r}
+#| label: guided-mtry
+# TASK 3: Try different mtry values — does it affect test accuracy?
+pred_vars <- c("Age","Sex","Fulltime","CTW","JobDemands","JobControl","JobSupport","MentalWB")
+p <- length(pred_vars)
+
+for (m in c(2, 3, 4, round(p/2), p)) {
+  set.seed(42)
+  rf_m <- randomForest(SWP ~ Age + Sex + Fulltime + CTW + JobDemands +
+                         JobControl + JobSupport + MentalWB,
+                       data=train, ntree=200, mtry=m)
+  pred  <- predict(rf_m, newdata=test)
+  cm    <- table(Predicted=pred, Actual=test$SWP)
+  sens  <- cm[1,1]/sum(cm[,1])
+  cat(sprintf("mtry=%d  Acc=%.1f%%  Sens(SWP=0)=%.1f%%  OOB=%.1f%%\n",
+              m, mean(pred==test$SWP)*100, sens*100, rf_m$err.rate[200,"OOB"]*100))
+}
+```
+
+::: {.callout-tip collapse="true"}
+## What to look for
+- Does the random forest improve sensitivity for SWP=0 compared to a single tree (C3)?
+- Which variable has the highest importance? Does it match the first split of the CART tree?
+- How does mtry affect the trade-off between accuracy and sensitivity?
+:::
+
+---
+
+# Why-Questions
+
+::: {.callout-caution collapse="true"}
+## Q: "Random forests are hard to interpret. Can I still get insights from them?"
+
+Yes — through variable importance plots and partial dependence plots:
+- **Variable importance**: which predictors matter most (but not how or in which direction)
+- **Partial dependence plots** (`partialPlot()`): marginal effect of one predictor averaged over all others
+- **SHAP values**: newer method that shows individual-observation contributions
+
+For occupational health research, you might report: "CTW and MentalWB were the strongest predictors of SWP (highest Gini importance), and the partial dependence plot shows SWP probability increasing monotonically with CTW."
+:::
+
+::: {.callout-note}
+## Further reading
+James et al. (2021). *An Introduction to Statistical Learning*. — Chapter 8.2
+:::

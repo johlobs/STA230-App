@@ -1,5 +1,5 @@
 ---
-title: "C — Boosting Xgboost"
+title: "C5 — Boosting & XGBoost"
 engine: knitr
 ---
 
@@ -7,4 +7,252 @@ engine: knitr
 <script>document.body.classList.add("classification");</script>
 ```
 
-*Coming soon — Block 2: Classification*
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(xgboost)
+swp <- readRDS(here::here("data/swp.rds"))
+set.seed(42)
+tr <- sample(nrow(swp), round(0.7 * nrow(swp)))
+train <- swp[tr, ]; test <- swp[-tr, ]
+
+X_tr <- model.matrix(~ Age + Sex + Fulltime + CTW + JobDemands +
+                       JobControl + JobSupport + MentalWB - 1, data = train)
+X_te <- model.matrix(~ Age + Sex + Fulltime + CTW + JobDemands +
+                       JobControl + JobSupport + MentalWB - 1, data = test)
+y_tr <- train$SWP
+y_te <- test$SWP
+dtrain <- xgb.DMatrix(data = X_tr, label = y_tr)
+dtest  <- xgb.DMatrix(data = X_te, label = y_te)
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+swp <- readRDS("https://johlobs.github.io/STA230-App/data/swp.rds")
+set.seed(42)
+tr <- sample(nrow(swp), round(0.7 * nrow(swp)))
+train <- swp[tr, ]; test <- swp[-tr, ]
+X_tr <- model.matrix(~ Age + Sex + Fulltime + CTW + JobDemands +
+                       JobControl + JobSupport + MentalWB - 1, data = train)
+X_te <- model.matrix(~ Age + Sex + Fulltime + CTW + JobDemands +
+                       JobControl + JobSupport + MentalWB - 1, data = test)
+y_tr <- train$SWP; y_te <- test$SWP
+```
+
+# Concept: Sequential Ensemble Learning
+
+## Boosting vs bagging
+
+**Bagging** builds trees in parallel on bootstrap samples and averages. **Boosting** builds trees **sequentially** — each tree focuses on the mistakes of the previous ones.
+
+## Gradient boosting
+
+At each step $m$, fit a tree to the **negative gradient** of the loss function evaluated at the current predictions. For binary classification with log-loss:
+
+$$\hat{f}^{(m)}(\mathbf{x}) = \hat{f}^{(m-1)}(\mathbf{x}) + \eta \cdot h_m(\mathbf{x})$$
+
+where $h_m$ is the new tree and $\eta$ (learning rate) controls how much each tree contributes.
+
+## Key hyperparameters
+
+| Parameter | Effect | Typical values |
+|-----------|--------|---------------|
+| `nrounds` | Number of trees | 100–1000 (with early stopping) |
+| `eta` (learning rate) | Step size | 0.01–0.3 — smaller = more robust |
+| `max_depth` | Tree depth | 3–8 — shallower = less overfit |
+| `subsample` | Fraction of rows per tree | 0.5–1.0 — bagging-like regularisation |
+| `colsample_bytree` | Fraction of columns per tree | 0.5–1.0 — random forest-like |
+
+::: {.callout-tip}
+## Rule of thumb
+Lower `eta` + more `nrounds` + early stopping = more robust. Start with eta=0.1, nrounds=500, use early stopping on validation set.
+:::
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="Boosting builds trees sequentially. What does the second tree learn?">
+  <div class="q-opt" data-correct="false">The same pattern as the first tree, but on a different bootstrap sample</div>
+  <div class="q-opt" data-correct="true">The residuals (errors) of the first tree — it focuses on the observations the first tree got wrong</div>
+  <div class="q-opt" data-correct="false">A random subset of predictors ignored by the first tree</div>
+  <div class="q-opt" data-correct="false">The inverse of the first tree's predictions</div>
+  <div class="q-exp">In gradient boosting, the second tree is fitted to the negative gradient of the loss — for squared error this is exactly the residuals. For log-loss (binary classification), it's proportional to (y − p̂). Observations where the first tree was confident and correct get downweighted; misclassified observations get more focus. This sequential error-correction is why boosting can achieve very low bias.</div>
+</div>
+
+<div class="sta230-quiz" data-question="Boosting with too many rounds and a high learning rate is likely to...">
+  <div class="q-opt" data-correct="false">Underfit — the model won't have enough complexity</div>
+  <div class="q-opt" data-correct="true">Overfit — the model eventually memorises the training noise</div>
+  <div class="q-opt" data-correct="false">Converge to the Bayes error rate regardless of settings</div>
+  <div class="q-opt" data-correct="false">Be equivalent to random forests</div>
+  <div class="q-exp">Unlike bagging, boosting CAN overfit — especially with many rounds and a high learning rate. Early stopping (monitor validation error and stop when it stops improving) is the standard fix. A lower learning rate with more rounds usually generalises better than a high learning rate with few rounds — the model corrects errors more gradually and doesn't chase noise.</div>
+</div>
+
+<div class="sta230-quiz" data-question="XGBoost uses 'scale_pos_weight' for imbalanced classification. What does it do?">
+  <div class="q-opt" data-correct="false">It resamples the training data to balance the classes</div>
+  <div class="q-opt" data-correct="true">It increases the weight of the minority class in the loss function, making misclassifying a minority observation more costly</div>
+  <div class="q-opt" data-correct="false">It scales the predicted probabilities to match the class proportions</div>
+  <div class="q-opt" data-correct="false">It clips probabilities to avoid extreme values near 0 or 1</div>
+  <div class="q-exp">scale_pos_weight = (# negative) / (# positive) tells XGBoost to penalise misclassifying the positive class more heavily. For SWP with 89% SWP=1 and 11% SWP=0: set scale_pos_weight = 8897/1103 ≈ 8 to compensate for the imbalance. This shifts the decision boundary and increases sensitivity for the minority class (SWP=0), at the cost of some specificity.</div>
+</div>
+```
+
+---
+
+# Worked Example
+
+```{r}
+#| label: xgb-basic
+library(xgboost)
+set.seed(42)
+params <- list(
+  objective        = "binary:logistic",
+  eval_metric      = "auc",
+  eta              = 0.1,
+  max_depth        = 4,
+  subsample        = 0.8,
+  colsample_bytree = 0.8
+)
+
+xgb_fit <- xgb.train(
+  params    = params,
+  data      = dtrain,
+  nrounds   = 200,
+  watchlist = list(train = dtrain, test = dtest),
+  verbose   = 0
+)
+
+best_auc <- max(xgb_fit$evaluation_log$test_auc)
+best_iter <- which.max(xgb_fit$evaluation_log$test_auc)
+cat("Best iteration:", best_iter, "\n")
+cat("Best test AUC: ", round(best_auc, 4), "\n")
+```
+
+```{r}
+#| label: xgb-imbalance
+# Handle class imbalance with scale_pos_weight
+n_neg <- sum(y_tr == 0)
+n_pos <- sum(y_tr == 1)
+params_bal <- c(params, list(scale_pos_weight = n_neg / n_pos))
+
+xgb_bal <- xgb.train(
+  params    = params_bal,
+  data      = dtrain,
+  nrounds   = 200,
+  watchlist = list(train = dtrain, test = dtest),
+  verbose   = 0,
+  early_stopping_rounds = 20
+)
+
+# Compare sensitivity
+pred_base <- ifelse(predict(xgb_fit, dtest) > 0.5, 1, 0)
+pred_bal  <- ifelse(predict(xgb_bal,  dtest) > 0.5, 1, 0)
+
+cm_base <- table(Predicted=pred_base, Actual=y_te)
+cm_bal  <- table(Predicted=pred_bal,  Actual=y_te)
+
+cat("Without scale_pos_weight:\n")
+cat("  Sensitivity (SWP=0):", round(cm_base[1,1]/sum(cm_base[,1])*100, 1), "%\n")
+cat("  Accuracy:           ", round(mean(pred_base==y_te)*100, 1), "%\n")
+cat("\nWith scale_pos_weight =", round(n_neg/n_pos, 1), ":\n")
+cat("  Sensitivity (SWP=0):", round(cm_bal[1,1]/sum(cm_bal[,1])*100, 1), "%\n")
+cat("  Accuracy:           ", round(mean(pred_bal==y_te)*100, 1), "%\n")
+```
+
+```{r}
+#| label: xgb-importance
+#| fig-width: 8
+#| fig-height: 5
+imp <- xgb.importance(feature_names = colnames(X_tr), model = xgb_fit)
+xgb.plot.importance(imp, top_n = 8,
+                    main = "XGBoost variable importance (SWP)")
+```
+
+---
+
+# Guided Practice
+
+::: {.webr-loading-note}
+**R is loading in the background** — exercises below will be interactive once ready.
+:::
+
+```{webr-r}
+#| label: guided-xgb-check
+# Check if xgboost is available in WebR
+if (requireNamespace("xgboost", quietly = TRUE)) {
+  cat("xgboost is available!\n")
+  library(xgboost)
+} else {
+  cat("xgboost not available in this WebR session.\n")
+  cat("Using gbm (gradient boosting machines) as alternative.\n")
+  # gbm is a pure-R implementation that works in WebR
+}
+```
+
+```{webr-r}
+#| label: guided-gbm
+# gbm as fallback if xgboost is unavailable
+# gbm is a pure-R gradient boosting implementation
+if (requireNamespace("gbm", quietly = TRUE)) {
+  library(gbm)
+  train_gbm <- train
+  train_gbm$SWP <- as.numeric(as.character(train$SWP))
+
+  set.seed(42)
+  gbm_fit <- gbm(SWP ~ Age + Sex + Fulltime + CTW + JobDemands +
+                   JobControl + JobSupport + MentalWB,
+                 data = train_gbm, distribution = "bernoulli",
+                 n.trees = 300, interaction.depth = 4,
+                 shrinkage = 0.1, bag.fraction = 0.8,
+                 cv.folds = 5, verbose = FALSE)
+
+  best_iter <- gbm.perf(gbm_fit, method="cv", plot.it=FALSE)
+  cat("Best iteration (CV):", best_iter, "\n")
+
+  pred_prob <- predict(gbm_fit, newdata=test, n.trees=best_iter, type="response")
+  pred_class <- ifelse(pred_prob > 0.5, 1, 0)
+  cm <- table(Predicted=pred_class, Actual=test$SWP)
+  cat("Test accuracy:", round(mean(pred_class==test$SWP)*100,1), "%\n")
+  if (nrow(cm) == 2)
+    cat("Sensitivity (SWP=0):", round(cm[1,1]/sum(cm[,1])*100,1), "%\n")
+
+  # Variable importance
+  cat("\nVariable importance:\n")
+  print(summary(gbm_fit, n.trees=best_iter, plotit=FALSE))
+} else {
+  cat("Neither xgboost nor gbm available — run the knitr examples above instead.\n")
+}
+```
+
+::: {.callout-tip collapse="true"}
+## Tasks
+1. Does XGBoost/gbm outperform random forest (C4) on test accuracy and sensitivity?
+2. Compare variable importance — do the top predictors agree across methods?
+3. Try lowering `shrinkage` to 0.01 and increasing trees to 500 — does it improve?
+:::
+
+---
+
+# Why-Questions
+
+::: {.callout-caution collapse="true"}
+## Q: "Boosting, bagging, random forests — how do I choose?"
+
+Rule of thumb:
+- **Random forest**: great default — parallelisable, robust, minimal tuning
+- **Gradient boosting (XGBoost)**: often best performance, but requires tuning (learning rate, depth, rounds) and is sequential (slower)
+- **Bagging**: rarely used alone; superseded by random forests
+
+In practice: try random forest first, then gradient boosting with early stopping if you need more accuracy. Both should be compared against the simpler methods (logistic, LASSO) — sometimes the gain is marginal and the simpler model is preferred for interpretability.
+:::
+
+::: {.callout-note}
+## Further reading
+James et al. (2021). *An Introduction to Statistical Learning*. — Chapter 8.2.3
+:::

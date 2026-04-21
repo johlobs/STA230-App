@@ -1,5 +1,5 @@
 ---
-title: "C — Logistic Regression"
+title: "C1 — Logistic Regression"
 engine: knitr
 ---
 
@@ -7,4 +7,239 @@ engine: knitr
 <script>document.body.classList.add("classification");</script>
 ```
 
-*Coming soon — Block 2: Classification*
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+swp <- readRDS(here::here("data/swp.rds"))
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+swp <- readRDS("https://johlobs.github.io/STA230-App/data/swp.rds")
+```
+
+# Concept: Classification and the Logistic Model
+
+## From regression to classification
+
+In classification the outcome $Y$ is categorical. For binary $Y \in \{0, 1\}$, we model the **probability** of belonging to class 1:
+
+$$p(\mathbf{x}) = P(Y = 1 \mid \mathbf{X} = \mathbf{x})$$
+
+We then classify: $\hat{Y} = 1$ if $\hat{p}(\mathbf{x}) > 0.5$ (or another threshold).
+
+## The logistic model
+
+Logistic regression models $p(\mathbf{x})$ via the logit link:
+
+$$\log\frac{p(\mathbf{x})}{1 - p(\mathbf{x})} = \beta_0 + \beta_1 x_1 + \cdots + \beta_p x_p$$
+
+Equivalently:
+
+$$p(\mathbf{x}) = \frac{e^{\mathbf{x}^\top\boldsymbol{\beta}}}{1 + e^{\mathbf{x}^\top\boldsymbol{\beta}}}$$
+
+The coefficients $e^{\beta_j}$ are **odds ratios** — the multiplicative change in odds of $Y=1$ per unit increase in $x_j$.
+
+## Class imbalance
+
+When one class is rare (e.g., only 11% have $Y=0$ in SWP_CTW), a naive classifier that always predicts the majority class achieves high accuracy but is useless. Alternatives:
+
+- Use **sensitivity** and **specificity** instead of accuracy
+- Report **AUC** (area under the ROC curve)
+- Adjust the decision threshold away from 0.5
+- Resample: oversample the minority class (SMOTE) or undersample the majority
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="Logistic regression models P(Y=1|X). Why not just use linear regression and threshold at 0.5?">
+  <div class="q-opt" data-correct="false">Linear regression cannot handle binary outcomes mathematically</div>
+  <div class="q-opt" data-correct="true">Linear regression predictions can fall outside [0,1] and assume a linear effect on probability rather than on the log-odds</div>
+  <div class="q-opt" data-correct="false">Logistic regression always gives better predictions than linear regression for binary outcomes</div>
+  <div class="q-opt" data-correct="false">Linear regression requires normally distributed errors, which binary outcomes violate in the coefficients</div>
+  <div class="q-exp">Linear regression fitted to a binary outcome (the 'linear probability model') can give predicted probabilities <0 or >1 and has heteroskedastic errors. More fundamentally, the effect of a predictor on probability should be non-linear: near p=0 or p=1, a unit change in X should have little effect; near p=0.5 the effect is largest. The logit link captures this non-linearity correctly.</div>
+</div>
+
+<div class="sta230-quiz" data-question="In SWP_CTW, 89% of participants have SWP=1. A model that always predicts SWP=1 achieves 89% accuracy. Why is this misleading?">
+  <div class="q-opt" data-correct="false">Accuracy of 89% is always considered a good model</div>
+  <div class="q-opt" data-correct="true">The model never identifies any of the 11% at risk of not sustaining work — sensitivity for SWP=0 is 0%</div>
+  <div class="q-opt" data-correct="false">The model is overfit because training and test accuracy are both 89%</div>
+  <div class="q-opt" data-correct="false">Accuracy is only valid when classes are perfectly balanced</div>
+  <div class="q-exp">With 89% majority class, predicting '1' for everyone achieves 89% accuracy with zero insight. In occupational health, correctly identifying the 11% who do NOT sustain work (SWP=0) is exactly the clinical goal — those are the people needing intervention. Sensitivity (recall for the minority class) and AUC are far more informative than accuracy in imbalanced settings.</div>
+</div>
+
+<div class="sta230-quiz" data-question="The logistic coefficient for CTW is β=0.08. What is the odds ratio, and what does it mean?">
+  <div class="q-opt" data-correct="false">OR = 0.08 — a one-unit increase in CTW multiplies the odds of SWP=1 by 0.08</div>
+  <div class="q-opt" data-correct="true">OR = exp(0.08) ≈ 1.08 — a one-unit increase in CTW multiplies the odds of SWP=1 by 1.08</div>
+  <div class="q-opt" data-correct="false">OR = 0.08 + 1 = 1.08 — odds increase by 8 percentage points</div>
+  <div class="q-opt" data-correct="false">OR = exp(0.08)² — the OR must be squared for binary outcomes</div>
+  <div class="q-exp">The log-odds is linear in X with slope β. A one-unit increase in CTW changes the log-odds by 0.08, which means the odds are multiplied by exp(0.08) ≈ 1.083. Since CTW ranges ~66–118, a 10-unit increase gives OR = exp(0.8) ≈ 2.23 — the odds of SWP=1 more than doubles. Always report OR = exp(β) with a confidence interval [exp(β − 1.96·SE), exp(β + 1.96·SE)].</div>
+</div>
+```
+
+---
+
+# Worked Example: Predicting Sustainable Work Participation
+
+```{r}
+#| label: data-overview
+cat("Dataset: SWP_CTW — Sustainable Work Participation\n")
+cat("n =", nrow(swp), " | Outcome: SWP (1 = sustains work)\n")
+cat("\nClass distribution:\n")
+print(table(SWP = swp$SWP))
+cat("\nClass balance:", round(mean(swp$SWP == 1) * 100, 1), "% SWP=1\n")
+```
+
+```{r}
+#| label: logistic-fit
+fit <- glm(SWP ~ Age + Sex + Fulltime + CTW + JobDemands + JobControl +
+             JobSupport + MentalWB, data = swp, family = binomial)
+summary(fit)
+```
+
+```{r}
+#| label: odds-ratios
+#| fig-width: 8
+#| fig-height: 4.5
+# Odds ratios with 95% CI
+or_df <- data.frame(
+  variable = names(coef(fit))[-1],
+  OR  = exp(coef(fit)[-1]),
+  lower = exp(confint(fit)[-1, 1]),
+  upper = exp(confint(fit)[-1, 2])
+)
+
+ggplot(or_df, aes(x = reorder(variable, OR), y = OR)) +
+  geom_point(size = 3, colour = "#2980b9") +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, colour = "#2980b9") +
+  geom_hline(yintercept = 1, linetype = "dashed", colour = "#888") +
+  coord_flip() +
+  labs(title = "Odds ratios for SWP=1 (logistic regression)",
+       subtitle = "OR > 1: increases odds of SWP=1  |  OR < 1: decreases odds",
+       x = NULL, y = "Odds Ratio (95% CI)") +
+  theme_minimal()
+```
+
+```{r}
+#| label: confusion-matrix
+# Default threshold = 0.5
+pred_prob <- predict(fit, type = "response")
+pred_class <- ifelse(pred_prob > 0.5, 1, 0)
+
+cm <- table(Predicted = pred_class, Actual = swp$SWP)
+print(cm)
+cat("\nAccuracy:   ", round(mean(pred_class == swp$SWP) * 100, 1), "%\n")
+cat("Sensitivity:", round(cm[2,2] / sum(cm[,2]) * 100, 1), "% (correctly identified SWP=1)\n")
+cat("Specificity:", round(cm[1,1] / sum(cm[,1]) * 100, 1), "% (correctly identified SWP=0)\n")
+```
+
+---
+
+# Guided Practice
+
+::: {.webr-loading-note}
+**R is loading in the background** — exercises below will be interactive once ready.
+:::
+
+```{webr-r}
+#| label: guided-explore
+# TASK 1: Check class imbalance and explore predictors
+cat("Class distribution:\n")
+print(table(SWP = swp$SWP))
+cat("\nMean CTW by SWP:\n")
+print(tapply(swp$CTW, swp$SWP, mean))
+cat("\nMean MentalWB by SWP:\n")
+print(tapply(swp$MentalWB, swp$SWP, mean))
+```
+
+```{webr-r}
+#| label: guided-logistic
+# TASK 2: Fit logistic regression and inspect coefficients
+fit <- glm(SWP ~ Age + Sex + Fulltime + CTW + JobDemands +
+             JobControl + JobSupport + MentalWB,
+           data = swp, family = binomial)
+
+# Odds ratios
+cat("Odds ratios:\n")
+print(round(exp(coef(fit)), 4))
+
+# TASK 3: Which predictors are most strongly associated with SWP?
+# (Compare z-values / p-values)
+cat("\nCoefficient summary:\n")
+print(round(summary(fit)$coefficients, 4))
+```
+
+```{webr-r}
+#| label: guided-threshold
+# TASK 4: Try a lower threshold for the minority class (SWP=0)
+# Default threshold = 0.5 rarely catches the minority class well
+pred_prob <- predict(fit, type = "response")
+
+for (thresh in c(0.80, 0.85, 0.90, 0.95)) {
+  pred <- ifelse(pred_prob > thresh, 1, 0)
+  cm   <- table(Predicted = pred, Actual = swp$SWP)
+  sens <- if (nrow(cm) == 2) cm[1,1] / sum(cm[,1]) else 0
+  spec <- if (nrow(cm) == 2) cm[2,2] / sum(cm[,2]) else 1
+  cat(sprintf("Threshold=%.2f  Acc=%.1f%%  Sens(SWP=0)=%.1f%%  Spec(SWP=1)=%.1f%%\n",
+              thresh,
+              mean(pred == swp$SWP) * 100,
+              sens * 100, spec * 100))
+}
+```
+
+::: {.callout-tip collapse="true"}
+## What to look for
+- At threshold=0.5, sensitivity for SWP=0 is likely very low — why?
+- As you lower the threshold, sensitivity for SWP=0 increases but specificity decreases
+- This trade-off is exactly what the ROC curve (C6) visualises
+:::
+
+---
+
+# Retrieval Challenge
+
+```{webr-r}
+#| label: challenge
+# Q1: Train/test split — compare training and test accuracy
+set.seed(42)
+tr <- sample(nrow(swp), round(0.7 * nrow(swp)))
+te <- setdiff(seq_len(nrow(swp)), tr)
+
+fit_tr <- glm(SWP ~ Age + Sex + Fulltime + CTW + JobDemands +
+                JobControl + JobSupport + MentalWB,
+              data = swp[tr, ], family = binomial)
+
+acc <- function(m, newdat) {
+  p <- predict(m, newdata = newdat, type = "response")
+  mean(ifelse(p > 0.5, 1, 0) == newdat$SWP)
+}
+cat("Training accuracy:", round(acc(fit_tr, swp[tr,]) * 100, 1), "%\n")
+cat("Test accuracy:    ", round(acc(fit_tr, swp[te,]) * 100, 1), "%\n")
+
+# Q2: Null model accuracy (always predict majority class)
+cat("Null accuracy:    ", round(max(mean(swp$SWP==1), mean(swp$SWP==0)) * 100, 1), "%\n")
+
+# Q3: What does this tell you about using accuracy as the metric here?
+```
+
+---
+
+# Why-Questions
+
+::: {.callout-caution collapse="true"}
+## Q: "Can I use logistic regression with 80 predictors?"
+
+Yes, but with caution. With p=80 and n=10000, OLS-style logistic regression is technically feasible (n >> p), but many of those 80 variables may be redundant questionnaire items. Better to either (a) use penalised logistic regression (LASSO with glmnet, family="binomial"), or (b) first create composite scores (as was done here with CTW, JobDemands etc.) from the raw items. Blindly including all raw items risks overfitting and obscures interpretation.
+:::
+
+::: {.callout-note}
+## Further reading
+James et al. (2021). *An Introduction to Statistical Learning*. — Chapter 4.1–4.3
+:::

@@ -1,5 +1,5 @@
 ---
-title: "C — Roc Auc"
+title: "C6 — ROC Curve & AUC"
 engine: knitr
 ---
 
@@ -7,4 +7,280 @@ engine: knitr
 <script>document.body.classList.add("classification");</script>
 ```
 
-*Coming soon — Block 2: Classification*
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(pROC)
+library(randomForest)
+library(xgboost)
+swp <- readRDS(here::here("data/swp.rds"))
+set.seed(42)
+tr <- sample(nrow(swp), round(0.7 * nrow(swp)))
+train <- swp[tr, ]; test <- swp[-tr, ]
+swp_factor <- swp; swp_factor$SWP <- factor(swp$SWP)
+train_f <- swp_factor[tr, ]; test_f <- swp_factor[-tr, ]
+
+X_tr <- model.matrix(~ Age + Sex + Fulltime + CTW + JobDemands +
+                       JobControl + JobSupport + MentalWB - 1, data = train)
+X_te <- model.matrix(~ Age + Sex + Fulltime + CTW + JobDemands +
+                       JobControl + JobSupport + MentalWB - 1, data = test)
+dtrain <- xgb.DMatrix(data=X_tr, label=train$SWP)
+dtest  <- xgb.DMatrix(data=X_te, label=test$SWP)
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(pROC)
+swp <- readRDS("https://johlobs.github.io/STA230-App/data/swp.rds")
+set.seed(42)
+tr <- sample(nrow(swp), round(0.7 * nrow(swp)))
+train <- swp[tr, ]; test <- swp[-tr, ]
+swp$SWP_f <- factor(swp$SWP)
+train_f <- swp[tr, ]; test_f <- swp[-tr, ]
+```
+
+# Concept: Evaluating Classifiers Beyond Accuracy
+
+## The confusion matrix
+
+For binary classification with threshold $c$: classify as positive if $\hat{p} > c$.
+
+|  | Actual + | Actual − |
+|--|----------|----------|
+| **Predicted +** | TP | FP |
+| **Predicted −** | FN | TN |
+
+Key metrics:
+
+$$\text{Sensitivity} = \frac{TP}{TP + FN} \quad \text{(true positive rate, recall)}$$
+$$\text{Specificity} = \frac{TN}{TN + FP} \quad \text{(true negative rate)}$$
+$$\text{PPV (Precision)} = \frac{TP}{TP + FP}$$
+
+## The ROC curve
+
+The **Receiver Operating Characteristic** curve plots sensitivity (TPR) vs 1−specificity (FPR) as the threshold $c$ varies from 0 to 1.
+
+- **Top-left corner** (TPR=1, FPR=0): perfect classifier
+- **Diagonal** (TPR = FPR): random classifier
+- **AUC** (Area Under the Curve): probability that a randomly chosen positive example scores higher than a randomly chosen negative example — ranges 0.5 (random) to 1.0 (perfect)
+
+## Choosing a threshold
+
+The optimal threshold depends on the **cost asymmetry**:
+
+- In occupational health: missing a worker at risk (FN) may be more costly than a false alarm (FP) → lower threshold → higher sensitivity
+- Rule: choose threshold that maximises $\text{Sensitivity} + \text{Specificity} - 1$ (Youden's J) or matches clinical cost-benefit
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="AUC = 0.75. What does this mean in plain language?">
+  <div class="q-opt" data-correct="false">The model correctly classifies 75% of observations</div>
+  <div class="q-opt" data-correct="true">If you pick a random SWP=1 and a random SWP=0, the model gives a higher predicted probability to the positive case 75% of the time</div>
+  <div class="q-opt" data-correct="false">The model has 75% sensitivity at the 0.5 threshold</div>
+  <div class="q-opt" data-correct="false">75% of the area under the precision-recall curve is captured</div>
+  <div class="q-exp">AUC is a rank-based metric: it measures how well the model separates the two classes in terms of predicted probability. AUC=0.5 means random ordering (no discrimination). AUC=1.0 means all positives score higher than all negatives. AUC=0.75 means 75% of positive-negative pairs are correctly ranked. Crucially, AUC is threshold-independent — it evaluates the model's discrimination ability regardless of where you place the cutoff.</div>
+</div>
+
+<div class="sta230-quiz" data-question="Model A has accuracy=92% and AUC=0.61. Model B has accuracy=89% and AUC=0.79. Which is better for identifying workers at risk?">
+  <div class="q-opt" data-correct="false">Model A — higher accuracy is always the primary criterion</div>
+  <div class="q-opt" data-correct="true">Model B — higher AUC means better discrimination; model A's high accuracy is likely due to predicting the majority class</div>
+  <div class="q-opt" data-correct="false">They are equivalent — accuracy and AUC always agree</div>
+  <div class="q-opt" data-correct="false">Model A — AUC is only valid for balanced datasets</div>
+  <div class="q-exp">With 89% majority class (SWP=1), model A's 92% accuracy likely comes from correctly predicting SWP=1 for almost everyone. AUC=0.61 is barely above random — it has almost no ability to rank the minority class (SWP=0) above the majority. Model B sacrifices 3% accuracy but dramatically improves discrimination. For identifying at-risk workers, AUC (or sensitivity at a clinically chosen threshold) is the right metric.</div>
+</div>
+
+<div class="sta230-quiz" data-question="You want to flag as many at-risk workers as possible, even at the cost of some false alarms. How should you adjust the classification threshold?">
+  <div class="q-opt" data-correct="false">Increase the threshold above 0.5</div>
+  <div class="q-opt" data-correct="true">Decrease the threshold below 0.5 — more observations get predicted positive, increasing sensitivity</div>
+  <div class="q-opt" data-correct="false">Keep the threshold at 0.5 — that is always optimal</div>
+  <div class="q-opt" data-correct="false">Use AUC instead of a threshold — it avoids threshold choice entirely</div>
+  <div class="q-exp">Lowering the threshold means more observations are classified as positive (SWP=0 risk, requiring intervention). This increases sensitivity (fewer at-risk workers missed) but decreases specificity (more false alarms — workers who would have been fine are flagged). The optimal threshold depends on the relative costs of FN vs FP in the specific application. The ROC curve shows you all possible (FPR, TPR) trade-offs simultaneously.</div>
+</div>
+```
+
+---
+
+# Worked Example: ROC Comparison Across All Methods
+
+```{r}
+#| label: roc-all-methods
+#| fig-width: 9
+#| fig-height: 6
+library(pROC)
+
+# Logistic regression
+logit <- glm(SWP ~ Age + Sex + Fulltime + CTW + JobDemands +
+               JobControl + JobSupport + MentalWB, data=train, family=binomial)
+p_logit <- predict(logit, newdata=test, type="response")
+
+# Random forest
+rf <- randomForest(factor(SWP) ~ Age + Sex + Fulltime + CTW + JobDemands +
+                     JobControl + JobSupport + MentalWB,
+                   data=train_f, ntree=300)
+p_rf <- predict(rf, newdata=test_f, type="prob")[, "1"]
+
+# XGBoost
+xgb_fit <- xgb.train(
+  params  = list(objective="binary:logistic", eta=0.1, max_depth=4,
+                 eval_metric="auc"),
+  data    = dtrain, nrounds=200, verbose=0)
+p_xgb <- predict(xgb_fit, dtest)
+
+# ROC curves
+roc_logit <- roc(test$SWP, p_logit, quiet=TRUE)
+roc_rf    <- roc(test$SWP, p_rf,    quiet=TRUE)
+roc_xgb   <- roc(test$SWP, p_xgb,  quiet=TRUE)
+
+# Plot
+plot(roc_logit, col="#2980b9", lwd=2,
+     main="ROC curves — SWP classification",
+     xlab="1 − Specificity (FPR)", ylab="Sensitivity (TPR)")
+lines(roc_rf,  col="#27ae60", lwd=2)
+lines(roc_xgb, col="#e74c3c", lwd=2)
+abline(0, 1, lty=2, col="#888")
+legend("bottomright",
+       legend=c(paste0("Logistic (AUC=", round(auc(roc_logit),3), ")"),
+                paste0("Random Forest (AUC=", round(auc(roc_rf),3), ")"),
+                paste0("XGBoost (AUC=", round(auc(roc_xgb),3), ")")),
+       col=c("#2980b9","#27ae60","#e74c3c"), lwd=2, bty="n")
+```
+
+```{r}
+#| label: optimal-threshold
+# Find optimal threshold for logistic model (Youden's J)
+coords_logit <- coords(roc_logit, "best", best.method="youden")
+cat("Optimal threshold (Youden):", round(coords_logit$threshold, 4), "\n")
+cat("  Sensitivity:", round(coords_logit$sensitivity*100, 1), "%\n")
+cat("  Specificity:", round(coords_logit$specificity*100, 1), "%\n")
+
+# Compare to default threshold=0.5
+pred_05  <- ifelse(p_logit > 0.5, 1, 0)
+pred_opt <- ifelse(p_logit > coords_logit$threshold, 1, 0)
+
+cm_05  <- table(Predicted=pred_05,  Actual=test$SWP)
+cm_opt <- table(Predicted=pred_opt, Actual=test$SWP)
+
+cat("\nThreshold=0.5:\n")
+cat("  Sensitivity (SWP=0):", round(cm_05[1,1]/sum(cm_05[,1])*100,1), "%\n")
+cat("  Accuracy:           ", round(mean(pred_05==test$SWP)*100,1), "%\n")
+
+cat("\nThreshold=", round(coords_logit$threshold,3), "(Youden):\n")
+cat("  Sensitivity (SWP=0):", round(cm_opt[1,1]/sum(cm_opt[,1])*100,1), "%\n")
+cat("  Accuracy:           ", round(mean(pred_opt==test$SWP)*100,1), "%\n")
+```
+
+---
+
+# Guided Practice
+
+::: {.webr-loading-note}
+**R is loading in the background** — exercises below will be interactive once ready.
+:::
+
+```{webr-r}
+#| label: guided-roc
+# TASK 1: Fit logistic model and draw ROC curve
+logit <- glm(SWP ~ Age + Sex + Fulltime + CTW + JobDemands +
+               JobControl + JobSupport + MentalWB, data=train, family=binomial)
+p_logit <- predict(logit, newdata=test, type="response")
+
+library(pROC)
+roc_obj <- roc(test$SWP, p_logit, quiet=TRUE)
+plot(roc_obj, col="#2980b9", lwd=2,
+     main=paste0("Logistic ROC (AUC=", round(auc(roc_obj),3), ")"))
+abline(0, 1, lty=2, col="#888")
+
+cat("AUC:", round(auc(roc_obj), 4), "\n")
+```
+
+```{webr-r}
+#| label: guided-threshold
+# TASK 2: Find optimal threshold and compare to default
+coords_best <- coords(roc_obj, "best", best.method="youden")
+cat("Optimal threshold:", round(coords_best$threshold, 4), "\n")
+cat("Sensitivity:", round(coords_best$sensitivity*100, 1), "%\n")
+cat("Specificity:", round(coords_best$specificity*100, 1), "%\n")
+
+# TASK 3: Apply both thresholds and compare confusion matrices
+pred_05  <- ifelse(p_logit > 0.50, 1, 0)
+pred_opt <- ifelse(p_logit > coords_best$threshold, 1, 0)
+
+cat("\n--- Threshold = 0.5 ---\n")
+print(table(Predicted=pred_05, Actual=test$SWP))
+
+cat("\n--- Threshold =", round(coords_best$threshold,3), "(Youden) ---\n")
+print(table(Predicted=pred_opt, Actual=test$SWP))
+```
+
+```{webr-r}
+#| label: guided-summary
+# TASK 4: Full Block 2 summary — compare all methods by AUC and sensitivity
+
+# Methods from previous sections (re-fit for reference)
+logit <- glm(SWP ~ Age + Sex + Fulltime + CTW + JobDemands +
+               JobControl + JobSupport + MentalWB, data=train, family=binomial)
+
+p_logit <- predict(logit, newdata=test, type="response")
+roc_l   <- roc(test$SWP, p_logit, quiet=TRUE)
+
+# Null model (always predict 0.89)
+p_null <- rep(mean(train$SWP), nrow(test))
+roc_n  <- roc(test$SWP, p_null, quiet=TRUE)
+
+cat("=== Block 2 Summary: Classification on SWP dataset ===\n\n")
+cat(sprintf("%-20s  AUC\n", "Method"))
+cat(sprintf("%-20s  %.3f\n", "Null (constant)", auc(roc_n)))
+cat(sprintf("%-20s  %.3f\n", "Logistic",        auc(roc_l)))
+cat("\n(Add random forest and XGBoost AUC from previous sections)\n")
+cat("\nKey insight: accuracy alone is misleading with 89% majority class.\n")
+cat("Focus on AUC and sensitivity at clinically meaningful threshold.\n")
+```
+
+::: {.callout-tip collapse="true"}
+## Clinical interpretation
+In occupational health, a worker flagged as SWP=0 (at risk) would receive an intervention. The costs are:
+- **False negative (missed)**: worker deteriorates without support — high cost
+- **False positive (false alarm)**: unnecessary intervention — lower cost
+
+This asymmetry justifies a low threshold (favour sensitivity) and reporting sensitivity alongside AUC rather than accuracy.
+:::
+
+---
+
+# Why-Questions
+
+::: {.callout-caution collapse="true"}
+## Q: "AUC of 0.80 — is that good?"
+
+It depends on the application. General benchmarks:
+- 0.5: random (no discrimination)
+- 0.7–0.8: acceptable
+- 0.8–0.9: excellent
+- > 0.9: outstanding (sometimes suspicious — check for data leakage)
+
+For predicting sustainable work participation from self-reported scales (which have measurement error), AUC ≈ 0.75–0.85 is realistic and clinically useful. Higher AUC in this setting might indicate overfitting or a leaking predictor.
+:::
+
+::: {.callout-caution collapse="true"}
+## Q: "Should I report AUC or the precision-recall curve?"
+
+For **imbalanced** datasets, the precision-recall (PR) curve is often more informative than ROC:
+- ROC AUC can look high even when sensitivity for the minority class is poor
+- PR curve focuses on the minority class performance
+- `pROC::plot.roc()` shows ROC; use `PRROC` package for PR curves
+
+In clinical settings, always report *both* — and report sensitivity and specificity at the chosen operating threshold.
+:::
+
+::: {.callout-note}
+## Further reading
+James et al. (2021). *An Introduction to Statistical Learning*. — Chapter 4.4.3 (ROC)
+:::
