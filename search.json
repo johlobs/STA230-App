@@ -249,75 +249,219 @@
     ]
   },
   {
-    "objectID": "classification/06-roc-auc.html",
-    "href": "classification/06-roc-auc.html",
-    "title": "C — Roc Auc",
-    "section": "",
-    "text": "Coming soon — Block 2: Classification",
+    "objectID": "classification/06-roc-auc.html#the-confusion-matrix",
+    "href": "classification/06-roc-auc.html#the-confusion-matrix",
+    "title": "C6 — ROC Curve & AUC",
+    "section": "1.1 The confusion matrix",
+    "text": "1.1 The confusion matrix\nFor binary classification with threshold \\(c\\): classify as positive if \\(\\hat{p} &gt; c\\).\n\n\n\n\nActual +\nActual −\n\n\n\n\nPredicted +\nTP\nFP\n\n\nPredicted −\nFN\nTN\n\n\n\nKey metrics:\n\\[\\text{Sensitivity} = \\frac{TP}{TP + FN} \\quad \\text{(true positive rate, recall)}\\] \\[\\text{Specificity} = \\frac{TN}{TN + FP} \\quad \\text{(true negative rate)}\\] \\[\\text{PPV (Precision)} = \\frac{TP}{TP + FP}\\]",
     "crumbs": [
       "Home",
       "Block 2: Classification",
-      "C — Roc Auc"
+      "C6 — ROC Curve & AUC"
     ]
   },
   {
-    "objectID": "classification/04-random-forests.html",
-    "href": "classification/04-random-forests.html",
-    "title": "C — Random Forests",
-    "section": "",
-    "text": "Coming soon — Block 2: Classification",
+    "objectID": "classification/06-roc-auc.html#the-roc-curve",
+    "href": "classification/06-roc-auc.html#the-roc-curve",
+    "title": "C6 — ROC Curve & AUC",
+    "section": "1.2 The ROC curve",
+    "text": "1.2 The ROC curve\nThe Receiver Operating Characteristic curve plots sensitivity (TPR) vs 1−specificity (FPR) as the threshold \\(c\\) varies from 0 to 1.\n\nTop-left corner (TPR=1, FPR=0): perfect classifier\nDiagonal (TPR = FPR): random classifier\nAUC (Area Under the Curve): probability that a randomly chosen positive example scores higher than a randomly chosen negative example — ranges 0.5 (random) to 1.0 (perfect)",
     "crumbs": [
       "Home",
       "Block 2: Classification",
-      "C — Random Forests"
+      "C6 — ROC Curve & AUC"
     ]
   },
   {
-    "objectID": "classification/02-lda-knn.html",
-    "href": "classification/02-lda-knn.html",
-    "title": "C — Lda Knn",
-    "section": "",
-    "text": "Coming soon — Block 2: Classification",
+    "objectID": "classification/06-roc-auc.html#choosing-a-threshold",
+    "href": "classification/06-roc-auc.html#choosing-a-threshold",
+    "title": "C6 — ROC Curve & AUC",
+    "section": "1.3 Choosing a threshold",
+    "text": "1.3 Choosing a threshold\nThe optimal threshold depends on the cost asymmetry:\n\nIn occupational health: missing a worker at risk (FN) may be more costly than a false alarm (FP) → lower threshold → higher sensitivity\nRule: choose threshold that maximises \\(\\text{Sensitivity} + \\text{Specificity} - 1\\) (Youden’s J) or matches clinical cost-benefit",
     "crumbs": [
       "Home",
       "Block 2: Classification",
-      "C — Lda Knn"
+      "C6 — ROC Curve & AUC"
     ]
   },
   {
-    "objectID": "classification/01-logistic-regression.html",
-    "href": "classification/01-logistic-regression.html",
-    "title": "C — Logistic Regression",
-    "section": "",
-    "text": "Coming soon — Block 2: Classification",
+    "objectID": "classification/04-random-forests.html#bagging-reducing-variance-by-averaging",
+    "href": "classification/04-random-forests.html#bagging-reducing-variance-by-averaging",
+    "title": "C4 — Random Forests",
+    "section": "1.1 Bagging: reducing variance by averaging",
+    "text": "1.1 Bagging: reducing variance by averaging\nA single tree has high variance. Bagging (Bootstrap Aggregating) reduces variance by averaging many trees:\n\nDraw \\(B\\) bootstrap samples (size \\(n\\) with replacement) from training data\nFit a full tree on each bootstrap sample\nPredict by majority vote across all \\(B\\) trees\n\nSince each tree is trained on a different sample, averaging \\(B\\) uncorrelated trees reduces variance by factor \\(B\\) — while keeping bias approximately constant.",
     "crumbs": [
       "Home",
       "Block 2: Classification",
-      "C — Logistic Regression"
+      "C4 — Random Forests"
     ]
   },
   {
-    "objectID": "classification/03-decision-trees.html",
-    "href": "classification/03-decision-trees.html",
-    "title": "C — Decision Trees",
-    "section": "",
-    "text": "Coming soon — Block 2: Classification",
+    "objectID": "classification/04-random-forests.html#random-forests-decorrelating-trees",
+    "href": "classification/04-random-forests.html#random-forests-decorrelating-trees",
+    "title": "C4 — Random Forests",
+    "section": "1.2 Random forests: decorrelating trees",
+    "text": "1.2 Random forests: decorrelating trees\nIn bagging, if one predictor is very strong, most trees will use it at the top split — the trees are correlated. Averaging correlated trees reduces variance less effectively.\nRandom forests fix this by randomly selecting \\(m\\) predictors at each split (default: \\(m = \\sqrt{p}\\) for classification). This decorrelates the trees and further reduces variance.",
     "crumbs": [
       "Home",
       "Block 2: Classification",
-      "C — Decision Trees"
+      "C4 — Random Forests"
     ]
   },
   {
-    "objectID": "classification/05-boosting-xgboost.html",
-    "href": "classification/05-boosting-xgboost.html",
-    "title": "C — Boosting Xgboost",
-    "section": "",
-    "text": "Coming soon — Block 2: Classification",
+    "objectID": "classification/04-random-forests.html#key-hyperparameters",
+    "href": "classification/04-random-forests.html#key-hyperparameters",
+    "title": "C4 — Random Forests",
+    "section": "1.3 Key hyperparameters",
+    "text": "1.3 Key hyperparameters\n\n\n\nParameter\nDefault\nEffect\n\n\n\n\nntree\n500\nMore trees → more stable; diminishing returns\n\n\nmtry\n√p\nSmaller → more decorrelated, higher bias\n\n\nnodesize\n1\nLarger → shallower trees, less overfit",
     "crumbs": [
       "Home",
       "Block 2: Classification",
-      "C — Boosting Xgboost"
+      "C4 — Random Forests"
+    ]
+  },
+  {
+    "objectID": "classification/04-random-forests.html#out-of-bag-oob-error",
+    "href": "classification/04-random-forests.html#out-of-bag-oob-error",
+    "title": "C4 — Random Forests",
+    "section": "1.4 Out-of-bag (OOB) error",
+    "text": "1.4 Out-of-bag (OOB) error\nEach tree is trained on ~63% of data (the bootstrap sample). The remaining ~37% (out-of-bag) can be used to estimate test error without a separate validation set. OOB error is a nearly unbiased estimate of test error.",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C4 — Random Forests"
+    ]
+  },
+  {
+    "objectID": "classification/02-lda-knn.html#linear-discriminant-analysis-lda",
+    "href": "classification/02-lda-knn.html#linear-discriminant-analysis-lda",
+    "title": "C2 — LDA & kNN",
+    "section": "1.1 Linear Discriminant Analysis (LDA)",
+    "text": "1.1 Linear Discriminant Analysis (LDA)\nLDA models the class-conditional distributions \\(P(\\mathbf{X} \\mid Y=k)\\) as multivariate Gaussians with the same covariance matrix \\(\\boldsymbol{\\Sigma}\\). Via Bayes’ theorem, this gives a linear decision boundary. QDA relaxes equal-covariance, giving a quadratic boundary but estimating more parameters.",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C2 — LDA & kNN"
+    ]
+  },
+  {
+    "objectID": "classification/02-lda-knn.html#k-nearest-neighbours-knn",
+    "href": "classification/02-lda-knn.html#k-nearest-neighbours-knn",
+    "title": "C2 — LDA & kNN",
+    "section": "1.2 k-Nearest Neighbours (kNN)",
+    "text": "1.2 k-Nearest Neighbours (kNN)\nkNN is non-parametric — no distributional assumption:\n\nFor a new point \\(\\mathbf{x}_0\\), find the \\(k\\) closest training points\nAssign the majority class among those neighbours\n\nSmall \\(k\\) = flexible, low bias, high variance. Large \\(k\\) = smooth, high bias, low variance. Optimal \\(k\\) found by cross-validation.\n\n\n\nMethod\nBoundary\nAssumption\nScale-sensitive?\n\n\n\n\nLogistic\nLinear\nNone\nNo\n\n\nLDA\nLinear\nGaussian, equal Σ\nNo\n\n\nQDA\nQuadratic\nGaussian, different Σ\nNo\n\n\nkNN\nNon-linear\nNone\nYes — must standardise",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C2 — LDA & kNN"
+    ]
+  },
+  {
+    "objectID": "classification/01-logistic-regression.html#from-regression-to-classification",
+    "href": "classification/01-logistic-regression.html#from-regression-to-classification",
+    "title": "C1 — Logistic Regression",
+    "section": "1.1 From regression to classification",
+    "text": "1.1 From regression to classification\nIn classification the outcome \\(Y\\) is categorical. For binary \\(Y \\in \\{0, 1\\}\\), we model the probability of belonging to class 1:\n\\[p(\\mathbf{x}) = P(Y = 1 \\mid \\mathbf{X} = \\mathbf{x})\\]\nWe then classify: \\(\\hat{Y} = 1\\) if \\(\\hat{p}(\\mathbf{x}) &gt; 0.5\\) (or another threshold).",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C1 — Logistic Regression"
+    ]
+  },
+  {
+    "objectID": "classification/01-logistic-regression.html#the-logistic-model",
+    "href": "classification/01-logistic-regression.html#the-logistic-model",
+    "title": "C1 — Logistic Regression",
+    "section": "1.2 The logistic model",
+    "text": "1.2 The logistic model\nLogistic regression models \\(p(\\mathbf{x})\\) via the logit link:\n\\[\\log\\frac{p(\\mathbf{x})}{1 - p(\\mathbf{x})} = \\beta_0 + \\beta_1 x_1 + \\cdots + \\beta_p x_p\\]\nEquivalently:\n\\[p(\\mathbf{x}) = \\frac{e^{\\mathbf{x}^\\top\\boldsymbol{\\beta}}}{1 + e^{\\mathbf{x}^\\top\\boldsymbol{\\beta}}}\\]\nThe coefficients \\(e^{\\beta_j}\\) are odds ratios — the multiplicative change in odds of \\(Y=1\\) per unit increase in \\(x_j\\).",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C1 — Logistic Regression"
+    ]
+  },
+  {
+    "objectID": "classification/01-logistic-regression.html#class-imbalance",
+    "href": "classification/01-logistic-regression.html#class-imbalance",
+    "title": "C1 — Logistic Regression",
+    "section": "1.3 Class imbalance",
+    "text": "1.3 Class imbalance\nWhen one class is rare (e.g., only 11% have \\(Y=0\\) in SWP_CTW), a naive classifier that always predicts the majority class achieves high accuracy but is useless. Alternatives:\n\nUse sensitivity and specificity instead of accuracy\nReport AUC (area under the ROC curve)\nAdjust the decision threshold away from 0.5\nResample: oversample the minority class (SMOTE) or undersample the majority",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C1 — Logistic Regression"
+    ]
+  },
+  {
+    "objectID": "classification/03-decision-trees.html#how-cart-works",
+    "href": "classification/03-decision-trees.html#how-cart-works",
+    "title": "C3 — Decision Trees (CART)",
+    "section": "1.1 How CART works",
+    "text": "1.1 How CART works\nA classification tree recursively splits the predictor space into rectangular regions. At each node, it finds the predictor \\(X_j\\) and split point \\(s\\) that minimises the Gini impurity in the resulting child nodes:\n\\[G = \\sum_{k} \\hat{p}_{mk}(1 - \\hat{p}_{mk})\\]\nwhere \\(\\hat{p}_{mk}\\) is the proportion of class \\(k\\) observations in region \\(m\\). \\(G=0\\) means a pure node (all one class); \\(G=0.5\\) is maximally impure for a binary outcome.",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C3 — Decision Trees (CART)"
+    ]
+  },
+  {
+    "objectID": "classification/03-decision-trees.html#pruning-to-avoid-overfitting",
+    "href": "classification/03-decision-trees.html#pruning-to-avoid-overfitting",
+    "title": "C3 — Decision Trees (CART)",
+    "section": "1.2 Pruning to avoid overfitting",
+    "text": "1.2 Pruning to avoid overfitting\nA fully grown tree overfits — it memorises the training data. Cost-complexity pruning adds a penalty \\(\\alpha \\cdot |\\text{leaves}|\\) to the tree size. The optimal \\(\\alpha\\) is found by cross-validation.",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C3 — Decision Trees (CART)"
+    ]
+  },
+  {
+    "objectID": "classification/03-decision-trees.html#strengths-and-weaknesses",
+    "href": "classification/03-decision-trees.html#strengths-and-weaknesses",
+    "title": "C3 — Decision Trees (CART)",
+    "section": "1.3 Strengths and weaknesses",
+    "text": "1.3 Strengths and weaknesses\n\n\n\n\n\n\n\nStrength\nWeakness\n\n\n\n\nInterpretable — easy to visualise\nHigh variance — small data changes give different trees\n\n\nHandles mixed variable types naturally\nUsually outperformed by ensemble methods\n\n\nCaptures interactions automatically\nAxis-aligned splits only\n\n\nNo need to standardise\nProne to overfitting without pruning",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C3 — Decision Trees (CART)"
+    ]
+  },
+  {
+    "objectID": "classification/05-boosting-xgboost.html#boosting-vs-bagging",
+    "href": "classification/05-boosting-xgboost.html#boosting-vs-bagging",
+    "title": "C5 — Boosting & XGBoost",
+    "section": "1.1 Boosting vs bagging",
+    "text": "1.1 Boosting vs bagging\nBagging builds trees in parallel on bootstrap samples and averages. Boosting builds trees sequentially — each tree focuses on the mistakes of the previous ones.",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C5 — Boosting & XGBoost"
+    ]
+  },
+  {
+    "objectID": "classification/05-boosting-xgboost.html#gradient-boosting",
+    "href": "classification/05-boosting-xgboost.html#gradient-boosting",
+    "title": "C5 — Boosting & XGBoost",
+    "section": "1.2 Gradient boosting",
+    "text": "1.2 Gradient boosting\nAt each step \\(m\\), fit a tree to the negative gradient of the loss function evaluated at the current predictions. For binary classification with log-loss:\n\\[\\hat{f}^{(m)}(\\mathbf{x}) = \\hat{f}^{(m-1)}(\\mathbf{x}) + \\eta \\cdot h_m(\\mathbf{x})\\]\nwhere \\(h_m\\) is the new tree and \\(\\eta\\) (learning rate) controls how much each tree contributes.",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C5 — Boosting & XGBoost"
+    ]
+  },
+  {
+    "objectID": "classification/05-boosting-xgboost.html#key-hyperparameters",
+    "href": "classification/05-boosting-xgboost.html#key-hyperparameters",
+    "title": "C5 — Boosting & XGBoost",
+    "section": "1.3 Key hyperparameters",
+    "text": "1.3 Key hyperparameters\n\n\n\n\n\n\n\n\nParameter\nEffect\nTypical values\n\n\n\n\nnrounds\nNumber of trees\n100–1000 (with early stopping)\n\n\neta (learning rate)\nStep size\n0.01–0.3 — smaller = more robust\n\n\nmax_depth\nTree depth\n3–8 — shallower = less overfit\n\n\nsubsample\nFraction of rows per tree\n0.5–1.0 — bagging-like regularisation\n\n\ncolsample_bytree\nFraction of columns per tree\n0.5–1.0 — random forest-like\n\n\n\n\n\n\n\n\n\nTipRule of thumb\n\n\n\nLower eta + more nrounds + early stopping = more robust. Start with eta=0.1, nrounds=500, use early stopping on validation set.",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C5 — Boosting & XGBoost"
     ]
   },
   {
