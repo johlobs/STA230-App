@@ -1,5 +1,5 @@
 ---
-title: "U — Hierarchical Clustering"
+title: "U3 — Hierarchical Clustering"
 engine: knitr
 ---
 
@@ -7,4 +7,277 @@ engine: knitr
 <script>document.body.classList.add("unsupervised");</script>
 ```
 
-*Coming soon — Block 3: Unsupervised*
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+nhanes <- readRDS(here::here("data/nhanes.rds"))
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+nhanes <- readRDS("https://johlobs.github.io/STA230-App/data/nhanes.rds")
+```
+
+# Concept: A Tree of Clusters
+
+## Why hierarchical clustering?
+
+K-means requires you to choose $K$ before you start. Hierarchical clustering builds a **tree (dendrogram)** that shows the nested cluster structure at every level — you choose $K$ after seeing the tree. It is also **deterministic**: the same data always gives the same result, unlike k-means.
+
+A second advantage: the dendrogram reveals *how* clusters relate to each other. Are clusters 1 and 2 more similar to each other than to cluster 3? The tree shows this immediately.
+
+## Bottom-up (agglomerative) clustering
+
+The most common approach:
+
+1. Start with $n$ clusters — every observation is its own cluster
+2. Merge the two **most similar** clusters
+3. Repeat until all observations are in one cluster
+
+The result is a dendrogram. To get $K$ clusters, cut the tree at height $h$ such that exactly $K$ branches extend below the cut.
+
+## Linkage — how similarity is measured between clusters
+
+Once clusters contain multiple observations, we need to define distance between clusters (not just individual points).
+
+| Linkage | Distance between clusters A and B |
+|---------|----------------------------------|
+| **Complete** | Maximum distance between any point in A and any point in B |
+| **Single** | Minimum distance (nearest neighbours) |
+| **Average** | Average distance between all pairs |
+| **Ward's** | Increase in total WCSS when merging A and B |
+
+**Ward's linkage** is usually recommended for health data — it produces compact, similarly sized clusters and connects directly to k-means (both minimise WCSS).
+
+## Reading a dendrogram
+
+- **Height of a merge** = dissimilarity at which two clusters joined
+- **Long vertical lines** = large gap between levels = natural cluster boundary
+- **Short lines** = clusters joined at similar dissimilarity = less clear separation
+- **Cut the tree** where you see the longest vertical lines before the cut
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="What is the main advantage of hierarchical clustering over k-means?">
+  <div class="q-opt" data-correct="false">It always finds the global optimum</div>
+  <div class="q-opt" data-correct="false">It runs faster on large datasets</div>
+  <div class="q-opt" data-correct="true">You do not need to specify K in advance — the dendrogram shows the structure at all levels and you choose the cut afterwards</div>
+  <div class="q-opt" data-correct="false">It works without standardising the variables</div>
+  <div class="q-exp">K-means requires K as input. Hierarchical clustering builds a full tree and you choose K by deciding where to cut the dendrogram — after seeing the structure. This is useful when you have no prior expectation about the number of groups. Hierarchical clustering still requires standardisation and a choice of linkage method, so it is not assumption-free.</div>
+</div>
+
+<div class="sta230-quiz" data-question="Complete linkage uses the maximum distance between points in two clusters. What kind of clusters does this tend to produce?">
+  <div class="q-opt" data-correct="false">Very elongated, chain-like clusters</div>
+  <div class="q-opt" data-correct="true">Compact clusters — because merging requires that the farthest points in both clusters are still close</div>
+  <div class="q-opt" data-correct="false">Clusters of exactly equal size</div>
+  <div class="q-opt" data-correct="false">Clusters that always match k-means output</div>
+  <div class="q-exp">Complete linkage is conservative: two clusters only merge if their most distant members are still close enough. This prevents one large loose cluster from absorbing everything (the "chaining" problem of single linkage). The result is compact, roughly spherical clusters. Ward's linkage is similar in spirit but uses WCSS as the criterion.</div>
+</div>
+
+<div class="sta230-quiz" data-question="In a dendrogram, two clusters merge at height 4.2 and another pair merges at height 0.8. What does this mean?">
+  <div class="q-opt" data-correct="false">The first pair has 4.2 observations and the second has 0.8 observations</div>
+  <div class="q-opt" data-correct="true">The first pair was much more dissimilar when they merged — a height of 4.2 vs 0.8 suggests a natural cluster boundary between them</div>
+  <div class="q-opt" data-correct="false">The algorithm made an error — heights should be equal</div>
+  <div class="q-opt" data-correct="false">The first pair is a better cluster than the second</div>
+  <div class="q-exp">Height in a dendrogram = the dissimilarity (e.g. Euclidean distance) at which the merge happened. A large height means the two clusters were far apart before merging — cutting the tree just below this height preserves the separation. Long vertical lines in a dendrogram indicate natural boundaries. Short lines indicate clusters that were already very similar.</div>
+</div>
+```
+
+---
+
+# Worked Example: Hierarchical Clustering of NHANES Patients
+
+```{r}
+#| label: hclust-prep
+vars <- c("Age", "BMI", "Waist", "Cholesterol", "SBP")
+set.seed(42)
+# Use a subsample of 300 for readable dendrogram
+idx  <- sample(which(complete.cases(nhanes[, vars])), 300)
+dat  <- nhanes[idx, vars]
+X    <- scale(dat)
+
+# Compute Euclidean distance matrix
+dist_X <- dist(X, method = "euclidean")
+
+# Fit hierarchical clustering with Ward's linkage
+hc <- hclust(dist_X, method = "ward.D2")
+```
+
+```{r}
+#| label: dendrogram
+#| fig-width: 10
+#| fig-height: 5
+plot(hc, labels = FALSE, hang = -1,
+     main = "Dendrogram — NHANES health variables (Ward's linkage)",
+     xlab = "Patients", ylab = "Height (dissimilarity)")
+abline(h = 12, col = "#e74c3c", lty = 2, lwd = 1.5)
+legend("topright", legend = "Cut at h = 12 → 3 clusters",
+       col = "#e74c3c", lty = 2, bty = "n")
+```
+
+```{r}
+#| label: cut-tree
+# Cut at K = 3
+clusters <- cutree(hc, k = 3)
+dat$cluster <- factor(clusters)
+
+# Cluster means
+aggregate(dat[, vars], by = list(Cluster = dat$cluster), FUN = mean) |>
+  mutate(across(where(is.numeric), round, 1))
+```
+
+```{r}
+#| label: hclust-pca-plot
+#| fig-width: 8
+#| fig-height: 5
+pca <- prcomp(X)
+scores <- data.frame(pca$x[, 1:2], cluster = dat$cluster)
+
+ggplot(scores, aes(PC1, PC2, colour = cluster)) +
+  geom_point(alpha = 0.5, size = 1.2) +
+  stat_ellipse(linewidth = 0.8) +
+  scale_colour_manual(values = c("#e74c3c", "#3498db", "#2ecc71")) +
+  labs(title = "Hierarchical clusters (K = 3, Ward's) on PC1–PC2",
+       colour = "Cluster") +
+  theme_minimal()
+```
+
+**Comparing to k-means:** Ward's hierarchical clustering often produces similar results to k-means because both minimise WCSS. The key difference: hierarchical clustering is deterministic and shows the full tree; k-means is faster on large datasets.
+
+---
+
+# Guided Practice
+
+::: {.webr-loading-note}
+**R is loading in the background** — exercises will be interactive once the status bar disappears.
+:::
+
+```{webr-r}
+#| label: guided-linkage
+vars <- c("Age", "BMI", "Waist", "Cholesterol", "SBP")
+set.seed(42)
+idx  <- sample(which(complete.cases(nhanes[, vars])), 200)
+dat  <- nhanes[idx, vars]
+X    <- scale(dat)
+D    <- dist(X)
+
+# TASK 1: Fit hierarchical clustering with complete linkage
+hc_complete <- hclust(D, method = "complete")
+plot(hc_complete, labels = FALSE, hang = -1,
+     main = "Complete linkage", xlab = "", ylab = "Height")
+
+# TASK 2: Fit with Ward's linkage — how does the dendrogram shape differ?
+hc_ward <- hclust(D, method = "ward.D2")
+plot(hc_ward, labels = FALSE, hang = -1,
+     main = "Ward's linkage", xlab = "", ylab = "Height")
+```
+
+```{webr-r}
+#| label: guided-cut
+vars <- c("Age", "BMI", "Waist", "Cholesterol", "SBP")
+set.seed(42)
+idx  <- sample(which(complete.cases(nhanes[, vars])), 200)
+dat  <- nhanes[idx, vars]
+X    <- scale(dat)
+D    <- dist(X)
+hc   <- hclust(D, method = "ward.D2")
+
+# TASK 3: Cut the tree at K = 2, 3, and 4
+# Compare cluster sizes — which K gives the most balanced clusters?
+for (k in 2:4) {
+  cl <- cutree(hc, k = k)
+  cat("K =", k, "— cluster sizes:", table(cl), "\n")
+}
+
+# TASK 4: For K = 3, print the cluster means
+dat$cluster <- cutree(hc, k = 3)
+aggregate(dat[, vars], by = list(Cluster = dat$cluster), FUN = mean) |>
+  round(1)
+```
+
+::: {.callout-tip collapse="true"}
+## Hints
+- `hclust(dist(X), method = "ward.D2")` for Ward's linkage
+- `cutree(hc, k = 3)` to cut the tree into 3 clusters
+- `table(cutree(hc, k = K))` shows how many observations per cluster
+- Ward's tends to give more balanced cluster sizes than complete or single linkage
+:::
+
+---
+
+# Retrieval Challenge
+
+```{webr-r}
+#| label: challenge
+# Connect PCA and hierarchical clustering:
+# 1. Run PCA on the 5 health variables
+# 2. Keep the first 2 PCs
+# 3. Run hierarchical clustering on the PC scores (not original variables)
+# 4. Plot the dendrogram and cut at K = 3
+# 5. Visualise the clusters in a scatterplot of PC1 vs PC2
+# Is the result similar to clustering on the full 5-variable space?
+
+vars <- c("Age", "BMI", "Waist", "Cholesterol", "SBP")
+set.seed(42)
+idx  <- sample(which(complete.cases(nhanes[, vars])), 300)
+dat  <- nhanes[idx, vars]
+X    <- scale(dat)
+```
+
+::: {.callout-tip collapse="true"}
+## Model Answer
+```r
+pca    <- prcomp(X)
+scores <- pca$x[, 1:2]          # Keep first 2 PCs
+
+D_pc   <- dist(scores)
+hc_pc  <- hclust(D_pc, method = "ward.D2")
+plot(hc_pc, labels = FALSE, hang = -1, main = "Clustering on PC1–PC2")
+
+cl <- cutree(hc_pc, k = 3)
+df <- data.frame(scores, cluster = factor(cl))
+
+library(ggplot2)
+ggplot(df, aes(PC1, PC2, colour = cluster)) +
+  geom_point(alpha = 0.5) +
+  stat_ellipse() +
+  theme_minimal() +
+  labs(title = "Hierarchical clusters on PC scores")
+# Note: clustering on 2 PCs discards ~30% of variance vs full 5-variable clustering
+```
+:::
+
+---
+
+# Why-Questions
+
+::: {.callout-caution collapse="true"}
+## Q: "Should I use k-means or hierarchical clustering?"
+
+Use **hierarchical** when: you don't know K, you want to see the full tree structure, the dataset is small enough for a readable dendrogram (n < ~1000), or reproducibility matters. Use **k-means** when: n is large (k-means is O(nKd) per iteration, hclust is O(n² log n)), you have a strong prior on K, or you need to re-cluster new observations (you can assign new points to the nearest centroid in k-means). For health data at master's level, hierarchical with Ward's linkage is usually the starting point.
+:::
+
+::: {.callout-caution collapse="true"}
+## Q: "How does this connect to what I did with factor analysis in STA220?"
+
+Factor analysis (FA) and clustering both reveal structure in unlabelled data. FA finds latent dimensions in the *variable* space — the HAD items cluster into depression and anxiety constructs. Hierarchical clustering finds groups in the *observation* space — patients group into health profiles. You can chain them: run FA to find the latent dimensions (or use PCA), then use the factor scores (or PC scores) as input to clustering. This gives clusters that are defined by the latent structure, not by the raw item correlations.
+:::
+
+::: {.callout-caution collapse="true"}
+## Q: "The dendrogram looks like two large groups at the top but K = 3 seems better from the elbow plot. Which do I trust?"
+
+Use both sources of evidence. The dendrogram shows the hierarchical structure; the elbow plot (from k-means) shows WCSS. If the dendrogram shows two very clear top-level groups and one of them splits into two sub-groups at a lower height, K = 3 is a natural choice — two main profiles, one of which has two subtypes. There is no single correct K; describe what you find at multiple levels and let the research question guide the final choice.
+:::
+
+::: {.callout-note}
+## Further reading
+James et al. (2021). *An Introduction to Statistical Learning*. — Chapter 12.4
+:::
