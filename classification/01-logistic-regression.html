@@ -1891,19 +1891,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../unsupervised/01-pca.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">U — Pca</span></a>
+ <span class="menu-text">U1 — Principal Component Analysis</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../unsupervised/02-clustering-kmeans.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">U — Clustering Kmeans</span></a>
+ <span class="menu-text">U2 — K-Means Clustering</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../unsupervised/03-hierarchical-clustering.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">U — Hierarchical Clustering</span></a>
+ <span class="menu-text">U3 — Hierarchical Clustering</span></a>
   </div>
 </li>
       </ul>
@@ -2993,7 +2993,7 @@ Accuracy:    89 %</code></pre>
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/johlobs\.github\.io\/STA230-App\/");
+        var filterRegex = new RegExp('/' + window.location.host + '/');
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }

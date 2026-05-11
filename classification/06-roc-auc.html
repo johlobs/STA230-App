@@ -1891,19 +1891,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../unsupervised/01-pca.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">U — Pca</span></a>
+ <span class="menu-text">U1 — Principal Component Analysis</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../unsupervised/02-clustering-kmeans.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">U — Clustering Kmeans</span></a>
+ <span class="menu-text">U2 — K-Means Clustering</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../unsupervised/03-hierarchical-clustering.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">U — Hierarchical Clustering</span></a>
+ <span class="menu-text">U3 — Hierarchical Clustering</span></a>
   </div>
 </li>
       </ul>
@@ -1923,9 +1923,15 @@ window.Quarto = {
   <li><a href="#the-confusion-matrix" id="toc-the-confusion-matrix" class="nav-link" data-scroll-target="#the-confusion-matrix"><span class="header-section-number">1.1</span> The confusion matrix</a></li>
   <li><a href="#the-roc-curve" id="toc-the-roc-curve" class="nav-link" data-scroll-target="#the-roc-curve"><span class="header-section-number">1.2</span> The ROC curve</a></li>
   <li><a href="#choosing-a-threshold" id="toc-choosing-a-threshold" class="nav-link" data-scroll-target="#choosing-a-threshold"><span class="header-section-number">1.3</span> Choosing a threshold</a></li>
+  <li><a href="#discrimination-vs-calibration" id="toc-discrimination-vs-calibration" class="nav-link" data-scroll-target="#discrimination-vs-calibration"><span class="header-section-number">1.4</span> Discrimination vs calibration</a></li>
+  <li><a href="#calibration-metrics" id="toc-calibration-metrics" class="nav-link" data-scroll-target="#calibration-metrics"><span class="header-section-number">1.5</span> Calibration metrics</a></li>
+  <li><a href="#kappa-statistic" id="toc-kappa-statistic" class="nav-link" data-scroll-target="#kappa-statistic"><span class="header-section-number">1.6</span> Kappa statistic</a></li>
   </ul></li>
   <li><a href="#quiz" id="toc-quiz" class="nav-link" data-scroll-target="#quiz"><span class="header-section-number">2</span> Quiz</a></li>
-  <li><a href="#worked-example-roc-comparison-across-all-methods" id="toc-worked-example-roc-comparison-across-all-methods" class="nav-link" data-scroll-target="#worked-example-roc-comparison-across-all-methods"><span class="header-section-number">3</span> Worked Example: ROC Comparison Across All Methods</a></li>
+  <li><a href="#worked-example-roc-comparison-across-all-methods" id="toc-worked-example-roc-comparison-across-all-methods" class="nav-link" data-scroll-target="#worked-example-roc-comparison-across-all-methods"><span class="header-section-number">3</span> Worked Example: ROC Comparison Across All Methods</a>
+  <ul class="collapse">
+  <li><a href="#calibration-are-the-predicted-probabilities-accurate" id="toc-calibration-are-the-predicted-probabilities-accurate" class="nav-link" data-scroll-target="#calibration-are-the-predicted-probabilities-accurate"><span class="header-section-number">3.1</span> Calibration: are the predicted probabilities accurate?</a></li>
+  </ul></li>
   <li><a href="#guided-practice" id="toc-guided-practice" class="nav-link" data-scroll-target="#guided-practice"><span class="header-section-number">4</span> Guided Practice</a></li>
   <li><a href="#why-questions" id="toc-why-questions" class="nav-link" data-scroll-target="#why-questions"><span class="header-section-number">5</span> Why-Questions</a></li>
   </ul>
@@ -2285,6 +2291,64 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <li>In occupational health: missing a worker at risk (FN) may be more costly than a false alarm (FP) → lower threshold → higher sensitivity</li>
 <li>Rule: choose threshold that maximises <span class="math inline">\(\text{Sensitivity} + \text{Specificity} - 1\)</span> (Youden’s J) or matches clinical cost-benefit</li>
 </ul>
+</section>
+<section id="discrimination-vs-calibration" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="discrimination-vs-calibration"><span class="header-section-number">1.4</span> Discrimination vs calibration</h2>
+<p>These are two distinct, independent model properties:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 29%">
+<col style="width: 37%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Aspect</th>
+<th>Question</th>
+<th>Metrics</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Discrimination</strong></td>
+<td>Can the model rank positives above negatives?</td>
+<td>AUC / C-statistic, sensitivity, specificity</td>
+</tr>
+<tr class="even">
+<td><strong>Calibration</strong></td>
+<td>Are the predicted probabilities accurate?</td>
+<td>Calibration plot, Hosmer-Lemeshow, Brier score</td>
+</tr>
+</tbody>
+</table>
+<p>A model can discriminate well but be poorly calibrated — e.g., it ranks workers correctly but systematically overestimates risk. For clinical and public health decision-making, <strong>both</strong> must be reported.</p>
+</section>
+<section id="calibration-metrics" class="level2" data-number="1.5">
+<h2 data-number="1.5" class="anchored" data-anchor-id="calibration-metrics"><span class="header-section-number">1.5</span> Calibration metrics</h2>
+<p><strong>Calibration plot</strong>: Group predicted probabilities into deciles. Compare the mean predicted probability to the observed event rate in each group. Points on the diagonal = perfect calibration.</p>
+<p><strong>Hosmer-Lemeshow test</strong>: Chi-squared test for calibration across <span class="math inline">\(g\)</span> groups (usually 10). Non-significant <span class="math inline">\(p\)</span> value = no evidence of poor calibration. Note: the test has low power in small samples.</p>
+<p><strong>Brier score</strong>: Mean squared error of predicted probabilities.</p>
+<p><span class="math display">\[\text{BS} = \frac{1}{n}\sum_{i=1}^{n}(\hat{p}_i - y_i)^2\]</span></p>
+<p>Ranges 0 (perfect) to 1. For a balanced outcome, a random (0.5 always) classifier gives BS = 0.25.</p>
+</section>
+<section id="kappa-statistic" class="level2" data-number="1.6">
+<h2 data-number="1.6" class="anchored" data-anchor-id="kappa-statistic"><span class="header-section-number">1.6</span> Kappa statistic</h2>
+<p>Cohen’s kappa corrects accuracy for chance agreement:</p>
+<p><span class="math display">\[\kappa = \frac{p_o - p_e}{1 - p_e}\]</span></p>
+<p>where <span class="math inline">\(p_o\)</span> is observed accuracy and <span class="math inline">\(p_e\)</span> is accuracy expected by chance (based on marginal distributions). Interpretation: <span class="math inline">\(\kappa = 0\)</span> means no better than chance; <span class="math inline">\(\kappa &gt; 0.6\)</span> is substantial agreement; <span class="math inline">\(\kappa &gt; 0.8\)</span> is almost perfect.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Imbalanced data and misleading accuracy
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>With 89% SWP=1 in the SWP dataset, always predicting SWP=1 achieves 89% accuracy — but <span class="math inline">\(\kappa = 0\)</span>. Accuracy is misleading when classes are imbalanced. Report AUC and sensitivity alongside accuracy, and always check kappa.</p>
+</div>
+</div>
 <hr>
 </section>
 </section>
@@ -2312,6 +2376,22 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
   <div class="q-opt" data-correct="false">Keep the threshold at 0.5 — that is always optimal</div>
   <div class="q-opt" data-correct="false">Use AUC instead of a threshold — it avoids threshold choice entirely</div>
   <div class="q-exp">Lowering the threshold means more observations are classified as positive (SWP=0 risk, requiring intervention). This increases sensitivity (fewer at-risk workers missed) but decreases specificity (more false alarms — workers who would have been fine are flagged). The optimal threshold depends on the relative costs of FN vs FP in the specific application. The ROC curve shows you all possible (FPR, TPR) trade-offs simultaneously.</div>
+</div>
+
+<div class="sta230-quiz" data-question="A logistic model has AUC = 0.83 but the Hosmer-Lemeshow test gives p = 0.01. What does this mean?">
+  <div class="q-opt" data-correct="false">The model has poor discrimination — it cannot rank positives above negatives</div>
+  <div class="q-opt" data-correct="true">The model discriminates well but is poorly calibrated — the predicted probabilities do not match observed event rates</div>
+  <div class="q-opt" data-correct="false">The AUC estimate is statistically unreliable</div>
+  <div class="q-opt" data-correct="false">The model has overfit the training data</div>
+  <div class="q-exp">Discrimination and calibration are independent. AUC = 0.83 means the model ranks 83% of positive–negative pairs correctly — good discrimination. Hosmer-Lemeshow p = 0.01 means the predicted probabilities are systematically off in some probability range — poor calibration. You can have excellent discrimination with poor calibration (e.g., all predicted probabilities shifted upward by 0.2). For clinical use you need both: accurate ranking AND accurate probability estimates.</div>
+</div>
+
+<div class="sta230-quiz" data-question="A model predicts SWP=1 for every observation. The dataset has 89% SWP=1. What is kappa?">
+  <div class="q-opt" data-correct="false">0.89 — the model correctly classifies 89% of observations</div>
+  <div class="q-opt" data-correct="true">≈ 0 — the model performs no better than chance after correcting for the marginal distribution</div>
+  <div class="q-opt" data-correct="false">Negative — the model is worse than random</div>
+  <div class="q-opt" data-correct="false">Cannot be calculated without a confusion matrix</div>
+  <div class="q-exp">κ = (p_o − p_e) / (1 − p_e). p_o = 0.89 (accuracy). p_e = expected accuracy by chance = (probability predict 1)(probability actual 1) + (prob. predict 0)(prob. actual 0) = 1.0 × 0.89 + 0.0 × 0.11 = 0.89. κ = (0.89 − 0.89)/(1 − 0.89) = 0. The model learns nothing beyond the base rate. Kappa exposes what accuracy hides with imbalanced outcomes.</div>
 </div>
 <hr>
 </section>
@@ -2412,7 +2492,92 @@ Threshold= 0.901 (Youden):</code></pre>
 <pre><code>  Accuracy:            60.5 %</code></pre>
 </div>
 </div>
+<section id="calibration-are-the-predicted-probabilities-accurate" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="calibration-are-the-predicted-probabilities-accurate"><span class="header-section-number">3.1</span> Calibration: are the predicted probabilities accurate?</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Decile-based calibration plot for logistic regression</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>cal_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">pred =</span> p_logit, <span class="at">obs =</span> test<span class="sc">$</span>SWP)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>cal_df<span class="sc">$</span>decile <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">cut</span>(<span class="fu">rank</span>(cal_df<span class="sc">$</span>pred), <span class="at">breaks =</span> <span class="dv">10</span>, <span class="at">labels =</span> <span class="cn">FALSE</span>))</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>cal_sum <span class="ot">&lt;-</span> cal_df <span class="sc">|&gt;</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">group_by</span>(decile) <span class="sc">|&gt;</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">summarise</span>(<span class="at">mean_pred =</span> <span class="fu">mean</span>(pred),</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>                   <span class="at">mean_obs  =</span> <span class="fu">mean</span>(obs),</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>                   <span class="at">n         =</span> dplyr<span class="sc">::</span><span class="fu">n</span>(),</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>                   <span class="at">.groups   =</span> <span class="st">"drop"</span>)</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(cal_sum, <span class="fu">aes</span>(mean_pred, mean_obs)) <span class="sc">+</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">colour =</span> <span class="st">"#888"</span>) <span class="sc">+</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#2980b9"</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">size =</span> n), <span class="at">colour =</span> <span class="st">"#2980b9"</span>, <span class="at">alpha =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_size_continuous</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>), <span class="at">name =</span> <span class="st">"n in decile"</span>) <span class="sc">+</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_equal</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Calibration plot — logistic regression (test data)"</span>,</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Dashed diagonal = perfect calibration; points should cluster on it"</span>,</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Mean predicted probability (decile)"</span>,</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Observed event rate (decile)"</span>) <span class="sc">+</span></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="06-roc-auc_files/figure-html/calibration-plot-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Brier score — mean squared error of predicted probabilities</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>brier <span class="ot">&lt;-</span> <span class="fu">mean</span>((p_logit <span class="sc">-</span> test<span class="sc">$</span>SWP)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Kappa — corrects accuracy for chance agreement</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>pred_05 <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(p_logit <span class="sc">&gt;</span> <span class="fl">0.5</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>po <span class="ot">&lt;-</span> <span class="fu">mean</span>(pred_05 <span class="sc">==</span> test<span class="sc">$</span>SWP)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>pe <span class="ot">&lt;-</span> <span class="fu">mean</span>(pred_05 <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">*</span> <span class="fu">mean</span>(test<span class="sc">$</span>SWP <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mean</span>(pred_05 <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">*</span> <span class="fu">mean</span>(test<span class="sc">$</span>SWP <span class="sc">==</span> <span class="dv">1</span>)</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>kappa_val <span class="ot">&lt;-</span> (po <span class="sc">-</span> pe) <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">-</span> pe)</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"=== Model evaluation summary (logistic, test data) ===</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>=== Model evaluation summary (logistic, test data) ===</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Discrimination:</span><span class="sc">\n</span><span class="st">"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Discrimination:</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  AUC (C-statistic):    %.3f</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">as.numeric</span>(<span class="fu">auc</span>(roc_logit))))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  AUC (C-statistic):    0.679</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Calibration:</span><span class="sc">\n</span><span class="st">"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Calibration:</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Brier score:          %.4f  (lower = better; 0 = perfect)</span><span class="sc">\n</span><span class="st">"</span>, brier))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Brier score:          0.0904  (lower = better; 0 = perfect)</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Classification (threshold = 0.5):</span><span class="sc">\n</span><span class="st">"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Classification (threshold = 0.5):</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Accuracy:             %.1f%%</span><span class="sc">\n</span><span class="st">"</span>, po <span class="sc">*</span> <span class="dv">100</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Accuracy:             89.6%</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Kappa:                %.4f  (0 = chance, &gt;0.6 = substantial)</span><span class="sc">\n</span><span class="st">"</span>, kappa_val))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Kappa:                0.0366  (0 = chance, &gt;0.6 = substantial)</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Sensitivity (SWP=0):  %.1f%%</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(cm_05[<span class="dv">1</span>,<span class="dv">1</span>] <span class="sc">/</span> <span class="fu">sum</span>(cm_05[,<span class="dv">1</span>]) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Sensitivity (SWP=0):  2.2%</code></pre>
+</div>
+</div>
 <hr>
+</section>
 </section>
 <section id="guided-practice" class="level1" data-number="4">
 <h1 data-number="4"><span class="header-section-number">4</span> Guided Practice</h1>
@@ -2426,7 +2591,7 @@ Threshold= 0.901 (Youden):</code></pre>
 <div id="qwebr-insertion-location-4"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 <div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -2435,7 +2600,7 @@ Threshold= 0.901 (Youden):</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>In occupational health, a worker flagged as SWP=0 (at risk) would receive an intervention. The costs are: - <strong>False negative (missed)</strong>: worker deteriorates without support — high cost - <strong>False positive (false alarm)</strong>: unnecessary intervention — lower cost</p>
 <p>This asymmetry justifies a low threshold (favour sensitivity) and reporting sensitivity alongside AUC rather than accuracy.</p>
@@ -2447,7 +2612,7 @@ Threshold= 0.901 (Youden):</code></pre>
 <section id="why-questions" class="level1" data-number="5">
 <h1 data-number="5"><span class="header-section-number">5</span> Why-Questions</h1>
 <div class="callout callout-style-default callout-caution callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -2456,7 +2621,7 @@ Threshold= 0.901 (Youden):</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>It depends on the application. General benchmarks: - 0.5: random (no discrimination) - 0.7–0.8: acceptable - 0.8–0.9: excellent - &gt; 0.9: outstanding (sometimes suspicious — check for data leakage)</p>
 <p>For predicting sustainable work participation from self-reported scales (which have measurement error), AUC ≈ 0.75–0.85 is realistic and clinically useful. Higher AUC in this setting might indicate overfitting or a leaking predictor.</p>
@@ -2464,7 +2629,7 @@ Threshold= 0.901 (Youden):</code></pre>
 </div>
 </div>
 <div class="callout callout-style-default callout-caution callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -2473,7 +2638,7 @@ Threshold= 0.901 (Youden):</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>For <strong>imbalanced</strong> datasets, the precision-recall (PR) curve is often more informative than ROC: - ROC AUC can look high even when sensitivity for the minority class is poor - PR curve focuses on the minority class performance - <code>pROC::plot.roc()</code> shows ROC; use <code>PRROC</code> package for PR curves</p>
 <p>In clinical settings, always report <em>both</em> — and report sensitivity and specificity at the chosen operating threshold.</p>
@@ -3001,7 +3166,7 @@ Threshold= 0.901 (Youden):</code></pre>
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/johlobs\.github\.io\/STA230-App\/");
+        var filterRegex = new RegExp('/' + window.location.host + '/');
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
@@ -3335,8 +3500,8 @@ Threshold= 0.901 (Youden):</code></pre>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../unsupervised/01-pca.html" class="pagination-link" aria-label="U — Pca">
-        <span class="nav-page-text">U — Pca</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../unsupervised/01-pca.html" class="pagination-link" aria-label="U1 — Principal Component Analysis">
+        <span class="nav-page-text">U1 — Principal Component Analysis</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

@@ -1,26 +1,98 @@
 [
   {
-    "objectID": "unsupervised/03-hierarchical-clustering.html",
-    "href": "unsupervised/03-hierarchical-clustering.html",
-    "title": "U — Hierarchical Clustering",
-    "section": "",
-    "text": "Coming soon — Block 3: Unsupervised",
+    "objectID": "unsupervised/03-hierarchical-clustering.html#why-hierarchical-clustering",
+    "href": "unsupervised/03-hierarchical-clustering.html#why-hierarchical-clustering",
+    "title": "U3 — Hierarchical Clustering",
+    "section": "1.1 Why hierarchical clustering?",
+    "text": "1.1 Why hierarchical clustering?\nK-means requires you to choose \\(K\\) before you start. Hierarchical clustering builds a tree (dendrogram) that shows the nested cluster structure at every level — you choose \\(K\\) after seeing the tree. It is also deterministic: the same data always gives the same result, unlike k-means.\nA second advantage: the dendrogram reveals how clusters relate to each other. Are clusters 1 and 2 more similar to each other than to cluster 3? The tree shows this immediately.",
     "crumbs": [
       "Home",
       "Block 3: Unsupervised",
-      "U — Hierarchical Clustering"
+      "U3 — Hierarchical Clustering"
     ]
   },
   {
-    "objectID": "unsupervised/01-pca.html",
-    "href": "unsupervised/01-pca.html",
-    "title": "U — Pca",
-    "section": "",
-    "text": "Coming soon — Block 3: Unsupervised",
+    "objectID": "unsupervised/03-hierarchical-clustering.html#bottom-up-agglomerative-clustering",
+    "href": "unsupervised/03-hierarchical-clustering.html#bottom-up-agglomerative-clustering",
+    "title": "U3 — Hierarchical Clustering",
+    "section": "1.2 Bottom-up (agglomerative) clustering",
+    "text": "1.2 Bottom-up (agglomerative) clustering\nThe most common approach:\n\nStart with \\(n\\) clusters — every observation is its own cluster\nMerge the two most similar clusters\nRepeat until all observations are in one cluster\n\nThe result is a dendrogram. To get \\(K\\) clusters, cut the tree at height \\(h\\) such that exactly \\(K\\) branches extend below the cut.",
     "crumbs": [
       "Home",
       "Block 3: Unsupervised",
-      "U — Pca"
+      "U3 — Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "unsupervised/03-hierarchical-clustering.html#linkage-how-similarity-is-measured-between-clusters",
+    "href": "unsupervised/03-hierarchical-clustering.html#linkage-how-similarity-is-measured-between-clusters",
+    "title": "U3 — Hierarchical Clustering",
+    "section": "1.3 Linkage — how similarity is measured between clusters",
+    "text": "1.3 Linkage — how similarity is measured between clusters\nOnce clusters contain multiple observations, we need to define distance between clusters (not just individual points).\n\n\n\n\n\n\n\nLinkage\nDistance between clusters A and B\n\n\n\n\nComplete\nMaximum distance between any point in A and any point in B\n\n\nSingle\nMinimum distance (nearest neighbours)\n\n\nAverage\nAverage distance between all pairs\n\n\nWard’s\nIncrease in total WCSS when merging A and B\n\n\n\nWard’s linkage is usually recommended for health data — it produces compact, similarly sized clusters and connects directly to k-means (both minimise WCSS).",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U3 — Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "unsupervised/03-hierarchical-clustering.html#reading-a-dendrogram",
+    "href": "unsupervised/03-hierarchical-clustering.html#reading-a-dendrogram",
+    "title": "U3 — Hierarchical Clustering",
+    "section": "1.4 Reading a dendrogram",
+    "text": "1.4 Reading a dendrogram\n\nHeight of a merge = dissimilarity at which two clusters joined\nLong vertical lines = large gap between levels = natural cluster boundary\nShort lines = clusters joined at similar dissimilarity = less clear separation\nCut the tree where you see the longest vertical lines before the cut",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U3 — Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "unsupervised/01-pca.html#you-have-seen-this-before",
+    "href": "unsupervised/01-pca.html#you-have-seen-this-before",
+    "title": "U1 — Principal Component Analysis",
+    "section": "1.1 You have seen this before",
+    "text": "1.1 You have seen this before\nIn STA220 you used factor analysis (FA) on the HAD scale — 14 items measuring depression and anxiety. FA found two latent factors: one loading on depression items, one on anxiety. Both factors were hidden dimensions that explained the correlations among items.\nPCA asks a related but different question:\n\n\n\n\n\n\n\n\n\nFactor Analysis (STA220)\nPCA (STA230)\n\n\n\n\nGoal\nFind latent factors that cause correlations\nFind directions that capture maximum variance\n\n\nModel\n\\(\\mathbf{X} = \\boldsymbol{\\Lambda}\\mathbf{f} + \\boldsymbol{\\varepsilon}\\) (generative)\nGeometric rotation of the data cloud\n\n\nOutput\nInterpretable factors (depression, anxiety)\nPrincipal components ordered by variance\n\n\nUse case\nPsychological measurement, construct validity\nCompression, visualisation, multicollinearity\n\n\n\nBoth methods reduce many correlated variables to a smaller set of dimensions. PCA is simpler and makes no distributional assumptions — it is purely about variance.",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U1 — Principal Component Analysis"
+    ]
+  },
+  {
+    "objectID": "unsupervised/01-pca.html#the-geometry-of-pca",
+    "href": "unsupervised/01-pca.html#the-geometry-of-pca",
+    "title": "U1 — Principal Component Analysis",
+    "section": "1.2 The geometry of PCA",
+    "text": "1.2 The geometry of PCA\nGiven \\(n\\) observations on \\(p\\) variables, PCA finds a sequence of orthogonal directions (principal components) \\(\\mathbf{z}_1, \\mathbf{z}_2, \\ldots\\) such that:\n\\[\\mathbf{z}_1 = \\mathbf{X}\\mathbf{v}_1, \\quad \\text{where } \\mathbf{v}_1 = \\arg\\max_{\\|\\mathbf{v}\\|=1} \\text{Var}(\\mathbf{X}\\mathbf{v})\\]\nEach subsequent component captures the maximum remaining variance, orthogonal to all previous ones.\nIn practice: standardise the variables (subtract mean, divide by SD), then compute the eigendecomposition of the covariance (or correlation) matrix:\n\\[\\mathbf{\\Sigma} = \\mathbf{V} \\mathbf{D} \\mathbf{V}^\\top\\]\n\n\\(\\mathbf{V}\\): eigenvectors = directions of principal components (loadings)\n\\(\\mathbf{D}\\): diagonal matrix of eigenvalues = variance explained by each component\n\nProportion of variance explained by component \\(k\\): \\(\\lambda_k / \\sum_j \\lambda_j\\)",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U1 — Principal Component Analysis"
+    ]
+  },
+  {
+    "objectID": "unsupervised/01-pca.html#reading-pca-output",
+    "href": "unsupervised/01-pca.html#reading-pca-output",
+    "title": "U1 — Principal Component Analysis",
+    "section": "1.3 Reading PCA output",
+    "text": "1.3 Reading PCA output\n\n\n\n\n\n\n\nOutput\nWhat it tells you\n\n\n\n\nScree plot\nEigenvalues in decreasing order — look for an “elbow”\n\n\nLoadings\nHow much each original variable contributes to each PC\n\n\nBiplot\nObservations (points) and variables (arrows) in PC space\n\n\nCumulative variance\nHow many PCs needed to explain e.g. 80% of variance",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U1 — Principal Component Analysis"
+    ]
+  },
+  {
+    "objectID": "unsupervised/01-pca.html#scaling-matters",
+    "href": "unsupervised/01-pca.html#scaling-matters",
+    "title": "U1 — Principal Component Analysis",
+    "section": "1.4 Scaling matters",
+    "text": "1.4 Scaling matters\nAlways use scale = TRUE in prcomp(). Variables on different scales (age in years, cholesterol in mmol/L) would otherwise be dominated by whichever has the largest variance — purely an artefact of measurement units, not biology.",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U1 — Principal Component Analysis"
     ]
   },
   {
@@ -285,6 +357,54 @@
     ]
   },
   {
+    "objectID": "classification/06-roc-auc.html#discrimination-vs-calibration",
+    "href": "classification/06-roc-auc.html#discrimination-vs-calibration",
+    "title": "C6 — ROC Curve & AUC",
+    "section": "1.4 Discrimination vs calibration",
+    "text": "1.4 Discrimination vs calibration\nThese are two distinct, independent model properties:\n\n\n\n\n\n\n\n\nAspect\nQuestion\nMetrics\n\n\n\n\nDiscrimination\nCan the model rank positives above negatives?\nAUC / C-statistic, sensitivity, specificity\n\n\nCalibration\nAre the predicted probabilities accurate?\nCalibration plot, Hosmer-Lemeshow, Brier score\n\n\n\nA model can discriminate well but be poorly calibrated — e.g., it ranks workers correctly but systematically overestimates risk. For clinical and public health decision-making, both must be reported.",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C6 — ROC Curve & AUC"
+    ]
+  },
+  {
+    "objectID": "classification/06-roc-auc.html#calibration-metrics",
+    "href": "classification/06-roc-auc.html#calibration-metrics",
+    "title": "C6 — ROC Curve & AUC",
+    "section": "1.5 Calibration metrics",
+    "text": "1.5 Calibration metrics\nCalibration plot: Group predicted probabilities into deciles. Compare the mean predicted probability to the observed event rate in each group. Points on the diagonal = perfect calibration.\nHosmer-Lemeshow test: Chi-squared test for calibration across \\(g\\) groups (usually 10). Non-significant \\(p\\) value = no evidence of poor calibration. Note: the test has low power in small samples.\nBrier score: Mean squared error of predicted probabilities.\n\\[\\text{BS} = \\frac{1}{n}\\sum_{i=1}^{n}(\\hat{p}_i - y_i)^2\\]\nRanges 0 (perfect) to 1. For a balanced outcome, a random (0.5 always) classifier gives BS = 0.25.",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C6 — ROC Curve & AUC"
+    ]
+  },
+  {
+    "objectID": "classification/06-roc-auc.html#kappa-statistic",
+    "href": "classification/06-roc-auc.html#kappa-statistic",
+    "title": "C6 — ROC Curve & AUC",
+    "section": "1.6 Kappa statistic",
+    "text": "1.6 Kappa statistic\nCohen’s kappa corrects accuracy for chance agreement:\n\\[\\kappa = \\frac{p_o - p_e}{1 - p_e}\\]\nwhere \\(p_o\\) is observed accuracy and \\(p_e\\) is accuracy expected by chance (based on marginal distributions). Interpretation: \\(\\kappa = 0\\) means no better than chance; \\(\\kappa &gt; 0.6\\) is substantial agreement; \\(\\kappa &gt; 0.8\\) is almost perfect.\n\n\n\n\n\n\nWarningImbalanced data and misleading accuracy\n\n\n\nWith 89% SWP=1 in the SWP dataset, always predicting SWP=1 achieves 89% accuracy — but \\(\\kappa = 0\\). Accuracy is misleading when classes are imbalanced. Report AUC and sensitivity alongside accuracy, and always check kappa.",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C6 — ROC Curve & AUC"
+    ]
+  },
+  {
+    "objectID": "classification/06-roc-auc.html#calibration-are-the-predicted-probabilities-accurate",
+    "href": "classification/06-roc-auc.html#calibration-are-the-predicted-probabilities-accurate",
+    "title": "C6 — ROC Curve & AUC",
+    "section": "3.1 Calibration: are the predicted probabilities accurate?",
+    "text": "3.1 Calibration: are the predicted probabilities accurate?\n\n# Decile-based calibration plot for logistic regression\ncal_df &lt;- data.frame(pred = p_logit, obs = test$SWP)\ncal_df$decile &lt;- as.integer(cut(rank(cal_df$pred), breaks = 10, labels = FALSE))\ncal_sum &lt;- cal_df |&gt;\n  dplyr::group_by(decile) |&gt;\n  dplyr::summarise(mean_pred = mean(pred),\n                   mean_obs  = mean(obs),\n                   n         = dplyr::n(),\n                   .groups   = \"drop\")\n\nggplot(cal_sum, aes(mean_pred, mean_obs)) +\n  geom_abline(slope = 1, intercept = 0, linetype = \"dashed\", colour = \"#888\") +\n  geom_line(colour = \"#2980b9\", alpha = 0.5) +\n  geom_point(aes(size = n), colour = \"#2980b9\", alpha = 0.9) +\n  scale_size_continuous(range = c(3, 8), name = \"n in decile\") +\n  coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +\n  labs(title = \"Calibration plot — logistic regression (test data)\",\n       subtitle = \"Dashed diagonal = perfect calibration; points should cluster on it\",\n       x = \"Mean predicted probability (decile)\",\n       y = \"Observed event rate (decile)\") +\n  theme_minimal()\n\n\n\n\n\n\n\n\n\n# Brier score — mean squared error of predicted probabilities\nbrier &lt;- mean((p_logit - test$SWP)^2)\n\n# Kappa — corrects accuracy for chance agreement\npred_05 &lt;- ifelse(p_logit &gt; 0.5, 1, 0)\npo &lt;- mean(pred_05 == test$SWP)\npe &lt;- mean(pred_05 == 0) * mean(test$SWP == 0) +\n      mean(pred_05 == 1) * mean(test$SWP == 1)\nkappa_val &lt;- (po - pe) / (1 - pe)\n\ncat(\"=== Model evaluation summary (logistic, test data) ===\\n\")\n\n=== Model evaluation summary (logistic, test data) ===\n\ncat(sprintf(\"\\nDiscrimination:\\n\"))\n\n\nDiscrimination:\n\ncat(sprintf(\"  AUC (C-statistic):    %.3f\\n\", as.numeric(auc(roc_logit))))\n\n  AUC (C-statistic):    0.679\n\ncat(sprintf(\"\\nCalibration:\\n\"))\n\n\nCalibration:\n\ncat(sprintf(\"  Brier score:          %.4f  (lower = better; 0 = perfect)\\n\", brier))\n\n  Brier score:          0.0904  (lower = better; 0 = perfect)\n\ncat(sprintf(\"\\nClassification (threshold = 0.5):\\n\"))\n\n\nClassification (threshold = 0.5):\n\ncat(sprintf(\"  Accuracy:             %.1f%%\\n\", po * 100))\n\n  Accuracy:             89.6%\n\ncat(sprintf(\"  Kappa:                %.4f  (0 = chance, &gt;0.6 = substantial)\\n\", kappa_val))\n\n  Kappa:                0.0366  (0 = chance, &gt;0.6 = substantial)\n\ncat(sprintf(\"  Sensitivity (SWP=0):  %.1f%%\\n\",\n    round(cm_05[1,1] / sum(cm_05[,1]) * 100, 1)))\n\n  Sensitivity (SWP=0):  2.2%",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C6 — ROC Curve & AUC"
+    ]
+  },
+  {
     "objectID": "classification/04-random-forests.html#bagging-reducing-variance-by-averaging",
     "href": "classification/04-random-forests.html#bagging-reducing-variance-by-averaging",
     "title": "C4 — Random Forests",
@@ -326,6 +446,18 @@
     "title": "C4 — Random Forests",
     "section": "1.4 Out-of-bag (OOB) error",
     "text": "1.4 Out-of-bag (OOB) error\nEach tree is trained on ~63% of data (the bootstrap sample). The remaining ~37% (out-of-bag) can be used to estimate test error without a separate validation set. OOB error is a nearly unbiased estimate of test error.",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C4 — Random Forests"
+    ]
+  },
+  {
+    "objectID": "classification/04-random-forests.html#variable-importance-and-shap-values",
+    "href": "classification/04-random-forests.html#variable-importance-and-shap-values",
+    "title": "C4 — Random Forests",
+    "section": "1.5 Variable importance and SHAP values",
+    "text": "1.5 Variable importance and SHAP values\nVariable importance in random forests = average decrease in Gini impurity from all splits on a variable, averaged across all trees. A high value means the variable is both frequently used and creates pure splits.\nHowever, importance scores tell you which variables matter but not how they contribute for an individual observation. SHAP (SHapley Additive exPlanations) solves this.\n\n1.5.1 The Shapley intuition\nImagine you want to attribute a predicted value to each predictor. For a model with age = 60 and BMI = 30 (and a bias of 50):\n\n\n\nPredictors used\nPrediction\n\n\n\n\n{none}\n50\n\n\n{age=60}\n70\n\n\n{BMI=30}\n85\n\n\n{age=60, BMI=30}\n100\n\n\n\nThe Shapley value for age averages its marginal contribution across all orderings:\n\nAdding age first: \\(70 - 50 = 20\\)\nAdding age after BMI: \\(100 - 85 = 15\\)\nSHAP(age) \\(= (20 + 15)/2 = 17.5\\)\n\nUnlike standardised regression coefficients (which are constant for every individual), SHAP values can differ for each observation — reflecting non-linear and interaction effects that trees capture naturally.\n\n\n\n\n\n\nTipSHAP vs linear regression\n\n\n\nIn a linear model, the contribution of BMI is always \\(\\hat{\\beta}_{\\text{BMI}} \\times \\text{BMI}_i\\) — a constant slope. With a random forest, SHAP might show a steep increase in contribution for very low BMI but a flat contribution in the normal range. This is the key advantage of tree-based SHAP over regression coefficients.",
     "crumbs": [
       "Home",
       "Block 2: Classification",
@@ -693,15 +825,51 @@
     ]
   },
   {
-    "objectID": "unsupervised/02-clustering-kmeans.html",
-    "href": "unsupervised/02-clustering-kmeans.html",
-    "title": "U — Clustering Kmeans",
-    "section": "",
-    "text": "Coming soon — Block 3: Unsupervised",
+    "objectID": "unsupervised/02-clustering-kmeans.html#supervised-vs-unsupervised-the-key-distinction",
+    "href": "unsupervised/02-clustering-kmeans.html#supervised-vs-unsupervised-the-key-distinction",
+    "title": "U2 — K-Means Clustering",
+    "section": "1.1 Supervised vs unsupervised — the key distinction",
+    "text": "1.1 Supervised vs unsupervised — the key distinction\nIn Blocks 1 and 2 you always had a response variable Y: SBP to predict, disease to classify. Clustering has no Y. You observe \\(\\mathbf{X}\\) and ask: are there natural subgroups in this data?\nIn STA220 you asked a related question: do HAD items group into depression and anxiety? Factor analysis answered this by finding latent dimensions. Clustering answers a different version: do patients group into distinct health profiles? No labels are assumed — the groups emerge from the data geometry.",
     "crumbs": [
       "Home",
       "Block 3: Unsupervised",
-      "U — Clustering Kmeans"
+      "U2 — K-Means Clustering"
+    ]
+  },
+  {
+    "objectID": "unsupervised/02-clustering-kmeans.html#the-k-means-algorithm",
+    "href": "unsupervised/02-clustering-kmeans.html#the-k-means-algorithm",
+    "title": "U2 — K-Means Clustering",
+    "section": "1.2 The k-means algorithm",
+    "text": "1.2 The k-means algorithm\nGiven \\(n\\) observations and a chosen number of clusters \\(K\\), k-means minimises the total within-cluster sum of squares (WCSS):\n\\[\\text{WCSS} = \\sum_{k=1}^{K} \\sum_{i \\in C_k} \\|\\mathbf{x}_i - \\boldsymbol{\\mu}_k\\|^2\\]\nwhere \\(\\boldsymbol{\\mu}_k\\) is the centroid (mean) of cluster \\(k\\).\nAlgorithm (Lloyd’s):\n\nRandomly initialise \\(K\\) centroids\nAssign each observation to the nearest centroid\nUpdate each centroid as the mean of its assigned observations\nRepeat steps 2–3 until assignments stop changing\n\nThe algorithm converges to a local minimum — not necessarily the global minimum. Always run with multiple random starts (nstart in R) and take the best result.",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U2 — K-Means Clustering"
+    ]
+  },
+  {
+    "objectID": "unsupervised/02-clustering-kmeans.html#choosing-k-the-elbow-method",
+    "href": "unsupervised/02-clustering-kmeans.html#choosing-k-the-elbow-method",
+    "title": "U2 — K-Means Clustering",
+    "section": "1.3 Choosing K — the elbow method",
+    "text": "1.3 Choosing K — the elbow method\nRun k-means for \\(K = 1, 2, \\ldots, K_{\\max}\\) and plot WCSS against \\(K\\). WCSS always decreases as \\(K\\) increases (more clusters = smaller groups = tighter fit). Look for an elbow — the point where the rate of decrease slows sharply.\nThere is no objectively correct \\(K\\). Domain knowledge matters: do you expect 2 patient profiles or 5? The elbow is a heuristic, not a rule.",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U2 — K-Means Clustering"
+    ]
+  },
+  {
+    "objectID": "unsupervised/02-clustering-kmeans.html#important-scale-your-variables",
+    "href": "unsupervised/02-clustering-kmeans.html#important-scale-your-variables",
+    "title": "U2 — K-Means Clustering",
+    "section": "1.4 Important: scale your variables",
+    "text": "1.4 Important: scale your variables\nK-means uses Euclidean distance. If Age is measured in years (range 20–80) and Cholesterol in mmol/L (range 2–8), Age will dominate purely because of its larger scale. Always standardise before clustering.",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U2 — K-Means Clustering"
     ]
   }
 ]

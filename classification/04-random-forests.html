@@ -1891,19 +1891,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../unsupervised/01-pca.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">U — Pca</span></a>
+ <span class="menu-text">U1 — Principal Component Analysis</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../unsupervised/02-clustering-kmeans.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">U — Clustering Kmeans</span></a>
+ <span class="menu-text">U2 — K-Means Clustering</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../unsupervised/03-hierarchical-clustering.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">U — Hierarchical Clustering</span></a>
+ <span class="menu-text">U3 — Hierarchical Clustering</span></a>
   </div>
 </li>
       </ul>
@@ -1924,6 +1924,10 @@ window.Quarto = {
   <li><a href="#random-forests-decorrelating-trees" id="toc-random-forests-decorrelating-trees" class="nav-link" data-scroll-target="#random-forests-decorrelating-trees"><span class="header-section-number">1.2</span> Random forests: decorrelating trees</a></li>
   <li><a href="#key-hyperparameters" id="toc-key-hyperparameters" class="nav-link" data-scroll-target="#key-hyperparameters"><span class="header-section-number">1.3</span> Key hyperparameters</a></li>
   <li><a href="#out-of-bag-oob-error" id="toc-out-of-bag-oob-error" class="nav-link" data-scroll-target="#out-of-bag-oob-error"><span class="header-section-number">1.4</span> Out-of-bag (OOB) error</a></li>
+  <li><a href="#variable-importance-and-shap-values" id="toc-variable-importance-and-shap-values" class="nav-link" data-scroll-target="#variable-importance-and-shap-values"><span class="header-section-number">1.5</span> Variable importance and SHAP values</a>
+  <ul class="collapse">
+  <li><a href="#the-shapley-intuition" id="toc-the-shapley-intuition" class="nav-link" data-scroll-target="#the-shapley-intuition"><span class="header-section-number">1.5.1</span> The Shapley intuition</a></li>
+  </ul></li>
   </ul></li>
   <li><a href="#quiz" id="toc-quiz" class="nav-link" data-scroll-target="#quiz"><span class="header-section-number">2</span> Quiz</a></li>
   <li><a href="#worked-example" id="toc-worked-example" class="nav-link" data-scroll-target="#worked-example"><span class="header-section-number">3</span> Worked Example</a></li>
@@ -2290,7 +2294,62 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <section id="out-of-bag-oob-error" class="level2" data-number="1.4">
 <h2 data-number="1.4" class="anchored" data-anchor-id="out-of-bag-oob-error"><span class="header-section-number">1.4</span> Out-of-bag (OOB) error</h2>
 <p>Each tree is trained on ~63% of data (the bootstrap sample). The remaining ~37% (out-of-bag) can be used to estimate test error <strong>without a separate validation set</strong>. OOB error is a nearly unbiased estimate of test error.</p>
+</section>
+<section id="variable-importance-and-shap-values" class="level2" data-number="1.5">
+<h2 data-number="1.5" class="anchored" data-anchor-id="variable-importance-and-shap-values"><span class="header-section-number">1.5</span> Variable importance and SHAP values</h2>
+<p><strong>Variable importance</strong> in random forests = average decrease in Gini impurity from all splits on a variable, averaged across all trees. A high value means the variable is both frequently used and creates pure splits.</p>
+<p>However, importance scores tell you <em>which</em> variables matter but not <em>how</em> they contribute for an individual observation. <strong>SHAP</strong> (SHapley Additive exPlanations) solves this.</p>
+<section id="the-shapley-intuition" class="level3" data-number="1.5.1">
+<h3 data-number="1.5.1" class="anchored" data-anchor-id="the-shapley-intuition"><span class="header-section-number">1.5.1</span> The Shapley intuition</h3>
+<p>Imagine you want to attribute a predicted value to each predictor. For a model with age = 60 and BMI = 30 (and a bias of 50):</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Predictors used</th>
+<th>Prediction</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>{none}</td>
+<td>50</td>
+</tr>
+<tr class="even">
+<td>{age=60}</td>
+<td>70</td>
+</tr>
+<tr class="odd">
+<td>{BMI=30}</td>
+<td>85</td>
+</tr>
+<tr class="even">
+<td>{age=60, BMI=30}</td>
+<td>100</td>
+</tr>
+</tbody>
+</table>
+<p>The Shapley value for age averages its marginal contribution across all orderings:</p>
+<ul>
+<li>Adding age first: <span class="math inline">\(70 - 50 = 20\)</span></li>
+<li>Adding age after BMI: <span class="math inline">\(100 - 85 = 15\)</span></li>
+<li><strong>SHAP(age)</strong> <span class="math inline">\(= (20 + 15)/2 = 17.5\)</span></li>
+</ul>
+<p>Unlike standardised regression coefficients (which are constant for every individual), SHAP values can differ for each observation — reflecting non-linear and interaction effects that trees capture naturally.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>SHAP vs linear regression
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In a linear model, the contribution of BMI is always <span class="math inline">\(\hat{\beta}_{\text{BMI}} \times \text{BMI}_i\)</span> — a constant slope. With a random forest, SHAP might show a steep increase in contribution for very low BMI but a flat contribution in the normal range. This is the key advantage of tree-based SHAP over regression coefficients.</p>
+</div>
+</div>
 <hr>
+</section>
 </section>
 </section>
 <section id="quiz" class="level1" data-number="2">
@@ -2412,7 +2471,7 @@ Test accuracy:       94.5 %</code></pre>
 <div id="qwebr-insertion-location-3"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 <div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -2421,7 +2480,7 @@ Test accuracy:       94.5 %</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <ul>
 <li>Does the random forest improve sensitivity for SWP=0 compared to a single tree (C3)?</li>
@@ -2436,7 +2495,7 @@ Test accuracy:       94.5 %</code></pre>
 <section id="why-questions" class="level1" data-number="5">
 <h1 data-number="5"><span class="header-section-number">5</span> Why-Questions</h1>
 <div class="callout callout-style-default callout-caution callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -2445,7 +2504,7 @@ Test accuracy:       94.5 %</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>Yes — through variable importance plots and partial dependence plots: - <strong>Variable importance</strong>: which predictors matter most (but not how or in which direction) - <strong>Partial dependence plots</strong> (<code>partialPlot()</code>): marginal effect of one predictor averaged over all others - <strong>SHAP values</strong>: newer method that shows individual-observation contributions</p>
 <p>For occupational health research, you might report: “CTW and MentalWB were the strongest predictors of SWP (highest Gini importance), and the partial dependence plot shows SWP probability increasing monotonically with CTW.”</p>
@@ -2973,7 +3032,7 @@ Test accuracy:       94.5 %</code></pre>
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/johlobs\.github\.io\/STA230-App\/");
+        var filterRegex = new RegExp('/' + window.location.host + '/');
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }

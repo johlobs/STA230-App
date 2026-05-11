@@ -1,1 +1,0 @@
-Sitemap: https://johlobs.github.io/STA230-App/sitemap.xml
