@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>R5 — Model Comparison &amp; Workflow – STA230 — Statistical Learning</title>
+<title>U6 — UMAP: Uniform Manifold Approximation and Projection – STA230 — Statistical Learning</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -68,8 +68,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../classification/01-logistic-regression.html" rel="next">
-<link href="../regression/04-lasso.html" rel="prev">
+<link href="../unsupervised/05-tsne.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
@@ -407,7 +406,7 @@ globalThis.qwebrCustomizedWebROptions = {
 };
 
 // Store cell data
-globalThis.qwebrCellDetails = [{"code":"library(ggplot2)\nlibrary(dplyr)\nlibrary(glmnet)\nlibrary(tidyr)\nnhanes <- readRDS(\"https://johlobs.github.io/STA230-App/data/nhanes.rds\")\nnhanes_cc <- nhanes |> filter(!is.na(Diabetes), !is.na(Smoker))\nX <- model.matrix(SBP ~ Age + Sex + BMI + Waist + Cholesterol +\n                    factor(Diabetes) + factor(Smoker), data = nhanes_cc)[, -1]\ny <- nhanes_cc$SBP","id":1,"options":{"autorun":"true","classes":"","comment":"","context":"setup","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"include":"false","label":"unnamed-chunk-1","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"# Complete regression workflow on NHANES\n# STEP 1: Check the data\ncat(\"=== Data overview ===\\n\")\ncat(\"n =\", nrow(nhanes_cc), \"\\n\")\ncat(\"Outcome SBP: mean =\", round(mean(y), 1), \"SD =\", round(sd(y), 1), \"\\n\")\ncat(\"Null RMSPE (SD of SBP):\", round(sd(y), 2), \"mmHg\\n\\n\")\n\n# STEP 2: 70/30 split\nset.seed(42)\ntr <- sample(nrow(nhanes_cc), round(0.7 * nrow(nhanes_cc)))\nte <- setdiff(seq_len(nrow(nhanes_cc)), tr)\nX_tr <- X[tr,]; y_tr <- y[tr]\nX_te <- X[te,]; y_te <- y[te]\ncat(\"Training set:\", length(tr), \"| Test set:\", length(te), \"\\n\")","id":2,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-workflow","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"# STEP 3: Select model via CV on training data\n# (Never touch X_te / y_te until the final evaluation)\nset.seed(42)\ncv_lasso <- cv.glmnet(X_tr, y_tr, alpha = 1, nfolds = 10)\ncv_ridge <- cv.glmnet(X_tr, y_tr, alpha = 0, nfolds = 10)\n\ncat(\"LASSO CV RMSPE (lambda.min):\", round(sqrt(min(cv_lasso$cvm)), 3), \"\\n\")\ncat(\"Ridge CV RMSPE (lambda.min):\", round(sqrt(min(cv_ridge$cvm)), 3), \"\\n\")\n\n# Which model do you choose based on CV?","id":3,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-select","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"# STEP 4: Evaluate chosen model on test set (do this only once!)\nrmspe <- function(pred, ytrue) sqrt(mean((ytrue - pred)^2))\n\ncat(\"=== Final test set evaluation ===\\n\")\ncat(\"Null RMSPE:   \", round(rmspe(rep(mean(y_tr), length(y_te)), y_te), 3), \"\\n\")\ncat(\"LASSO RMSPE:  \", round(rmspe(predict(cv_lasso, X_te, s=\"lambda.min\"), y_te), 3), \"\\n\")\ncat(\"Ridge RMSPE:  \", round(rmspe(predict(cv_ridge, X_te, s=\"lambda.min\"), y_te), 3), \"\\n\")\n\n# STEP 5: Interpret the selected model\ncat(\"\\n=== LASSO coefficients at lambda.min ===\\n\")\ncoef_final <- coef(cv_lasso, s = \"lambda.min\")\nprint(round(coef_final, 4))","id":4,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-evaluate","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}}];
+globalThis.qwebrCellDetails = [{"code":"library(ggplot2)\nlibrary(dplyr)\nlibrary(uwot)\nnhanes <- readRDS(\"https://johlobs.github.io/STA230-App/data/nhanes.rds\")","id":1,"options":{"autorun":"true","classes":"","comment":"","context":"setup","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"include":"false","label":"unnamed-chunk-1","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"vars <- c(\"Age\", \"BMI\", \"Waist\", \"Cholesterol\", \"SBP\")\ndat  <- na.omit(nhanes[, vars])\nX    <- scale(dat)\nset.seed(42)\n\n# TASK 1: Run UMAP with n_neighbors = 15, min_dist = 0.1\numap_res <- umap(X, n_neighbors = 15, min_dist = 0.1)\n\n# TASK 2: Plot the result, coloured by SBP\ndf <- data.frame(Dim1 = umap_res[, 1], Dim2 = umap_res[, 2], SBP = dat$SBP)\n\nggplot(df, aes(Dim1, Dim2, colour = SBP)) +\n  geom_point(size = 1, alpha = 0.6) +\n  scale_colour_viridis_c() +\n  labs(title = \"UMAP — coloured by SBP\") +\n  theme_minimal()","id":2,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-umap","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"vars <- c(\"Age\", \"BMI\", \"Waist\", \"Cholesterol\", \"SBP\")\ndat  <- na.omit(nhanes[, vars])\nX    <- scale(dat)\n\n# TASK 3: Compare min_dist = 0.01 vs min_dist = 0.5\n# How does the compactness of the embedding change?\nset.seed(42)\numap_tight  <- umap(X, n_neighbors = 15, min_dist = 0.01)\numap_spread <- umap(X, n_neighbors = 15, min_dist = 0.5)\n\ndf <- rbind(\n  data.frame(Dim1 = umap_tight[, 1],  Dim2 = umap_tight[, 2],  min_dist = \"0.01\"),\n  data.frame(Dim1 = umap_spread[, 1], Dim2 = umap_spread[, 2], min_dist = \"0.5\")\n)\n\nggplot(df, aes(Dim1, Dim2)) +\n  geom_point(size = 0.8, alpha = 0.5, colour = \"#2ecc71\") +\n  facet_wrap(~ min_dist, scales = \"free\") +\n  labs(title = \"Effect of min_dist on UMAP embedding\") +\n  theme_minimal()","id":3,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-mindist","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"# Full pipeline: scale → UMAP → K-means → visualise\n# 1. Run UMAP with n_neighbors = 15 on the scaled NHANES data\n# 2. Run k-means with K = 3 on the original scaled data (not UMAP coordinates)\n# 3. Colour the UMAP plot by the K-means cluster assignment\n# 4. Do the K-means clusters appear separated in UMAP space?\n\nvars <- c(\"Age\", \"BMI\", \"Waist\", \"Cholesterol\", \"SBP\")\ndat  <- na.omit(nhanes[, vars])\nX    <- scale(dat)\nset.seed(42)\n\n# Your code here:","id":4,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"challenge","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}}];
 
 </script>
 <script type="module">
@@ -1661,35 +1660,6 @@ globalThis.qwebrExecuteCode = async function (
 
 </script>
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 <link rel="stylesheet" href="../custom.css">
 </head>
@@ -1730,7 +1700,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../regression/01-ols-review.html">Block 1: Regression</a></li><li class="breadcrumb-item"><a href="../regression/05-model-comparison.html">R5 — Model Comparison &amp; Workflow</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../unsupervised/01-pca.html">Block 3: Unsupervised</a></li><li class="breadcrumb-item"><a href="../unsupervised/06-umap.html">U6 — UMAP: Uniform Manifold Approximation and Projection</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -1826,7 +1796,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../regression/05-model-comparison.html" class="sidebar-item-text sidebar-link active">
+  <a href="../regression/05-model-comparison.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">R5 — Model Comparison &amp; Workflow</span></a>
   </div>
 </li>
@@ -1926,7 +1896,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../unsupervised/06-umap.html" class="sidebar-item-text sidebar-link">
+  <a href="../unsupervised/06-umap.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">U6 — UMAP: Uniform Manifold Approximation and Projection</span></a>
   </div>
 </li>
@@ -1942,16 +1912,17 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#concept-putting-it-all-together" id="toc-concept-putting-it-all-together" class="nav-link active" data-scroll-target="#concept-putting-it-all-together"><span class="header-section-number">1</span> Concept: Putting It All Together</a>
+  <li><a href="#concept-t-snes-faster-more-structured-sibling" id="toc-concept-t-snes-faster-more-structured-sibling" class="nav-link active" data-scroll-target="#concept-t-snes-faster-more-structured-sibling"><span class="header-section-number">1</span> Concept: t-SNE’s Faster, More Structured Sibling</a>
   <ul class="collapse">
-  <li><a href="#the-complete-regression-workflow" id="toc-the-complete-regression-workflow" class="nav-link" data-scroll-target="#the-complete-regression-workflow"><span class="header-section-number">1.1</span> The complete regression workflow</a></li>
-  <li><a href="#which-method-to-choose" id="toc-which-method-to-choose" class="nav-link" data-scroll-target="#which-method-to-choose"><span class="header-section-number">1.2</span> Which method to choose?</a></li>
-  <li><a href="#reporting-test-performance" id="toc-reporting-test-performance" class="nav-link" data-scroll-target="#reporting-test-performance"><span class="header-section-number">1.3</span> Reporting test performance</a></li>
+  <li><a href="#what-umap-adds-over-t-sne" id="toc-what-umap-adds-over-t-sne" class="nav-link" data-scroll-target="#what-umap-adds-over-t-sne"><span class="header-section-number">1.1</span> What UMAP adds over t-SNE</a></li>
+  <li><a href="#key-hyperparameters" id="toc-key-hyperparameters" class="nav-link" data-scroll-target="#key-hyperparameters"><span class="header-section-number">1.2</span> Key hyperparameters</a></li>
+  <li><a href="#when-to-use-umap-vs-t-sne" id="toc-when-to-use-umap-vs-t-sne" class="nav-link" data-scroll-target="#when-to-use-umap-vs-t-sne"><span class="header-section-number">1.3</span> When to use UMAP vs t-SNE</a></li>
   </ul></li>
   <li><a href="#quiz" id="toc-quiz" class="nav-link" data-scroll-target="#quiz"><span class="header-section-number">2</span> Quiz</a></li>
-  <li><a href="#worked-example-full-comparison-on-nhanes" id="toc-worked-example-full-comparison-on-nhanes" class="nav-link" data-scroll-target="#worked-example-full-comparison-on-nhanes"><span class="header-section-number">3</span> Worked Example: Full Comparison on NHANES</a></li>
-  <li><a href="#guided-practice-full-workflow" id="toc-guided-practice-full-workflow" class="nav-link" data-scroll-target="#guided-practice-full-workflow"><span class="header-section-number">4</span> Guided Practice: Full Workflow</a></li>
-  <li><a href="#why-questions" id="toc-why-questions" class="nav-link" data-scroll-target="#why-questions"><span class="header-section-number">5</span> Why-Questions</a></li>
+  <li><a href="#worked-example-umap-on-nhanes-health-variables" id="toc-worked-example-umap-on-nhanes-health-variables" class="nav-link" data-scroll-target="#worked-example-umap-on-nhanes-health-variables"><span class="header-section-number">3</span> Worked Example: UMAP on NHANES Health Variables</a></li>
+  <li><a href="#guided-practice" id="toc-guided-practice" class="nav-link" data-scroll-target="#guided-practice"><span class="header-section-number">4</span> Guided Practice</a></li>
+  <li><a href="#retrieval-challenge" id="toc-retrieval-challenge" class="nav-link" data-scroll-target="#retrieval-challenge"><span class="header-section-number">5</span> Retrieval Challenge</a></li>
+  <li><a href="#why-questions" id="toc-why-questions" class="nav-link" data-scroll-target="#why-questions"><span class="header-section-number">6</span> Why-Questions</a></li>
   </ul>
 </nav>
     </div>
@@ -2242,9 +2213,9 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 }
 </script>
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../regression/01-ols-review.html">Block 1: Regression</a></li><li class="breadcrumb-item"><a href="../regression/05-model-comparison.html">R5 — Model Comparison &amp; Workflow</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../unsupervised/01-pca.html">Block 3: Unsupervised</a></li><li class="breadcrumb-item"><a href="../unsupervised/06-umap.html">U6 — UMAP: Uniform Manifold Approximation and Projection</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">R5 — Model Comparison &amp; Workflow</h1>
+<h1 class="title">U6 — UMAP: Uniform Manifold Approximation and Projection</h1>
 </div>
 
 
@@ -2261,172 +2232,204 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 </header>
 
 
-<script>document.body.classList.add("regression");</script>
+<script>document.body.classList.add("unsupervised");</script>
 <div id="qwebr-insertion-location-1"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
-<section id="concept-putting-it-all-together" class="level1" data-number="1">
-<h1 data-number="1"><span class="header-section-number">1</span> Concept: Putting It All Together</h1>
-<section id="the-complete-regression-workflow" class="level2" data-number="1.1">
-<h2 data-number="1.1" class="anchored" data-anchor-id="the-complete-regression-workflow"><span class="header-section-number">1.1</span> The complete regression workflow</h2>
-<pre><code>1. Explore data          → distributions, missingness, outliers
-2. Pre-process           → log-transform skewed outcomes, standardise predictors
-3. Split data            → train (70%) / test (30%) — or use CV throughout
-4. Fit candidate models  → OLS, forward stepwise, ridge, LASSO
-5. Select model          → by CV RMSPE on training data only
-6. Evaluate              → test RMSPE on held-out test set (once, at the end)
-7. Report                → coefficients, CIs, test performance, clinical interpretation</code></pre>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>The golden rule
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The test set is used <strong>exactly once</strong> — at the end. If you look at the test set to make model choices, it is no longer a clean test set.</p>
-</div>
-</div>
-</section>
-<section id="which-method-to-choose" class="level2" data-number="1.2">
-<h2 data-number="1.2" class="anchored" data-anchor-id="which-method-to-choose"><span class="header-section-number">1.2</span> Which method to choose?</h2>
+<section id="concept-t-snes-faster-more-structured-sibling" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Concept: t-SNE’s Faster, More Structured Sibling</h1>
+<section id="what-umap-adds-over-t-sne" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="what-umap-adds-over-t-sne"><span class="header-section-number">1.1</span> What UMAP adds over t-SNE</h2>
+<p>UMAP (Uniform Manifold Approximation and Projection) is a nonlinear dimensionality reduction method with a similar goal to t-SNE: project high-dimensional data into 2D while preserving local structure. It differs in two important ways:</p>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
 <thead>
 <tr class="header">
-<th>Situation</th>
-<th>Recommended method</th>
+<th></th>
+<th>t-SNE</th>
+<th>UMAP</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><span class="math inline">\(p\)</span> small, inference goal</td>
-<td>OLS with stepwise/AIC selection</td>
+<td><strong>Mathematical basis</strong></td>
+<td>KL divergence between probability distributions</td>
+<td>Topological data analysis (Riemannian geometry)</td>
 </tr>
 <tr class="even">
-<td><span class="math inline">\(p\)</span> moderate, prediction goal</td>
-<td>LASSO or elastic net</td>
+<td><strong>Global structure</strong></td>
+<td>Often distorted — cluster distances not reliable</td>
+<td>Better preserved — relative distances between clusters are more meaningful</td>
 </tr>
 <tr class="odd">
-<td><span class="math inline">\(p\)</span> large, many small effects</td>
-<td>Ridge</td>
+<td><strong>Speed</strong></td>
+<td>Slow on large datasets</td>
+<td>Substantially faster</td>
 </tr>
 <tr class="even">
-<td>Correlated predictors</td>
-<td>Ridge or elastic net</td>
+<td><strong>Reproducibility</strong></td>
+<td>Stochastic by default</td>
+<td>Reproducible for fixed seed</td>
 </tr>
 <tr class="odd">
-<td>Need sparse, interpretable model</td>
-<td>LASSO</td>
+<td><strong>New data</strong></td>
+<td>Cannot project new points</td>
+<td>Can project new observations onto existing embedding</td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="reporting-test-performance" class="level2" data-number="1.3">
-<h2 data-number="1.3" class="anchored" data-anchor-id="reporting-test-performance"><span class="header-section-number">1.3</span> Reporting test performance</h2>
-<p>Report RMSPE (or MAE) on the test set with a confidence interval:</p>
-<p><span class="math display">\[\text{RMSPE} \pm 1.96 \times \frac{\text{SD of squared errors}}{\sqrt{n_{\text{test}}}}\]</span></p>
-<p>Never report only training performance. Always compare to a baseline (e.g., predicting the mean: <span class="math inline">\(\text{RMSPE}_{\text{null}} = \text{SD}(Y)\)</span>).</p>
+<section id="key-hyperparameters" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="key-hyperparameters"><span class="header-section-number">1.2</span> Key hyperparameters</h2>
+<p><strong><code>n_neighbors</code></strong> (default 15): How many neighbours each point considers. Like perplexity in t-SNE:</p>
+<ul>
+<li>Low (e.g.&nbsp;5): captures very local structure, can fragment real clusters</li>
+<li>High (e.g.&nbsp;50): captures broader structure, more similar to PCA</li>
+</ul>
+<p><strong><code>min_dist</code></strong> (default 0.1): How tightly points are packed in the 2D embedding:</p>
+<ul>
+<li>Low (e.g.&nbsp;0.01): tighter clusters, more separated</li>
+<li>High (e.g.&nbsp;0.5): smoother, more spread-out embedding</li>
+</ul>
+<p>Run with multiple <code>n_neighbors</code> values to check stability, just as you would with t-SNE perplexity.</p>
+</section>
+<section id="when-to-use-umap-vs-t-sne" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="when-to-use-umap-vs-t-sne"><span class="header-section-number">1.3</span> When to use UMAP vs t-SNE</h2>
+<ul>
+<li>For <strong>visualisation of high-dimensional data</strong> (scRNA-seq, image embeddings): both work; UMAP is now the default in most genomics pipelines</li>
+<li>When <strong>global structure matters</strong> (are cluster A and cluster B more similar to each other than to cluster C?): prefer UMAP</li>
+<li>When <strong>speed</strong> is a constraint on large datasets: prefer UMAP</li>
+<li>For <strong>teaching and comparison</strong>: use both and compare</li>
+</ul>
 <hr>
 </section>
 </section>
 <section id="quiz" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Quiz</h1>
-<div class="sta230-quiz" data-question="You use the test set to compare OLS, ridge, and LASSO, then report the test RMSPE of the winner. What is wrong with this?">
-  <div class="q-opt" data-correct="false">Nothing — comparing methods on the test set is the correct approach</div>
-  <div class="q-opt" data-correct="true">The test set was used for model selection, so the reported RMSPE is optimistically biased</div>
-  <div class="q-opt" data-correct="false">You cannot compare different model classes on the same test set</div>
-  <div class="q-opt" data-correct="false">The test RMSPE is only valid if all models use the same lambda</div>
-  <div class="q-exp">If you pick the model with the lowest test RMSPE, the reported performance is optimistic — you effectively selected the model that happened to fit the test data best. This is a subtle form of overfitting. The fix: use cross-validation on training data for model selection, then report performance on a truly held-out test set that was never used during model building.</div>
+<div class="sta230-quiz" data-question="In a UMAP plot, cluster A and cluster B are far apart; cluster A and cluster C are close. What can you conclude?">
+  <div class="q-opt" data-correct="false">Nothing — distances in UMAP are never interpretable</div>
+  <div class="q-opt" data-correct="true">A and C are more similar to each other in the original high-dimensional space than A and B — UMAP preserves global distances better than t-SNE</div>
+  <div class="q-opt" data-correct="false">Cluster B has more observations than cluster C</div>
+  <div class="q-opt" data-correct="false">The result is an artefact of the min_dist parameter</div>
+  <div class="q-exp">UMAP's mathematical framework preserves global structure better than t-SNE: clusters that are genuinely more similar in the original space tend to appear closer in the UMAP embedding. This is not a strict guarantee, but it is more reliable than t-SNE, where cluster distances are largely meaningless. For t-SNE, the only reliable information is which points are near each other locally.</div>
 </div>
 
-<div class="sta230-quiz" data-question="The null model (predicting the mean for every observation) gives RMSPE = 18 mmHg. Your LASSO model gives RMSPE = 16 mmHg. How should you interpret this?">
-  <div class="q-opt" data-correct="false">LASSO is an excellent model — 16 &lt; 18</div>
-  <div class="q-opt" data-correct="false">The model is useless since it doesn't predict perfectly</div>
-  <div class="q-opt" data-correct="true">LASSO reduces RMSPE by about 11% over the null — modest improvement, worth interpreting in clinical context</div>
-  <div class="q-opt" data-correct="false">The null model should never be used as a baseline for RMSPE</div>
-  <div class="q-exp">The null RMSPE (SD of Y) is the natural baseline — it's what you get by ignoring all predictors. Going from 18 to 16 mmHg (~11% reduction) is a meaningful but modest improvement. Whether it's clinically useful depends on the application. For individual patient risk prediction, 16 mmHg error may still be too imprecise. Always contextualise RMSPE against domain-specific requirements.</div>
+<div class="sta230-quiz" data-question="You increase n_neighbors from 5 to 50. What do you expect to happen to the UMAP plot?">
+  <div class="q-opt" data-correct="false">The plot will show more fragmented, smaller clusters</div>
+  <div class="q-opt" data-correct="true">Local detail decreases and the global structure becomes more prominent — fewer, broader groupings</div>
+  <div class="q-opt" data-correct="false">The axes will become interpretable as principal components</div>
+  <div class="q-opt" data-correct="false">The algorithm will fail to converge</div>
+  <div class="q-exp">n_neighbors controls the size of the local neighbourhood each point uses to build its representation of the manifold. Small n_neighbors captures fine-grained local structure but can fragment real clusters. Large n_neighbors considers more global context, producing smoother embeddings that resemble PCA more closely. The default of 15 is a reasonable starting point; always try at least one smaller and one larger value.</div>
+</div>
+
+<div class="sta230-quiz" data-question="What is the main practical advantage of UMAP over t-SNE on a dataset with 100 000 observations?">
+  <div class="q-opt" data-correct="false">UMAP always finds more clusters</div>
+  <div class="q-opt" data-correct="false">UMAP requires no hyperparameter tuning</div>
+  <div class="q-opt" data-correct="true">UMAP is substantially faster — t-SNE's O(n log n) complexity becomes prohibitive at large n, while UMAP scales better</div>
+  <div class="q-opt" data-correct="false">UMAP produces interpretable axes like PCA</div>
+  <div class="q-exp">t-SNE uses Barnes-Hut approximation to achieve O(n log n) complexity, which is still slow for hundreds of thousands of points. UMAP uses approximate nearest-neighbour graphs and stochastic gradient descent, scaling much better to large datasets. On PBMC3k (2638 cells), both are fast. On a full single-cell atlas with 500 000 cells, UMAP runs in minutes while t-SNE may take hours.</div>
 </div>
 <hr>
 </section>
-<section id="worked-example-full-comparison-on-nhanes" class="level1" data-number="3">
-<h1 data-number="3"><span class="header-section-number">3</span> Worked Example: Full Comparison on NHANES</h1>
+<section id="worked-example-umap-on-nhanes-health-variables" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Worked Example: UMAP on NHANES Health Variables</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>tr_idx <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">nrow</span>(nhanes_cc), <span class="fu">round</span>(<span class="fl">0.7</span> <span class="sc">*</span> <span class="fu">nrow</span>(nhanes_cc)))</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>X_tr <span class="ot">&lt;-</span> X[tr_idx, ];  y_tr <span class="ot">&lt;-</span> y[tr_idx]</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>X_te <span class="ot">&lt;-</span> X[<span class="sc">-</span>tr_idx, ]; y_te <span class="ot">&lt;-</span> y[<span class="sc">-</span>tr_idx]</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Null model baseline</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>null_rmspe <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_te <span class="sc">-</span> <span class="fu">mean</span>(y_tr))<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># OLS</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>ols <span class="ot">&lt;-</span> <span class="fu">lm</span>(y_tr <span class="sc">~</span> X_tr)</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>ols_rmspe <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_te <span class="sc">-</span> <span class="fu">cbind</span>(<span class="dv">1</span>, X_te) <span class="sc">%*%</span> <span class="fu">coef</span>(ols))<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Forward stepwise (AIC) — refit on training data</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>tr_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">cbind</span>(<span class="at">SBP =</span> y_tr, X_tr))</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>fwd <span class="ot">&lt;-</span> <span class="fu">step</span>(<span class="fu">lm</span>(SBP <span class="sc">~</span> <span class="dv">1</span>, <span class="at">data=</span>tr_df),</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>            <span class="at">scope =</span> <span class="fu">list</span>(<span class="at">upper =</span> <span class="fu">lm</span>(SBP <span class="sc">~</span> ., <span class="at">data=</span>tr_df)),</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>            <span class="at">direction =</span> <span class="st">"forward"</span>, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>te_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">cbind</span>(<span class="at">SBP =</span> y_te, X_te))</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>fwd_rmspe <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_te <span class="sc">-</span> <span class="fu">predict</span>(fwd, <span class="at">newdata=</span>te_df))<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Ridge and LASSO via CV</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>cv_ridge <span class="ot">&lt;-</span> <span class="fu">cv.glmnet</span>(X_tr, y_tr, <span class="at">alpha =</span> <span class="dv">0</span>, <span class="at">nfolds =</span> <span class="dv">10</span>)</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>cv_lasso <span class="ot">&lt;-</span> <span class="fu">cv.glmnet</span>(X_tr, y_tr, <span class="at">alpha =</span> <span class="dv">1</span>, <span class="at">nfolds =</span> <span class="dv">10</span>)</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>ridge_rmspe <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_te <span class="sc">-</span> <span class="fu">predict</span>(cv_ridge, X_te, <span class="at">s=</span><span class="st">"lambda.min"</span>))<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>lasso_rmspe <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_te <span class="sc">-</span> <span class="fu">predict</span>(cv_lasso, X_te, <span class="at">s=</span><span class="st">"lambda.min"</span>))<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary table</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">Method =</span> <span class="fu">c</span>(<span class="st">"Null (mean)"</span>, <span class="st">"OLS"</span>, <span class="st">"Forward (AIC)"</span>, <span class="st">"Ridge"</span>, <span class="st">"LASSO"</span>),</span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">Test_RMSPE =</span> <span class="fu">round</span>(<span class="fu">c</span>(null_rmspe, ols_rmspe, fwd_rmspe, ridge_rmspe, lasso_rmspe), <span class="dv">3</span>)</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>results<span class="sc">$</span>vs_Null <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> results<span class="sc">$</span>Test_RMSPE <span class="sc">/</span> null_rmspe), <span class="dv">1</span>)</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(results)[<span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="st">"% better than null"</span></span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(results)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>         Method Test_RMSPE % better than null
-1   Null (mean)     18.777                0.0
-2           OLS     17.368                7.5
-3 Forward (AIC)     17.368                7.5
-4         Ridge     17.398                7.3
-5         LASSO     17.375                7.5</code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(results, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(Method, Test_RMSPE),</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                     <span class="at">y =</span> Test_RMSPE, <span class="at">fill =</span> Method <span class="sc">==</span> <span class="st">"Null (mean)"</span>)) <span class="sc">+</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">alpha =</span> <span class="fl">0.85</span>) <span class="sc">+</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> null_rmspe, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">colour =</span> <span class="st">"#888"</span>) <span class="sc">+</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">round</span>(Test_RMSPE, <span class="dv">2</span>)), <span class="at">hjust =</span> <span class="sc">-</span><span class="fl">0.2</span>, <span class="at">size =</span> <span class="fl">3.5</span>) <span class="sc">+</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"TRUE"</span> <span class="ot">=</span> <span class="st">"#bdc3c7"</span>, <span class="st">"FALSE"</span> <span class="ot">=</span> <span class="st">"#2980b9"</span>),</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                    <span class="at">guide =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Test RMSPE by method (NHANES → SBP, mmHg)"</span>,</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Dashed = null model (predict mean). Lower is better."</span>,</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Test RMSPE (mmHg)"</span>) <span class="sc">+</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Age"</span>, <span class="st">"BMI"</span>, <span class="st">"Waist"</span>, <span class="st">"Cholesterol"</span>, <span class="st">"SBP"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>dat  <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(nhanes[, vars])</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>X    <span class="ot">&lt;-</span> <span class="fu">scale</span>(dat)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Three n_neighbors values</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>umap_5  <span class="ot">&lt;-</span> <span class="fu">umap</span>(X, <span class="at">n_neighbors =</span> <span class="dv">5</span>,  <span class="at">min_dist =</span> <span class="fl">0.1</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>umap_15 <span class="ot">&lt;-</span> <span class="fu">umap</span>(X, <span class="at">n_neighbors =</span> <span class="dv">15</span>, <span class="at">min_dist =</span> <span class="fl">0.1</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>umap_50 <span class="ot">&lt;-</span> <span class="fu">umap</span>(X, <span class="at">n_neighbors =</span> <span class="dv">50</span>, <span class="at">min_dist =</span> <span class="fl">0.1</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>make_df <span class="ot">&lt;-</span> <span class="cf">function</span>(res, nn) {</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">Dim1 =</span> res[, <span class="dv">1</span>], <span class="at">Dim2 =</span> res[, <span class="dv">2</span>],</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>             <span class="at">n_neighbors =</span> <span class="fu">paste</span>(<span class="st">"n_neighbors ="</span>, nn))</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>umap_all <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">make_df</span>(umap_5, <span class="dv">5</span>),</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">make_df</span>(umap_15, <span class="dv">15</span>),</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">make_df</span>(umap_50, <span class="dv">50</span>))</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(umap_all, <span class="fu">aes</span>(Dim1, Dim2)) <span class="sc">+</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">0.8</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>, <span class="at">colour =</span> <span class="st">"#2ecc71"</span>) <span class="sc">+</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> n_neighbors, <span class="at">scales =</span> <span class="st">"free"</span>) <span class="sc">+</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"UMAP on NHANES health variables — three n_neighbors values"</span>) <span class="sc">+</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="05-model-comparison_files/figure-html/comparison-plot-1.png" class="img-fluid figure-img" width="768"></p>
+<p><img src="06-umap_files/figure-html/umap-run-1.png" class="img-fluid figure-img" width="960"></p>
 </figure>
 </div>
 </div>
 </div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Rtsne)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>tsne30  <span class="ot">&lt;-</span> <span class="fu">Rtsne</span>(X, <span class="at">dims =</span> <span class="dv">2</span>, <span class="at">perplexity =</span> <span class="dv">30</span>, <span class="at">check_duplicates =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>df_tsne <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Dim1 =</span> tsne30<span class="sc">$</span>Y[, <span class="dv">1</span>], <span class="at">Dim2 =</span> tsne30<span class="sc">$</span>Y[, <span class="dv">2</span>],</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">Method =</span> <span class="st">"t-SNE (perplexity = 30)"</span>, <span class="at">Age =</span> dat<span class="sc">$</span>Age)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>df_umap <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Dim1 =</span> umap_15[, <span class="dv">1</span>],  <span class="at">Dim2 =</span> umap_15[, <span class="dv">2</span>],</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                      <span class="at">Method =</span> <span class="st">"UMAP (n_neighbors = 15)"</span>, <span class="at">Age =</span> dat<span class="sc">$</span>Age)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">rbind</span>(df_tsne, df_umap), <span class="fu">aes</span>(Dim1, Dim2, <span class="at">colour =</span> Age)) <span class="sc">+</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">0.8</span>, <span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_viridis_c</span>(<span class="at">option =</span> <span class="st">"plasma"</span>) <span class="sc">+</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> Method, <span class="at">scales =</span> <span class="st">"free"</span>) <span class="sc">+</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"t-SNE vs UMAP — coloured by Age"</span>) <span class="sc">+</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="06-umap_files/figure-html/umap-vs-tsne-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Interpretation:</strong> Both methods separate older and younger patients into visible gradients. With five variables, the difference is subtle. In Project 3 (PBMC3k scRNA-seq), UMAP and t-SNE separate 8+ cell types that are completely mixed in PCA space — this is where the methods show their real value.</p>
 <hr>
 </section>
-<section id="guided-practice-full-workflow" class="level1" data-number="4">
-<h1 data-number="4"><span class="header-section-number">4</span> Guided Practice: Full Workflow</h1>
+<section id="guided-practice" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Guided Practice</h1>
 <div class="webr-loading-note">
-<p><strong>R is loading in the background</strong> — exercises below will be interactive once ready.</p>
+<p><strong>R is loading in the background</strong> — exercises will be interactive once the status bar disappears.</p>
 </div>
 <div id="qwebr-insertion-location-2"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 <div id="qwebr-insertion-location-3"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Hints
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ul>
+<li><code>umap(X, n_neighbors = 15, min_dist = 0.1)</code> returns an n×2 matrix</li>
+<li>Index columns 1 and 2 for Dim1/Dim2</li>
+<li>Low <code>min_dist</code> → points are pushed closer together → more compact clusters</li>
+<li>High <code>min_dist</code> → points are spread out → smoother, more continuous embedding</li>
+</ul>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="retrieval-challenge" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Retrieval Challenge</h1>
 <div id="qwebr-insertion-location-4"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 <div class="callout callout-style-default callout-tip callout-titled">
@@ -2435,38 +2438,47 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Questions to answer
+<span class="screen-reader-only">Tip</span>Model Answer
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<ol type="1">
-<li>Does regularisation (ridge or LASSO) outperform plain OLS on this dataset? Why or why not?</li>
-<li>Which predictors does LASSO select? Are they clinically plausible?</li>
-<li>How much better is the best model vs the null baseline (in % RMSPE reduction)?</li>
-<li>Is an RMSPE of ~16 mmHg clinically useful for individual SBP prediction?</li>
-</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>umap_res <span class="ot">&lt;-</span> <span class="fu">umap</span>(X, <span class="at">n_neighbors =</span> <span class="dv">15</span>, <span class="at">min_dist =</span> <span class="fl">0.1</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>km3      <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(X, <span class="at">centers =</span> <span class="dv">3</span>, <span class="at">nstart =</span> <span class="dv">25</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">Dim1    =</span> umap_res[, <span class="dv">1</span>],</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">Dim2    =</span> umap_res[, <span class="dv">2</span>],</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">cluster =</span> <span class="fu">factor</span>(km3<span class="sc">$</span>cluster)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df, <span class="fu">aes</span>(Dim1, Dim2, <span class="at">colour =</span> cluster)) <span class="sc">+</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">1</span>, <span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#e74c3c"</span>, <span class="st">"#3498db"</span>, <span class="st">"#2ecc71"</span>)) <span class="sc">+</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"K-means clusters (K = 3) visualised in UMAP space"</span>) <span class="sc">+</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If the k-means clusters appear well-separated in the UMAP plot, it confirms that UMAP has captured the same structure. If they overlap, it suggests either the clusters are not well-separated in the original space, or UMAP and k-means are picking up different aspects of the data structure.</p>
 </div>
 </div>
 </div>
 <hr>
 </section>
-<section id="why-questions" class="level1" data-number="5">
-<h1 data-number="5"><span class="header-section-number">5</span> Why-Questions</h1>
+<section id="why-questions" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Why-Questions</h1>
 <div class="callout callout-style-default callout-caution callout-titled">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Caution</span>Q: “Should I report OLS p-values after doing LASSO selection?”
+<span class="screen-reader-only">Caution</span>Q: “For the PBMC3k scRNA-seq data in Project 3, should I use PCA, t-SNE, or UMAP?”
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-3" class="callout-3-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>No — this is <strong>selective inference</strong>, and p-values are invalid after model selection. LASSO selected the variables partly based on the data, so performing OLS inference on the selected subset gives inflated Type I error. Options: (1) report only prediction performance from LASSO; (2) use a pre-specified confirmatory model for inference; (3) use methods designed for post-selection inference (e.g., the <code>selectiveInference</code> package).</p>
+<p>The standard pipeline is: (1) PCA on the 2000 variable genes to reduce to 20–50 PCs; (2) UMAP (or t-SNE) on the PC scores for 2D visualisation; (3) cluster in PCA space (Seurat uses a graph-based Louvain algorithm on the PC-space nearest-neighbour graph). UMAP is now the default in Seurat. PCA alone is not sufficient — the cell type structure is nonlinear and only visible after UMAP/t-SNE.</p>
 </div>
 </div>
 </div>
@@ -2476,13 +2488,29 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Caution</span>Q: “My train and test RMSPE are nearly identical. Is that good?”
+<span class="screen-reader-only">Caution</span>Q: “If I run UMAP twice with the same seed, do I get the same result?”
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-4" class="callout-4-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>It means the model generalises well — no overfitting. With n=3500 training and p=7, OLS already has low variance, so regularisation adds little. Large train-test gaps indicate overfitting; nearly equal performance indicates good generalisation.</p>
+<p>Yes — unlike t-SNE, UMAP is reproducible for a fixed seed. This makes it preferable for published figures and for comparing results across analyses. Set <code>set.seed()</code> immediately before calling <code>umap()</code>. Note that the result will still change if you change any hyperparameter (n_neighbors, min_dist) or if the data changes.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-caution callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Caution</span>Q: “Do the axes of a UMAP plot have any meaning?”
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>No — like t-SNE, the axes have no intrinsic meaning. UMAP1 is not the direction of maximum variance (that is PC1). The axes can be rotated, reflected, or scaled without changing the information content. What matters is the relative position of points: nearby points were similar in the original high-dimensional space. When publishing or reporting UMAP plots, label the axes “UMAP1” and “UMAP2” and always state the n_neighbors and min_dist values used.</p>
 </div>
 </div>
 </div>
@@ -2496,7 +2524,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>James et al.&nbsp;(2021). <em>An Introduction to Statistical Learning</em>. — Chapter 6 (full chapter)</p>
+<p>McInnes, Healy &amp; Melville (2018). <em>UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction</em>. arXiv:1802.03426.</p>
 </div>
 </div>
 
@@ -3336,14 +3364,11 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../regression/04-lasso.html" class="pagination-link" aria-label="R4 — LASSO">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">R4 — LASSO</span>
+      <a href="../unsupervised/05-tsne.html" class="pagination-link" aria-label="U5 — t-SNE: Nonlinear Dimensionality Reduction">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">U5 — t-SNE: Nonlinear Dimensionality Reduction</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../classification/01-logistic-regression.html" class="pagination-link" aria-label="C1 — Logistic Regression">
-        <span class="nav-page-text">C1 — Logistic Regression</span> <i class="bi bi-arrow-right-short"></i>
-      </a>
   </div>
 </nav>
 </div> <!-- /content -->

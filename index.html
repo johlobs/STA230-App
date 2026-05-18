@@ -258,6 +258,12 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text">C6 — ROC Curve &amp; AUC</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classification/07-calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">C7 — Calibration of Prediction Models</span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -285,6 +291,24 @@ ul.task-list li input[type="checkbox"] {
   <div class="sidebar-item-container"> 
   <a href="./unsupervised/03-hierarchical-clustering.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">U3 — Hierarchical Clustering</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./unsupervised/04-pam.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">U4 — PAM: Partitioning Around Medoids</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./unsupervised/05-tsne.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">U5 — t-SNE: Nonlinear Dimensionality Reduction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./unsupervised/06-umap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">U6 — UMAP: Uniform Manifold Approximation and Projection</span></a>
   </div>
 </li>
       </ul>
@@ -352,11 +376,11 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 <tr class="odd">
 <td><strong>Block 2: Classification</strong></td>
-<td>Logistic regression, LDA/kNN, decision trees, random forests, boosting, ROC/AUC</td>
+<td>Logistic regression, LDA/kNN, decision trees, random forests, boosting, ROC/AUC, calibration</td>
 </tr>
 <tr class="even">
 <td><strong>Block 3: Unsupervised</strong></td>
-<td>PCA, k-means clustering, hierarchical clustering</td>
+<td>PCA, k-means clustering, hierarchical clustering, PAM, t-SNE, UMAP</td>
 </tr>
 </tbody>
 </table>
@@ -891,7 +915,7 @@ ul.task-list li input[type="checkbox"] {
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp('/' + window.location.host + '/');
+        var filterRegex = new RegExp("https:\/\/johlobs\.github\.io\/STA230-App\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }

@@ -385,7 +385,7 @@ iframe.qwebr-output-code-browse {
 // Document level settings ----
 
 // Determine if we need to install R packages
-globalThis.qwebrInstallRPackagesList = ['ggplot2', 'dplyr', 'tidyr', 'glmnet', 'Matrix', 'MASS', 'pROC', 'class'];
+globalThis.qwebrInstallRPackagesList = ['ggplot2', 'dplyr', 'tidyr', 'glmnet', 'Matrix', 'MASS', 'pROC', 'class', 'cluster', 'Rtsne', 'uwot'];
 
 // Specify possible locations to search for the repository
 globalThis.qwebrPackageRepoURLS = ['https://repo.r-wasm.org/'];
@@ -1877,6 +1877,12 @@ window.Quarto = {
  <span class="menu-text">C6 — ROC Curve &amp; AUC</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../classification/07-calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">C7 — Calibration of Prediction Models</span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -1904,6 +1910,24 @@ window.Quarto = {
   <div class="sidebar-item-container"> 
   <a href="../unsupervised/03-hierarchical-clustering.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">U3 — Hierarchical Clustering</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../unsupervised/04-pam.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">U4 — PAM: Partitioning Around Medoids</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../unsupervised/05-tsne.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">U5 — t-SNE: Nonlinear Dimensionality Reduction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../unsupervised/06-umap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">U6 — UMAP: Uniform Manifold Approximation and Projection</span></a>
   </div>
 </li>
       </ul>
@@ -2980,7 +3004,7 @@ CV RMSPE at lambda.min: 16.695 mmHg</code></pre>
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp('/' + window.location.host + '/');
+        var filterRegex = new RegExp("https:\/\/johlobs\.github\.io\/STA230-App\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }

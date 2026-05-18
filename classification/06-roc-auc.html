@@ -68,7 +68,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../unsupervised/01-pca.html" rel="next">
+<link href="../classification/07-calibration.html" rel="next">
 <link href="../classification/05-boosting-xgboost.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -385,7 +385,7 @@ iframe.qwebr-output-code-browse {
 // Document level settings ----
 
 // Determine if we need to install R packages
-globalThis.qwebrInstallRPackagesList = ['ggplot2', 'dplyr', 'tidyr', 'glmnet', 'Matrix', 'MASS', 'pROC', 'class'];
+globalThis.qwebrInstallRPackagesList = ['ggplot2', 'dplyr', 'tidyr', 'glmnet', 'Matrix', 'MASS', 'pROC', 'class', 'cluster', 'Rtsne', 'uwot'];
 
 // Specify possible locations to search for the repository
 globalThis.qwebrPackageRepoURLS = ['https://repo.r-wasm.org/'];
@@ -1877,6 +1877,12 @@ window.Quarto = {
  <span class="menu-text">C6 — ROC Curve &amp; AUC</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../classification/07-calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">C7 — Calibration of Prediction Models</span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -1904,6 +1910,24 @@ window.Quarto = {
   <div class="sidebar-item-container"> 
   <a href="../unsupervised/03-hierarchical-clustering.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">U3 — Hierarchical Clustering</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../unsupervised/04-pam.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">U4 — PAM: Partitioning Around Medoids</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../unsupervised/05-tsne.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">U5 — t-SNE: Nonlinear Dimensionality Reduction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../unsupervised/06-umap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">U6 — UMAP: Uniform Manifold Approximation and Projection</span></a>
   </div>
 </li>
       </ul>
@@ -3166,7 +3190,7 @@ Classification (threshold = 0.5):</code></pre>
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp('/' + window.location.host + '/');
+        var filterRegex = new RegExp("https:\/\/johlobs\.github\.io\/STA230-App\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
@@ -3500,8 +3524,8 @@ Classification (threshold = 0.5):</code></pre>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../unsupervised/01-pca.html" class="pagination-link" aria-label="U1 — Principal Component Analysis">
-        <span class="nav-page-text">U1 — Principal Component Analysis</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../classification/07-calibration.html" class="pagination-link" aria-label="C7 — Calibration of Prediction Models">
+        <span class="nav-page-text">C7 — Calibration of Prediction Models</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

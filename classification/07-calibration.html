@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>R5 — Model Comparison &amp; Workflow – STA230 — Statistical Learning</title>
+<title>C7 — Calibration of Prediction Models – STA230 — Statistical Learning</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -68,8 +68,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../classification/01-logistic-regression.html" rel="next">
-<link href="../regression/04-lasso.html" rel="prev">
+<link href="../unsupervised/01-pca.html" rel="next">
+<link href="../classification/06-roc-auc.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
@@ -407,7 +407,7 @@ globalThis.qwebrCustomizedWebROptions = {
 };
 
 // Store cell data
-globalThis.qwebrCellDetails = [{"code":"library(ggplot2)\nlibrary(dplyr)\nlibrary(glmnet)\nlibrary(tidyr)\nnhanes <- readRDS(\"https://johlobs.github.io/STA230-App/data/nhanes.rds\")\nnhanes_cc <- nhanes |> filter(!is.na(Diabetes), !is.na(Smoker))\nX <- model.matrix(SBP ~ Age + Sex + BMI + Waist + Cholesterol +\n                    factor(Diabetes) + factor(Smoker), data = nhanes_cc)[, -1]\ny <- nhanes_cc$SBP","id":1,"options":{"autorun":"true","classes":"","comment":"","context":"setup","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"include":"false","label":"unnamed-chunk-1","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"# Complete regression workflow on NHANES\n# STEP 1: Check the data\ncat(\"=== Data overview ===\\n\")\ncat(\"n =\", nrow(nhanes_cc), \"\\n\")\ncat(\"Outcome SBP: mean =\", round(mean(y), 1), \"SD =\", round(sd(y), 1), \"\\n\")\ncat(\"Null RMSPE (SD of SBP):\", round(sd(y), 2), \"mmHg\\n\\n\")\n\n# STEP 2: 70/30 split\nset.seed(42)\ntr <- sample(nrow(nhanes_cc), round(0.7 * nrow(nhanes_cc)))\nte <- setdiff(seq_len(nrow(nhanes_cc)), tr)\nX_tr <- X[tr,]; y_tr <- y[tr]\nX_te <- X[te,]; y_te <- y[te]\ncat(\"Training set:\", length(tr), \"| Test set:\", length(te), \"\\n\")","id":2,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-workflow","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"# STEP 3: Select model via CV on training data\n# (Never touch X_te / y_te until the final evaluation)\nset.seed(42)\ncv_lasso <- cv.glmnet(X_tr, y_tr, alpha = 1, nfolds = 10)\ncv_ridge <- cv.glmnet(X_tr, y_tr, alpha = 0, nfolds = 10)\n\ncat(\"LASSO CV RMSPE (lambda.min):\", round(sqrt(min(cv_lasso$cvm)), 3), \"\\n\")\ncat(\"Ridge CV RMSPE (lambda.min):\", round(sqrt(min(cv_ridge$cvm)), 3), \"\\n\")\n\n# Which model do you choose based on CV?","id":3,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-select","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"# STEP 4: Evaluate chosen model on test set (do this only once!)\nrmspe <- function(pred, ytrue) sqrt(mean((ytrue - pred)^2))\n\ncat(\"=== Final test set evaluation ===\\n\")\ncat(\"Null RMSPE:   \", round(rmspe(rep(mean(y_tr), length(y_te)), y_te), 3), \"\\n\")\ncat(\"LASSO RMSPE:  \", round(rmspe(predict(cv_lasso, X_te, s=\"lambda.min\"), y_te), 3), \"\\n\")\ncat(\"Ridge RMSPE:  \", round(rmspe(predict(cv_ridge, X_te, s=\"lambda.min\"), y_te), 3), \"\\n\")\n\n# STEP 5: Interpret the selected model\ncat(\"\\n=== LASSO coefficients at lambda.min ===\\n\")\ncoef_final <- coef(cv_lasso, s = \"lambda.min\")\nprint(round(coef_final, 4))","id":4,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-evaluate","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}}];
+globalThis.qwebrCellDetails = [{"code":"library(ggplot2)\nlibrary(dplyr)\nlibrary(pROC)\nswp <- readRDS(\"https://johlobs.github.io/STA230-App/data/swp.rds\")\nset.seed(42)\ntr    <- sample(nrow(swp), round(0.7 * nrow(swp)))\ntrain <- swp[tr, ]; test  <- swp[-tr, ]\nglm_fit  <- glm(SWP ~ Age + Sex + Fulltime + CTW + JobDemands + JobControl +\n                  JobSupport + MentalWB, data = train, family = binomial)\npred_glm <- predict(glm_fit, newdata = test, type = \"response\")","id":1,"options":{"autorun":"true","classes":"","comment":"","context":"setup","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"include":"false","label":"unnamed-chunk-1","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"# Build a calibration plot for the logistic regression\ncal_df <- data.frame(pred = pred_glm, obs = as.numeric(test$SWP))\ncal_df$bin <- cut(cal_df$pred, breaks = seq(0, 1, by = 0.1), include.lowest = TRUE)\n\ncal_summary <- cal_df |>\n  group_by(bin) |>\n  summarise(mean_pred = mean(pred), obs_rate = mean(obs), n = n(), .groups = \"drop\")\n\n# TASK 1: Plot the calibration curve\nggplot(cal_summary, aes(mean_pred, obs_rate)) +\n  geom_abline(slope = 1, intercept = 0, linetype = \"dashed\") +\n  geom_line(colour = \"#3498db\") +\n  geom_point(aes(size = n)) +\n  labs(x = \"Mean predicted probability\", y = \"Observed event rate\",\n       title = \"Calibration plot\") +\n  theme_minimal()\n\n# TASK 2: Is the model overestimating or underestimating at high probabilities?","id":2,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-calplot","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"# Hosmer-Lemeshow test (manual)\nhl_manual <- function(pred, obs, g = 10) {\n  df  <- data.frame(pred, obs) |> dplyr::arrange(pred)\n  df$grp <- dplyr::ntile(df$pred, g)\n  tab <- df |> dplyr::group_by(grp) |>\n    dplyr::summarise(O1 = sum(obs), E1 = sum(pred),\n                     O0 = dplyr::n() - sum(obs), E0 = dplyr::n() - sum(pred),\n                     .groups = \"drop\")\n  chi2 <- sum((tab$O1 - tab$E1)^2 / tab$E1 + (tab$O0 - tab$E0)^2 / tab$E0)\n  p    <- 1 - pchisq(chi2, df = g - 2)\n  cat(sprintf(\"HL chi2 = %.2f, df = %d, p = %.4f\\n\", chi2, g - 2, p))\n}\n\n# TASK 3: Run the HL test for the logistic regression\nhl_manual(pred_glm, as.numeric(test$SWP))\n\n# TASK 4: What does the p-value tell you about calibration?","id":3,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-hl","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"# Compare calibration of logistic regression vs a \"naive\" model\n# that always predicts the marginal event rate (intercept-only)\n\n# Marginal event rate in the training data\np_marginal <- mean(train$SWP)\npred_naive <- rep(p_marginal, nrow(test))\n\n# TASK 1: Build calibration plots for both models side by side\n# TASK 2: Which model is better calibrated? Which is better discriminated (AUC)?\n# TASK 3: What does this tell you about the relationship between AUC and calibration?\n\ncal_compare <- function(pred, obs, label) {\n  df  <- data.frame(pred, obs)\n  df$bin <- cut(df$pred, breaks = seq(0, 1, by = 0.1), include.lowest = TRUE)\n  df |> group_by(bin) |>\n    summarise(mean_pred = mean(pred), obs_rate = mean(obs), n = n(), .groups = \"drop\") |>\n    mutate(model = label)\n}\n\nobs <- as.numeric(test$SWP)\n\nrbind(\n  cal_compare(pred_glm,   obs, \"Logistic regression\"),\n  cal_compare(pred_naive, obs, \"Naive (marginal rate)\")\n) |>\n  ggplot(aes(mean_pred, obs_rate)) +\n  geom_abline(slope = 1, intercept = 0, linetype = \"dashed\") +\n  geom_line(aes(colour = model)) +\n  geom_point(aes(size = n, colour = model)) +\n  facet_wrap(~ model) +\n  theme_minimal() +\n  labs(x = \"Mean predicted probability\", y = \"Observed event rate\")","id":4,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"challenge","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}}];
 
 </script>
 <script type="module">
@@ -1730,7 +1730,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../regression/01-ols-review.html">Block 1: Regression</a></li><li class="breadcrumb-item"><a href="../regression/05-model-comparison.html">R5 — Model Comparison &amp; Workflow</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../classification/01-logistic-regression.html">Block 2: Classification</a></li><li class="breadcrumb-item"><a href="../classification/07-calibration.html">C7 — Calibration of Prediction Models</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -1826,7 +1826,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../regression/05-model-comparison.html" class="sidebar-item-text sidebar-link active">
+  <a href="../regression/05-model-comparison.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">R5 — Model Comparison &amp; Workflow</span></a>
   </div>
 </li>
@@ -1879,7 +1879,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../classification/07-calibration.html" class="sidebar-item-text sidebar-link">
+  <a href="../classification/07-calibration.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">C7 — Calibration of Prediction Models</span></a>
   </div>
 </li>
@@ -1942,16 +1942,17 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#concept-putting-it-all-together" id="toc-concept-putting-it-all-together" class="nav-link active" data-scroll-target="#concept-putting-it-all-together"><span class="header-section-number">1</span> Concept: Putting It All Together</a>
+  <li><a href="#concept-does-the-models-confidence-match-reality" id="toc-concept-does-the-models-confidence-match-reality" class="nav-link active" data-scroll-target="#concept-does-the-models-confidence-match-reality"><span class="header-section-number">1</span> Concept: Does the Model’s Confidence Match Reality?</a>
   <ul class="collapse">
-  <li><a href="#the-complete-regression-workflow" id="toc-the-complete-regression-workflow" class="nav-link" data-scroll-target="#the-complete-regression-workflow"><span class="header-section-number">1.1</span> The complete regression workflow</a></li>
-  <li><a href="#which-method-to-choose" id="toc-which-method-to-choose" class="nav-link" data-scroll-target="#which-method-to-choose"><span class="header-section-number">1.2</span> Which method to choose?</a></li>
-  <li><a href="#reporting-test-performance" id="toc-reporting-test-performance" class="nav-link" data-scroll-target="#reporting-test-performance"><span class="header-section-number">1.3</span> Reporting test performance</a></li>
+  <li><a href="#auc-tells-you-about-ranking-calibration-tells-you-about-probabilities" id="toc-auc-tells-you-about-ranking-calibration-tells-you-about-probabilities" class="nav-link" data-scroll-target="#auc-tells-you-about-ranking-calibration-tells-you-about-probabilities"><span class="header-section-number">1.1</span> AUC tells you about ranking — calibration tells you about probabilities</a></li>
+  <li><a href="#the-calibration-plot" id="toc-the-calibration-plot" class="nav-link" data-scroll-target="#the-calibration-plot"><span class="header-section-number">1.2</span> The calibration plot</a></li>
+  <li><a href="#hosmerlemeshow-test" id="toc-hosmerlemeshow-test" class="nav-link" data-scroll-target="#hosmerlemeshow-test"><span class="header-section-number">1.3</span> Hosmer–Lemeshow test</a></li>
   </ul></li>
   <li><a href="#quiz" id="toc-quiz" class="nav-link" data-scroll-target="#quiz"><span class="header-section-number">2</span> Quiz</a></li>
-  <li><a href="#worked-example-full-comparison-on-nhanes" id="toc-worked-example-full-comparison-on-nhanes" class="nav-link" data-scroll-target="#worked-example-full-comparison-on-nhanes"><span class="header-section-number">3</span> Worked Example: Full Comparison on NHANES</a></li>
-  <li><a href="#guided-practice-full-workflow" id="toc-guided-practice-full-workflow" class="nav-link" data-scroll-target="#guided-practice-full-workflow"><span class="header-section-number">4</span> Guided Practice: Full Workflow</a></li>
-  <li><a href="#why-questions" id="toc-why-questions" class="nav-link" data-scroll-target="#why-questions"><span class="header-section-number">5</span> Why-Questions</a></li>
+  <li><a href="#worked-example-calibration-of-a-logistic-regression-model-on-swp-data" id="toc-worked-example-calibration-of-a-logistic-regression-model-on-swp-data" class="nav-link" data-scroll-target="#worked-example-calibration-of-a-logistic-regression-model-on-swp-data"><span class="header-section-number">3</span> Worked Example: Calibration of a Logistic Regression Model on SWP Data</a></li>
+  <li><a href="#guided-practice" id="toc-guided-practice" class="nav-link" data-scroll-target="#guided-practice"><span class="header-section-number">4</span> Guided Practice</a></li>
+  <li><a href="#retrieval-challenge" id="toc-retrieval-challenge" class="nav-link" data-scroll-target="#retrieval-challenge"><span class="header-section-number">5</span> Retrieval Challenge</a></li>
+  <li><a href="#why-questions" id="toc-why-questions" class="nav-link" data-scroll-target="#why-questions"><span class="header-section-number">6</span> Why-Questions</a></li>
   </ul>
 </nav>
     </div>
@@ -2242,9 +2243,9 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 }
 </script>
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../regression/01-ols-review.html">Block 1: Regression</a></li><li class="breadcrumb-item"><a href="../regression/05-model-comparison.html">R5 — Model Comparison &amp; Workflow</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../classification/01-logistic-regression.html">Block 2: Classification</a></li><li class="breadcrumb-item"><a href="../classification/07-calibration.html">C7 — Calibration of Prediction Models</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">R5 — Model Comparison &amp; Workflow</h1>
+<h1 class="title">C7 — Calibration of Prediction Models</h1>
 </div>
 
 
@@ -2261,172 +2262,191 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 </header>
 
 
-<script>document.body.classList.add("regression");</script>
+<script>document.body.classList.add("classification");</script>
 <div id="qwebr-insertion-location-1"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
-<section id="concept-putting-it-all-together" class="level1" data-number="1">
-<h1 data-number="1"><span class="header-section-number">1</span> Concept: Putting It All Together</h1>
-<section id="the-complete-regression-workflow" class="level2" data-number="1.1">
-<h2 data-number="1.1" class="anchored" data-anchor-id="the-complete-regression-workflow"><span class="header-section-number">1.1</span> The complete regression workflow</h2>
-<pre><code>1. Explore data          → distributions, missingness, outliers
-2. Pre-process           → log-transform skewed outcomes, standardise predictors
-3. Split data            → train (70%) / test (30%) — or use CV throughout
-4. Fit candidate models  → OLS, forward stepwise, ridge, LASSO
-5. Select model          → by CV RMSPE on training data only
-6. Evaluate              → test RMSPE on held-out test set (once, at the end)
-7. Report                → coefficients, CIs, test performance, clinical interpretation</code></pre>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>The golden rule
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The test set is used <strong>exactly once</strong> — at the end. If you look at the test set to make model choices, it is no longer a clean test set.</p>
-</div>
-</div>
+<section id="concept-does-the-models-confidence-match-reality" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Concept: Does the Model’s Confidence Match Reality?</h1>
+<section id="auc-tells-you-about-ranking-calibration-tells-you-about-probabilities" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="auc-tells-you-about-ranking-calibration-tells-you-about-probabilities"><span class="header-section-number">1.1</span> AUC tells you about ranking — calibration tells you about probabilities</h2>
+<p>A model with AUC = 0.85 ranks patients well: those with higher predicted probability tend to have the outcome more often. But a good AUC does not mean the probabilities are meaningful as numbers.</p>
+<p><strong>Calibration</strong> asks: if my model assigns probability 0.7 to a group of patients, do roughly 70% of them actually have the outcome?</p>
+<ul>
+<li>A <strong>well-calibrated</strong> model: predicted probabilities match observed proportions</li>
+<li>An <strong>overconfident</strong> model: probabilities close to 0 and 1, actual rates more moderate</li>
+<li>An <strong>underconfident</strong> model: probabilities cluster near 0.5 even when outcomes are certain</li>
+</ul>
+<p>Calibration is crucial for clinical decision-making. A model used to decide whether to screen a patient, prescribe a drug, or allocate an ICU bed must give meaningful probabilities — not just good rankings.</p>
 </section>
-<section id="which-method-to-choose" class="level2" data-number="1.2">
-<h2 data-number="1.2" class="anchored" data-anchor-id="which-method-to-choose"><span class="header-section-number">1.2</span> Which method to choose?</h2>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Situation</th>
-<th>Recommended method</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><span class="math inline">\(p\)</span> small, inference goal</td>
-<td>OLS with stepwise/AIC selection</td>
-</tr>
-<tr class="even">
-<td><span class="math inline">\(p\)</span> moderate, prediction goal</td>
-<td>LASSO or elastic net</td>
-</tr>
-<tr class="odd">
-<td><span class="math inline">\(p\)</span> large, many small effects</td>
-<td>Ridge</td>
-</tr>
-<tr class="even">
-<td>Correlated predictors</td>
-<td>Ridge or elastic net</td>
-</tr>
-<tr class="odd">
-<td>Need sparse, interpretable model</td>
-<td>LASSO</td>
-</tr>
-</tbody>
-</table>
+<section id="the-calibration-plot" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="the-calibration-plot"><span class="header-section-number">1.2</span> The calibration plot</h2>
+<p>The standard diagnostic is a <strong>calibration plot</strong> (also called a calibration curve):</p>
+<ol type="1">
+<li>Divide predicted probabilities into <span class="math inline">\(g\)</span> groups (typically <span class="math inline">\(g = 10\)</span> deciles)</li>
+<li>For each group, compute the mean predicted probability and the observed event rate</li>
+<li>Plot: x-axis = mean predicted probability, y-axis = observed proportion</li>
+<li>A perfectly calibrated model falls on the diagonal</li>
+</ol>
+<p>Points <strong>above</strong> the diagonal: observed rate exceeds prediction — model is underestimating risk. Points <strong>below</strong> the diagonal: observed rate below prediction — model is overestimating risk.</p>
 </section>
-<section id="reporting-test-performance" class="level2" data-number="1.3">
-<h2 data-number="1.3" class="anchored" data-anchor-id="reporting-test-performance"><span class="header-section-number">1.3</span> Reporting test performance</h2>
-<p>Report RMSPE (or MAE) on the test set with a confidence interval:</p>
-<p><span class="math display">\[\text{RMSPE} \pm 1.96 \times \frac{\text{SD of squared errors}}{\sqrt{n_{\text{test}}}}\]</span></p>
-<p>Never report only training performance. Always compare to a baseline (e.g., predicting the mean: <span class="math inline">\(\text{RMSPE}_{\text{null}} = \text{SD}(Y)\)</span>).</p>
+<section id="hosmerlemeshow-test" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="hosmerlemeshow-test"><span class="header-section-number">1.3</span> Hosmer–Lemeshow test</h2>
+<p>The Hosmer–Lemeshow (HL) test formally tests whether the calibration plot departs from the diagonal. It computes a chi-squared statistic over the <span class="math inline">\(g\)</span> groups.</p>
+<ul>
+<li>A <strong>large p-value</strong> (e.g.&nbsp;&gt; 0.05): no evidence of miscalibration — observed and expected counts are close</li>
+<li>A <strong>small p-value</strong>: significant miscalibration detected</li>
+</ul>
+<p><strong>Caveat:</strong> The HL test is sensitive to sample size. With large <span class="math inline">\(n\)</span> it detects trivial departures; with small <span class="math inline">\(n\)</span> it has low power. Always look at the calibration plot alongside the test.</p>
 <hr>
 </section>
 </section>
 <section id="quiz" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Quiz</h1>
-<div class="sta230-quiz" data-question="You use the test set to compare OLS, ridge, and LASSO, then report the test RMSPE of the winner. What is wrong with this?">
-  <div class="q-opt" data-correct="false">Nothing — comparing methods on the test set is the correct approach</div>
-  <div class="q-opt" data-correct="true">The test set was used for model selection, so the reported RMSPE is optimistically biased</div>
-  <div class="q-opt" data-correct="false">You cannot compare different model classes on the same test set</div>
-  <div class="q-opt" data-correct="false">The test RMSPE is only valid if all models use the same lambda</div>
-  <div class="q-exp">If you pick the model with the lowest test RMSPE, the reported performance is optimistic — you effectively selected the model that happened to fit the test data best. This is a subtle form of overfitting. The fix: use cross-validation on training data for model selection, then report performance on a truly held-out test set that was never used during model building.</div>
+<div class="sta230-quiz" data-question="A model has AUC = 0.90 but the calibration plot shows all predicted probabilities between 0.3 and 0.6, while observed event rates range from 0.05 to 0.85. What is the problem?">
+  <div class="q-opt" data-correct="false">The model cannot rank patients correctly</div>
+  <div class="q-opt" data-correct="true">The model ranks patients well (high AUC) but the predicted probabilities are compressed — they do not represent actual event rates and cannot be used as absolute risk estimates</div>
+  <div class="q-opt" data-correct="false">The AUC and calibration always agree, so this situation is impossible</div>
+  <div class="q-opt" data-correct="false">The model is overfitting</div>
+  <div class="q-exp">AUC measures discrimination: the probability that a randomly chosen case ranks above a randomly chosen control. It is unaffected by systematic shifts in the probability scale. A model that always predicts 0.4 ± 0.1 may discriminate well (the relative ordering is correct) but is miscalibrated (the absolute values are wrong). For decision-making — "should I screen this patient with predicted risk 0.6?" — calibration is essential.</div>
 </div>
 
-<div class="sta230-quiz" data-question="The null model (predicting the mean for every observation) gives RMSPE = 18 mmHg. Your LASSO model gives RMSPE = 16 mmHg. How should you interpret this?">
-  <div class="q-opt" data-correct="false">LASSO is an excellent model — 16 &lt; 18</div>
-  <div class="q-opt" data-correct="false">The model is useless since it doesn't predict perfectly</div>
-  <div class="q-opt" data-correct="true">LASSO reduces RMSPE by about 11% over the null — modest improvement, worth interpreting in clinical context</div>
-  <div class="q-opt" data-correct="false">The null model should never be used as a baseline for RMSPE</div>
-  <div class="q-exp">The null RMSPE (SD of Y) is the natural baseline — it's what you get by ignoring all predictors. Going from 18 to 16 mmHg (~11% reduction) is a meaningful but modest improvement. Whether it's clinically useful depends on the application. For individual patient risk prediction, 16 mmHg error may still be too imprecise. Always contextualise RMSPE against domain-specific requirements.</div>
+<div class="sta230-quiz" data-question="The calibration plot shows that for patients with predicted probability 0.8, the observed event rate is 0.5. What does this tell you?">
+  <div class="q-opt" data-correct="false">The model is underestimating risk for high-risk patients</div>
+  <div class="q-opt" data-correct="true">The model is overestimating risk for high-risk patients — it assigns 0.8 but only 50% actually have the outcome</div>
+  <div class="q-opt" data-correct="false">The model is perfectly calibrated in this region</div>
+  <div class="q-opt" data-correct="false">The AUC must be below 0.5</div>
+  <div class="q-exp">If the calibration point (0.8, 0.5) is below the diagonal, the model overclaims certainty. Patients it calls "80% likely" are actually only 50% likely. This is common with tree-based methods (random forests, XGBoost) which can be overconfident in regions with few training observations. Logistic regression tends to be better calibrated by default; tree methods often require post-hoc recalibration (e.g. Platt scaling, isotonic regression).</div>
+</div>
+
+<div class="sta230-quiz" data-question="The Hosmer–Lemeshow test gives p = 0.002 on a dataset with n = 50 000. What is the correct interpretation?">
+  <div class="q-opt" data-correct="false">The model is severely miscalibrated and should be discarded</div>
+  <div class="q-opt" data-correct="false">The model is perfectly calibrated — p &gt; 0.001</div>
+  <div class="q-opt" data-correct="true">There is statistically significant miscalibration, but with n = 50 000 even trivially small deviations are detected — inspect the calibration plot to judge if the miscalibration is clinically meaningful</div>
+  <div class="q-opt" data-correct="false">The test is invalid for n &gt; 10 000</div>
+  <div class="q-exp">The HL test is a chi-squared test and gains power as n increases. With 50 000 observations, even a 2% deviation from the diagonal will be significant. A p-value of 0.002 does not tell you whether the miscalibration matters clinically. Always look at the calibration plot: if the curve hugs the diagonal with only small deviations, the model may still be clinically useful despite a significant HL test.</div>
 </div>
 <hr>
 </section>
-<section id="worked-example-full-comparison-on-nhanes" class="level1" data-number="3">
-<h1 data-number="3"><span class="header-section-number">3</span> Worked Example: Full Comparison on NHANES</h1>
+<section id="worked-example-calibration-of-a-logistic-regression-model-on-swp-data" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Worked Example: Calibration of a Logistic Regression Model on SWP Data</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>tr_idx <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">nrow</span>(nhanes_cc), <span class="fu">round</span>(<span class="fl">0.7</span> <span class="sc">*</span> <span class="fu">nrow</span>(nhanes_cc)))</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>X_tr <span class="ot">&lt;-</span> X[tr_idx, ];  y_tr <span class="ot">&lt;-</span> y[tr_idx]</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>X_te <span class="ot">&lt;-</span> X[<span class="sc">-</span>tr_idx, ]; y_te <span class="ot">&lt;-</span> y[<span class="sc">-</span>tr_idx]</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Null model baseline</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>null_rmspe <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_te <span class="sc">-</span> <span class="fu">mean</span>(y_tr))<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># OLS</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>ols <span class="ot">&lt;-</span> <span class="fu">lm</span>(y_tr <span class="sc">~</span> X_tr)</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>ols_rmspe <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_te <span class="sc">-</span> <span class="fu">cbind</span>(<span class="dv">1</span>, X_te) <span class="sc">%*%</span> <span class="fu">coef</span>(ols))<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Forward stepwise (AIC) — refit on training data</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>tr_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">cbind</span>(<span class="at">SBP =</span> y_tr, X_tr))</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>fwd <span class="ot">&lt;-</span> <span class="fu">step</span>(<span class="fu">lm</span>(SBP <span class="sc">~</span> <span class="dv">1</span>, <span class="at">data=</span>tr_df),</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>            <span class="at">scope =</span> <span class="fu">list</span>(<span class="at">upper =</span> <span class="fu">lm</span>(SBP <span class="sc">~</span> ., <span class="at">data=</span>tr_df)),</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>            <span class="at">direction =</span> <span class="st">"forward"</span>, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>te_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">cbind</span>(<span class="at">SBP =</span> y_te, X_te))</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>fwd_rmspe <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_te <span class="sc">-</span> <span class="fu">predict</span>(fwd, <span class="at">newdata=</span>te_df))<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Ridge and LASSO via CV</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>cv_ridge <span class="ot">&lt;-</span> <span class="fu">cv.glmnet</span>(X_tr, y_tr, <span class="at">alpha =</span> <span class="dv">0</span>, <span class="at">nfolds =</span> <span class="dv">10</span>)</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>cv_lasso <span class="ot">&lt;-</span> <span class="fu">cv.glmnet</span>(X_tr, y_tr, <span class="at">alpha =</span> <span class="dv">1</span>, <span class="at">nfolds =</span> <span class="dv">10</span>)</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>ridge_rmspe <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_te <span class="sc">-</span> <span class="fu">predict</span>(cv_ridge, X_te, <span class="at">s=</span><span class="st">"lambda.min"</span>))<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>lasso_rmspe <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_te <span class="sc">-</span> <span class="fu">predict</span>(cv_lasso, X_te, <span class="at">s=</span><span class="st">"lambda.min"</span>))<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary table</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">Method =</span> <span class="fu">c</span>(<span class="st">"Null (mean)"</span>, <span class="st">"OLS"</span>, <span class="st">"Forward (AIC)"</span>, <span class="st">"Ridge"</span>, <span class="st">"LASSO"</span>),</span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">Test_RMSPE =</span> <span class="fu">round</span>(<span class="fu">c</span>(null_rmspe, ols_rmspe, fwd_rmspe, ridge_rmspe, lasso_rmspe), <span class="dv">3</span>)</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>results<span class="sc">$</span>vs_Null <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> results<span class="sc">$</span>Test_RMSPE <span class="sc">/</span> null_rmspe), <span class="dv">1</span>)</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(results)[<span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="st">"% better than null"</span></span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(results)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>         Method Test_RMSPE % better than null
-1   Null (mean)     18.777                0.0
-2           OLS     17.368                7.5
-3 Forward (AIC)     17.368                7.5
-4         Ridge     17.398                7.3
-5         LASSO     17.375                7.5</code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(results, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(Method, Test_RMSPE),</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                     <span class="at">y =</span> Test_RMSPE, <span class="at">fill =</span> Method <span class="sc">==</span> <span class="st">"Null (mean)"</span>)) <span class="sc">+</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">alpha =</span> <span class="fl">0.85</span>) <span class="sc">+</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> null_rmspe, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">colour =</span> <span class="st">"#888"</span>) <span class="sc">+</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">round</span>(Test_RMSPE, <span class="dv">2</span>)), <span class="at">hjust =</span> <span class="sc">-</span><span class="fl">0.2</span>, <span class="at">size =</span> <span class="fl">3.5</span>) <span class="sc">+</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"TRUE"</span> <span class="ot">=</span> <span class="st">"#bdc3c7"</span>, <span class="st">"FALSE"</span> <span class="ot">=</span> <span class="st">"#2980b9"</span>),</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                    <span class="at">guide =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Test RMSPE by method (NHANES → SBP, mmHg)"</span>,</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Dashed = null model (predict mean). Lower is better."</span>,</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Test RMSPE (mmHg)"</span>) <span class="sc">+</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Manual calibration plot using deciles of predicted probability</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>cal_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">pred =</span> pred_glm,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">obs  =</span> <span class="fu">as.numeric</span>(test<span class="sc">$</span>SWP)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Cut into 10 equal-width bins</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>cal_df<span class="sc">$</span>bin <span class="ot">&lt;-</span> <span class="fu">cut</span>(cal_df<span class="sc">$</span>pred, <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="fl">0.1</span>),</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>                  <span class="at">include.lowest =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>cal_summary <span class="ot">&lt;-</span> cal_df <span class="sc">|&gt;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(bin) <span class="sc">|&gt;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_pred =</span> <span class="fu">mean</span>(pred),</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">obs_rate  =</span> <span class="fu">mean</span>(obs),</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">n         =</span> <span class="fu">n</span>(),</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups   =</span> <span class="st">"drop"</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(cal_summary, <span class="fu">aes</span>(mean_pred, obs_rate)) <span class="sc">+</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">colour =</span> <span class="st">"grey50"</span>) <span class="sc">+</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#3498db"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">size =</span> n), <span class="at">colour =</span> <span class="st">"#2c3e50"</span>) <span class="sc">+</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_size_continuous</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">8</span>), <span class="at">name =</span> <span class="st">"n in bin"</span>) <span class="sc">+</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">percent_format</span>()) <span class="sc">+</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">percent_format</span>()) <span class="sc">+</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Calibration plot — Logistic regression on SWP data"</span>,</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Dashed line = perfect calibration"</span>,</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Mean predicted probability"</span>, <span class="at">y =</span> <span class="st">"Observed event rate"</span>) <span class="sc">+</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="05-model-comparison_files/figure-html/comparison-plot-1.png" class="img-fluid figure-img" width="768"></p>
+<p><img src="07-calibration_files/figure-html/cal-plot-manual-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Smoothed calibration curve using LOESS</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(cal_df, <span class="fu">aes</span>(pred, obs)) <span class="sc">+</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">colour =</span> <span class="st">"grey50"</span>) <span class="sc">+</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"loess"</span>, <span class="at">se =</span> <span class="cn">TRUE</span>, <span class="at">colour =</span> <span class="st">"#e74c3c"</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>              <span class="at">fill =</span> <span class="st">"#e74c3c"</span>, <span class="at">alpha =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">percent_format</span>()) <span class="sc">+</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">percent_format</span>()) <span class="sc">+</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Smoothed calibration curve — Logistic regression"</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Red = LOESS smooth with 95% CI"</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Predicted probability"</span>, <span class="at">y =</span> <span class="st">"Observed proportion"</span>) <span class="sc">+</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="07-calibration_files/figure-html/cal-smooth-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Hosmer-Lemeshow test (manual implementation without ResourceSelection)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>hl_manual <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs, <span class="at">g =</span> <span class="dv">10</span>) {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  df   <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(pred, obs) <span class="sc">|&gt;</span> <span class="fu">arrange</span>(pred)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  df<span class="sc">$</span>grp <span class="ot">&lt;-</span> <span class="fu">ntile</span>(df<span class="sc">$</span>pred, g)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  tab  <span class="ot">&lt;-</span> df <span class="sc">|&gt;</span> <span class="fu">group_by</span>(grp) <span class="sc">|&gt;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(<span class="at">O1 =</span> <span class="fu">sum</span>(obs), <span class="at">E1 =</span> <span class="fu">sum</span>(pred),</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>              <span class="at">O0 =</span> <span class="fu">n</span>() <span class="sc">-</span> <span class="fu">sum</span>(obs), <span class="at">E0 =</span> <span class="fu">n</span>() <span class="sc">-</span> <span class="fu">sum</span>(pred), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  chi2 <span class="ot">&lt;-</span> <span class="fu">sum</span>((tab<span class="sc">$</span>O1 <span class="sc">-</span> tab<span class="sc">$</span>E1)<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> tab<span class="sc">$</span>E1 <span class="sc">+</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>               (tab<span class="sc">$</span>O0 <span class="sc">-</span> tab<span class="sc">$</span>E0)<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> tab<span class="sc">$</span>E0)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  p    <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">-</span> <span class="fu">pchisq</span>(chi2, <span class="at">df =</span> g <span class="sc">-</span> <span class="dv">2</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Hosmer-Lemeshow chi2 = %.2f, df = %d, p = %.4f</span><span class="sc">\n</span><span class="st">"</span>, chi2, g<span class="dv">-2</span>, p))</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">invisible</span>(<span class="fu">list</span>(<span class="at">chi2 =</span> chi2, <span class="at">p =</span> p))</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="fu">hl_manual</span>(pred_glm, <span class="fu">as.numeric</span>(test<span class="sc">$</span>SWP))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Hosmer-Lemeshow chi2 = 9.51, df = 8, p = 0.3010</code></pre>
+</div>
+</div>
 <hr>
 </section>
-<section id="guided-practice-full-workflow" class="level1" data-number="4">
-<h1 data-number="4"><span class="header-section-number">4</span> Guided Practice: Full Workflow</h1>
+<section id="guided-practice" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Guided Practice</h1>
 <div class="webr-loading-note">
-<p><strong>R is loading in the background</strong> — exercises below will be interactive once ready.</p>
+<p><strong>R is loading in the background</strong> — exercises will be interactive once the status bar disappears.</p>
 </div>
 <div id="qwebr-insertion-location-2"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 <div id="qwebr-insertion-location-3"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Hints
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ul>
+<li>Points above the diagonal = observed rate exceeds prediction (underestimation)</li>
+<li>Points below the diagonal = observed rate below prediction (overestimation)</li>
+<li>Logistic regression is generally well-calibrated; tree-based methods often overestimate at extremes</li>
+<li>A significant HL p-value does not automatically mean the model is unusable — inspect the plot</li>
+</ul>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="retrieval-challenge" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Retrieval Challenge</h1>
 <div id="qwebr-insertion-location-4"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 <div class="callout callout-style-default callout-tip callout-titled">
@@ -2435,38 +2455,33 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Questions to answer
+<span class="screen-reader-only">Tip</span>Model Answer
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<ol type="1">
-<li>Does regularisation (ridge or LASSO) outperform plain OLS on this dataset? Why or why not?</li>
-<li>Which predictors does LASSO select? Are they clinically plausible?</li>
-<li>How much better is the best model vs the null baseline (in % RMSPE reduction)?</li>
-<li>Is an RMSPE of ~16 mmHg clinically useful for individual SBP prediction?</li>
-</ol>
+<p>The naive model always predicts the marginal rate (a constant), so its calibration plot is a single point — trivially calibrated for that one probability value. The logistic regression spans the full probability range and its calibration curve should track the diagonal. AUC of the naive model is exactly 0.5 (random). This illustrates that a model can be “calibrated” in a trivial sense while having zero discrimination, and conversely a well-discriminating model may need recalibration.</p>
 </div>
 </div>
 </div>
 <hr>
 </section>
-<section id="why-questions" class="level1" data-number="5">
-<h1 data-number="5"><span class="header-section-number">5</span> Why-Questions</h1>
+<section id="why-questions" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Why-Questions</h1>
 <div class="callout callout-style-default callout-caution callout-titled">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Caution</span>Q: “Should I report OLS p-values after doing LASSO selection?”
+<span class="screen-reader-only">Caution</span>Q: “Tree-based models (random forests, XGBoost) often have poor calibration — why?”
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-3" class="callout-3-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>No — this is <strong>selective inference</strong>, and p-values are invalid after model selection. LASSO selected the variables partly based on the data, so performing OLS inference on the selected subset gives inflated Type I error. Options: (1) report only prediction performance from LASSO; (2) use a pre-specified confirmatory model for inference; (3) use methods designed for post-selection inference (e.g., the <code>selectiveInference</code> package).</p>
+<p>Tree-based models output predicted probabilities that are leaf-node proportions (random forests average these across trees). In regions of the feature space with few training observations, leaf proportions are extreme (close to 0 or 1) even when the true probability is moderate. Logistic regression, by contrast, produces smooth probabilities governed by the linear predictor. Post-hoc recalibration methods like <strong>Platt scaling</strong> (logistic regression on the model outputs) or <strong>isotonic regression</strong> can correct tree-model calibration.</p>
 </div>
 </div>
 </div>
@@ -2476,13 +2491,29 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Caution</span>Q: “My train and test RMSPE are nearly identical. Is that good?”
+<span class="screen-reader-only">Caution</span>Q: “In the STA230 project, which is more important — AUC or calibration?”
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-4" class="callout-4-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>It means the model generalises well — no overfitting. With n=3500 training and p=7, OLS already has low variance, so regularisation adds little. Large train-test gaps indicate overfitting; nearly equal performance indicates good generalisation.</p>
+<p>It depends on the use case. For ranking patients on a risk score (triage, screening), AUC is the primary metric. For absolute risk estimates used in clinical decisions — “should we treat this patient with 40% predicted 5-year risk?” — calibration is essential. In the SWP project you fitted four models (logistic, CART, RF, XGBoost): compare both AUC and calibration to get a complete picture. A model with AUC = 0.82 and good calibration is more useful clinically than one with AUC = 0.85 but severely miscalibrated probabilities.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-caution callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Caution</span>Q: “How does calibration relate to internal validation from the reading articles?”
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>The articles you read in Project 2 (Steyerberg et al., Harrell et al.) emphasise that <strong>optimism</strong> — the gap between apparent performance on training data and true performance on new data — affects both discrimination and calibration. Optimistic calibration appears as a calibration curve that is steeper than the diagonal (overconfident predictions). Internal validation via bootstrap or cross-validation corrects this optimism. The Hosmer–Lemeshow test on training data will always look better than on test data — always report calibration on held-out data.</p>
 </div>
 </div>
 </div>
@@ -2496,7 +2527,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>James et al.&nbsp;(2021). <em>An Introduction to Statistical Learning</em>. — Chapter 6 (full chapter)</p>
+<p>Steyerberg et al.&nbsp;(2010). <em>Assessing the performance of prediction models</em>. Epidemiology 21(1), 128–138.</p>
 </div>
 </div>
 
@@ -3336,13 +3367,13 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../regression/04-lasso.html" class="pagination-link" aria-label="R4 — LASSO">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">R4 — LASSO</span>
+      <a href="../classification/06-roc-auc.html" class="pagination-link" aria-label="C6 — ROC Curve &amp; AUC">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">C6 — ROC Curve &amp; AUC</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../classification/01-logistic-regression.html" class="pagination-link" aria-label="C1 — Logistic Regression">
-        <span class="nav-page-text">C1 — Logistic Regression</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../unsupervised/01-pca.html" class="pagination-link" aria-label="U1 — Principal Component Analysis">
+        <span class="nav-page-text">U1 — Principal Component Analysis</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

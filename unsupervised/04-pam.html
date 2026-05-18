@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>R5 — Model Comparison &amp; Workflow – STA230 — Statistical Learning</title>
+<title>U4 — PAM: Partitioning Around Medoids – STA230 — Statistical Learning</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -68,8 +68,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../classification/01-logistic-regression.html" rel="next">
-<link href="../regression/04-lasso.html" rel="prev">
+<link href="../unsupervised/05-tsne.html" rel="next">
+<link href="../unsupervised/03-hierarchical-clustering.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
@@ -407,7 +407,7 @@ globalThis.qwebrCustomizedWebROptions = {
 };
 
 // Store cell data
-globalThis.qwebrCellDetails = [{"code":"library(ggplot2)\nlibrary(dplyr)\nlibrary(glmnet)\nlibrary(tidyr)\nnhanes <- readRDS(\"https://johlobs.github.io/STA230-App/data/nhanes.rds\")\nnhanes_cc <- nhanes |> filter(!is.na(Diabetes), !is.na(Smoker))\nX <- model.matrix(SBP ~ Age + Sex + BMI + Waist + Cholesterol +\n                    factor(Diabetes) + factor(Smoker), data = nhanes_cc)[, -1]\ny <- nhanes_cc$SBP","id":1,"options":{"autorun":"true","classes":"","comment":"","context":"setup","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"include":"false","label":"unnamed-chunk-1","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"# Complete regression workflow on NHANES\n# STEP 1: Check the data\ncat(\"=== Data overview ===\\n\")\ncat(\"n =\", nrow(nhanes_cc), \"\\n\")\ncat(\"Outcome SBP: mean =\", round(mean(y), 1), \"SD =\", round(sd(y), 1), \"\\n\")\ncat(\"Null RMSPE (SD of SBP):\", round(sd(y), 2), \"mmHg\\n\\n\")\n\n# STEP 2: 70/30 split\nset.seed(42)\ntr <- sample(nrow(nhanes_cc), round(0.7 * nrow(nhanes_cc)))\nte <- setdiff(seq_len(nrow(nhanes_cc)), tr)\nX_tr <- X[tr,]; y_tr <- y[tr]\nX_te <- X[te,]; y_te <- y[te]\ncat(\"Training set:\", length(tr), \"| Test set:\", length(te), \"\\n\")","id":2,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-workflow","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"# STEP 3: Select model via CV on training data\n# (Never touch X_te / y_te until the final evaluation)\nset.seed(42)\ncv_lasso <- cv.glmnet(X_tr, y_tr, alpha = 1, nfolds = 10)\ncv_ridge <- cv.glmnet(X_tr, y_tr, alpha = 0, nfolds = 10)\n\ncat(\"LASSO CV RMSPE (lambda.min):\", round(sqrt(min(cv_lasso$cvm)), 3), \"\\n\")\ncat(\"Ridge CV RMSPE (lambda.min):\", round(sqrt(min(cv_ridge$cvm)), 3), \"\\n\")\n\n# Which model do you choose based on CV?","id":3,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-select","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"# STEP 4: Evaluate chosen model on test set (do this only once!)\nrmspe <- function(pred, ytrue) sqrt(mean((ytrue - pred)^2))\n\ncat(\"=== Final test set evaluation ===\\n\")\ncat(\"Null RMSPE:   \", round(rmspe(rep(mean(y_tr), length(y_te)), y_te), 3), \"\\n\")\ncat(\"LASSO RMSPE:  \", round(rmspe(predict(cv_lasso, X_te, s=\"lambda.min\"), y_te), 3), \"\\n\")\ncat(\"Ridge RMSPE:  \", round(rmspe(predict(cv_ridge, X_te, s=\"lambda.min\"), y_te), 3), \"\\n\")\n\n# STEP 5: Interpret the selected model\ncat(\"\\n=== LASSO coefficients at lambda.min ===\\n\")\ncoef_final <- coef(cv_lasso, s = \"lambda.min\")\nprint(round(coef_final, 4))","id":4,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-evaluate","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}}];
+globalThis.qwebrCellDetails = [{"code":"library(ggplot2)\nlibrary(dplyr)\nlibrary(cluster)\nnhanes <- readRDS(\"https://johlobs.github.io/STA230-App/data/nhanes.rds\")","id":1,"options":{"autorun":"true","classes":"","comment":"","context":"setup","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"include":"false","label":"unnamed-chunk-1","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"vars <- c(\"Age\", \"BMI\", \"Waist\", \"Cholesterol\", \"SBP\")\ndat  <- na.omit(nhanes[, vars])\nX    <- scale(dat)\n\n# TASK 1: Run PAM for K = 2 to 6 and plot average silhouette width\nsil_widths <- sapply(2:6, function(k) pam(X, k = k)$silinfo$avg.width)\nplot(2:6, sil_widths, type = \"b\", pch = 19,\n     xlab = \"K\", ylab = \"Average silhouette width\",\n     main = \"Choosing K — PAM silhouette\")\n\n# TASK 2: Which K has the highest silhouette? Does it match the K-means elbow?\ncat(\"Best K by silhouette:\", which.max(sil_widths) + 1, \"\\n\")","id":2,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-sil","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"vars <- c(\"Age\", \"BMI\", \"Waist\", \"Cholesterol\", \"SBP\")\ndat  <- na.omit(nhanes[, vars])\nX    <- scale(dat)\n\n# TASK 3: Fit PAM with K = 3 and inspect the medoids\npam3 <- pam(X, k = 3)\n\ncat(\"Medoid row indices:\", pam3$id.med, \"\\n\")\ncat(\"Average silhouette width:\", round(pam3$silinfo$avg.width, 3), \"\\n\")\n\n# TASK 4: Look at the actual medoid patients on the original scale\ndat[pam3$id.med, ]","id":3,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-pam","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"# Compare PAM and K-means clusters on the same data:\n# 1. Run PAM with K = 3\n# 2. Run K-means with K = 3\n# 3. Build a cross-tabulation of PAM cluster vs K-means cluster\n# 4. Are the assignments mostly the same?\n\nvars <- c(\"Age\", \"BMI\", \"Waist\", \"Cholesterol\", \"SBP\")\ndat  <- na.omit(nhanes[, vars])\nX    <- scale(dat)\nset.seed(42)\n\n# Your code here:","id":4,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"challenge","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}}];
 
 </script>
 <script type="module">
@@ -1730,7 +1730,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../regression/01-ols-review.html">Block 1: Regression</a></li><li class="breadcrumb-item"><a href="../regression/05-model-comparison.html">R5 — Model Comparison &amp; Workflow</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../unsupervised/01-pca.html">Block 3: Unsupervised</a></li><li class="breadcrumb-item"><a href="../unsupervised/04-pam.html">U4 — PAM: Partitioning Around Medoids</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -1826,7 +1826,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../regression/05-model-comparison.html" class="sidebar-item-text sidebar-link active">
+  <a href="../regression/05-model-comparison.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">R5 — Model Comparison &amp; Workflow</span></a>
   </div>
 </li>
@@ -1914,7 +1914,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../unsupervised/04-pam.html" class="sidebar-item-text sidebar-link">
+  <a href="../unsupervised/04-pam.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">U4 — PAM: Partitioning Around Medoids</span></a>
   </div>
 </li>
@@ -1942,16 +1942,17 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#concept-putting-it-all-together" id="toc-concept-putting-it-all-together" class="nav-link active" data-scroll-target="#concept-putting-it-all-together"><span class="header-section-number">1</span> Concept: Putting It All Together</a>
+  <li><a href="#concept-a-more-robust-alternative-to-k-means" id="toc-concept-a-more-robust-alternative-to-k-means" class="nav-link active" data-scroll-target="#concept-a-more-robust-alternative-to-k-means"><span class="header-section-number">1</span> Concept: A More Robust Alternative to K-Means</a>
   <ul class="collapse">
-  <li><a href="#the-complete-regression-workflow" id="toc-the-complete-regression-workflow" class="nav-link" data-scroll-target="#the-complete-regression-workflow"><span class="header-section-number">1.1</span> The complete regression workflow</a></li>
-  <li><a href="#which-method-to-choose" id="toc-which-method-to-choose" class="nav-link" data-scroll-target="#which-method-to-choose"><span class="header-section-number">1.2</span> Which method to choose?</a></li>
-  <li><a href="#reporting-test-performance" id="toc-reporting-test-performance" class="nav-link" data-scroll-target="#reporting-test-performance"><span class="header-section-number">1.3</span> Reporting test performance</a></li>
+  <li><a href="#medoids-vs-centroids" id="toc-medoids-vs-centroids" class="nav-link" data-scroll-target="#medoids-vs-centroids"><span class="header-section-number">1.1</span> Medoids vs centroids</a></li>
+  <li><a href="#the-silhouette-width" id="toc-the-silhouette-width" class="nav-link" data-scroll-target="#the-silhouette-width"><span class="header-section-number">1.2</span> The silhouette width</a></li>
+  <li><a href="#scaling" id="toc-scaling" class="nav-link" data-scroll-target="#scaling"><span class="header-section-number">1.3</span> Scaling</a></li>
   </ul></li>
   <li><a href="#quiz" id="toc-quiz" class="nav-link" data-scroll-target="#quiz"><span class="header-section-number">2</span> Quiz</a></li>
-  <li><a href="#worked-example-full-comparison-on-nhanes" id="toc-worked-example-full-comparison-on-nhanes" class="nav-link" data-scroll-target="#worked-example-full-comparison-on-nhanes"><span class="header-section-number">3</span> Worked Example: Full Comparison on NHANES</a></li>
-  <li><a href="#guided-practice-full-workflow" id="toc-guided-practice-full-workflow" class="nav-link" data-scroll-target="#guided-practice-full-workflow"><span class="header-section-number">4</span> Guided Practice: Full Workflow</a></li>
-  <li><a href="#why-questions" id="toc-why-questions" class="nav-link" data-scroll-target="#why-questions"><span class="header-section-number">5</span> Why-Questions</a></li>
+  <li><a href="#worked-example-patient-profiles-with-pam-in-nhanes" id="toc-worked-example-patient-profiles-with-pam-in-nhanes" class="nav-link" data-scroll-target="#worked-example-patient-profiles-with-pam-in-nhanes"><span class="header-section-number">3</span> Worked Example: Patient Profiles with PAM in NHANES</a></li>
+  <li><a href="#guided-practice" id="toc-guided-practice" class="nav-link" data-scroll-target="#guided-practice"><span class="header-section-number">4</span> Guided Practice</a></li>
+  <li><a href="#retrieval-challenge" id="toc-retrieval-challenge" class="nav-link" data-scroll-target="#retrieval-challenge"><span class="header-section-number">5</span> Retrieval Challenge</a></li>
+  <li><a href="#why-questions" id="toc-why-questions" class="nav-link" data-scroll-target="#why-questions"><span class="header-section-number">6</span> Why-Questions</a></li>
   </ul>
 </nav>
     </div>
@@ -2242,9 +2243,9 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 }
 </script>
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../regression/01-ols-review.html">Block 1: Regression</a></li><li class="breadcrumb-item"><a href="../regression/05-model-comparison.html">R5 — Model Comparison &amp; Workflow</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../unsupervised/01-pca.html">Block 3: Unsupervised</a></li><li class="breadcrumb-item"><a href="../unsupervised/04-pam.html">U4 — PAM: Partitioning Around Medoids</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">R5 — Model Comparison &amp; Workflow</h1>
+<h1 class="title">U4 — PAM: Partitioning Around Medoids</h1>
 </div>
 
 
@@ -2261,172 +2262,250 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 </header>
 
 
-<script>document.body.classList.add("regression");</script>
+<script>document.body.classList.add("unsupervised");</script>
 <div id="qwebr-insertion-location-1"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
-<section id="concept-putting-it-all-together" class="level1" data-number="1">
-<h1 data-number="1"><span class="header-section-number">1</span> Concept: Putting It All Together</h1>
-<section id="the-complete-regression-workflow" class="level2" data-number="1.1">
-<h2 data-number="1.1" class="anchored" data-anchor-id="the-complete-regression-workflow"><span class="header-section-number">1.1</span> The complete regression workflow</h2>
-<pre><code>1. Explore data          → distributions, missingness, outliers
-2. Pre-process           → log-transform skewed outcomes, standardise predictors
-3. Split data            → train (70%) / test (30%) — or use CV throughout
-4. Fit candidate models  → OLS, forward stepwise, ridge, LASSO
-5. Select model          → by CV RMSPE on training data only
-6. Evaluate              → test RMSPE on held-out test set (once, at the end)
-7. Report                → coefficients, CIs, test performance, clinical interpretation</code></pre>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>The golden rule
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The test set is used <strong>exactly once</strong> — at the end. If you look at the test set to make model choices, it is no longer a clean test set.</p>
-</div>
-</div>
-</section>
-<section id="which-method-to-choose" class="level2" data-number="1.2">
-<h2 data-number="1.2" class="anchored" data-anchor-id="which-method-to-choose"><span class="header-section-number">1.2</span> Which method to choose?</h2>
+<section id="concept-a-more-robust-alternative-to-k-means" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Concept: A More Robust Alternative to K-Means</h1>
+<section id="medoids-vs-centroids" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="medoids-vs-centroids"><span class="header-section-number">1.1</span> Medoids vs centroids</h2>
+<p>K-means represents each cluster by its <strong>centroid</strong> — the mean of all observations in that cluster. The centroid is usually not an actual data point. PAM uses a <strong>medoid</strong> instead: the actual observation that minimises the total dissimilarity to all other members of its cluster.</p>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
 <thead>
 <tr class="header">
-<th>Situation</th>
-<th>Recommended method</th>
+<th></th>
+<th>K-means</th>
+<th>PAM</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><span class="math inline">\(p\)</span> small, inference goal</td>
-<td>OLS with stepwise/AIC selection</td>
+<td><strong>Cluster representative</strong></td>
+<td>Centroid (mean — not a real data point)</td>
+<td>Medoid (an actual observation)</td>
 </tr>
 <tr class="even">
-<td><span class="math inline">\(p\)</span> moderate, prediction goal</td>
-<td>LASSO or elastic net</td>
+<td><strong>Objective</strong></td>
+<td>Minimise total within-cluster SS</td>
+<td>Minimise total dissimilarity to medoids</td>
 </tr>
 <tr class="odd">
-<td><span class="math inline">\(p\)</span> large, many small effects</td>
-<td>Ridge</td>
+<td><strong>Robustness to outliers</strong></td>
+<td>Low — mean shifts toward extremes</td>
+<td>Higher — medoid is a typical, central point</td>
 </tr>
 <tr class="even">
-<td>Correlated predictors</td>
-<td>Ridge or elastic net</td>
+<td><strong>Must choose K?</strong></td>
+<td>Yes</td>
+<td>Yes</td>
 </tr>
 <tr class="odd">
-<td>Need sparse, interpretable model</td>
-<td>LASSO</td>
+<td><strong>Distance measure</strong></td>
+<td>Euclidean only</td>
+<td>Any dissimilarity matrix</td>
 </tr>
 </tbody>
 </table>
+<p>Because the medoid is an actual observation, PAM clusters are more interpretable: you can inspect the representative patient directly rather than a hypothetical average.</p>
 </section>
-<section id="reporting-test-performance" class="level2" data-number="1.3">
-<h2 data-number="1.3" class="anchored" data-anchor-id="reporting-test-performance"><span class="header-section-number">1.3</span> Reporting test performance</h2>
-<p>Report RMSPE (or MAE) on the test set with a confidence interval:</p>
-<p><span class="math display">\[\text{RMSPE} \pm 1.96 \times \frac{\text{SD of squared errors}}{\sqrt{n_{\text{test}}}}\]</span></p>
-<p>Never report only training performance. Always compare to a baseline (e.g., predicting the mean: <span class="math inline">\(\text{RMSPE}_{\text{null}} = \text{SD}(Y)\)</span>).</p>
+<section id="the-silhouette-width" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="the-silhouette-width"><span class="header-section-number">1.2</span> The silhouette width</h2>
+<p>PAM uses the <strong>silhouette width</strong> as a built-in quality measure. For each observation <span class="math inline">\(i\)</span>:</p>
+<p><span class="math display">\[s(i) = \frac{b(i) - a(i)}{\max(a(i),\, b(i))}\]</span></p>
+<p>where <span class="math inline">\(a(i)\)</span> is the mean distance to other observations in the same cluster, and <span class="math inline">\(b(i)\)</span> is the mean distance to observations in the nearest other cluster.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 68%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Value</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(s(i) \approx 1\)</span></td>
+<td>Observation fits well inside its cluster</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(s(i) \approx 0\)</span></td>
+<td>Observation lies on the border between two clusters</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(s(i) &lt; 0\)</span></td>
+<td>Observation may belong to a neighbouring cluster</td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>average silhouette width</strong> summarises overall cluster quality. To choose K, run PAM for K = 2, 3, … and pick the K that maximises the average silhouette width.</p>
+</section>
+<section id="scaling" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="scaling"><span class="header-section-number">1.3</span> Scaling</h2>
+<p>PAM uses dissimilarities (Euclidean by default). Like k-means, <strong>standardise all variables</strong> before running PAM so no single variable dominates the distance calculation.</p>
 <hr>
 </section>
 </section>
 <section id="quiz" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Quiz</h1>
-<div class="sta230-quiz" data-question="You use the test set to compare OLS, ridge, and LASSO, then report the test RMSPE of the winner. What is wrong with this?">
-  <div class="q-opt" data-correct="false">Nothing — comparing methods on the test set is the correct approach</div>
-  <div class="q-opt" data-correct="true">The test set was used for model selection, so the reported RMSPE is optimistically biased</div>
-  <div class="q-opt" data-correct="false">You cannot compare different model classes on the same test set</div>
-  <div class="q-opt" data-correct="false">The test RMSPE is only valid if all models use the same lambda</div>
-  <div class="q-exp">If you pick the model with the lowest test RMSPE, the reported performance is optimistic — you effectively selected the model that happened to fit the test data best. This is a subtle form of overfitting. The fix: use cross-validation on training data for model selection, then report performance on a truly held-out test set that was never used during model building.</div>
+<div class="sta230-quiz" data-question="What is a medoid, and how does it differ from a K-means centroid?">
+  <div class="q-opt" data-correct="false">A medoid is the mean of the cluster — identical to a K-means centroid</div>
+  <div class="q-opt" data-correct="true">A medoid is the actual data point that minimises total dissimilarity to other cluster members — unlike a centroid, it always exists in the dataset</div>
+  <div class="q-opt" data-correct="false">A medoid is the observation with the largest distance to the cluster centre</div>
+  <div class="q-opt" data-correct="false">A medoid is only used in hierarchical clustering</div>
+  <div class="q-exp">The centroid is the mean vector — it represents the "average" observation and is usually not one of the actual data points. The medoid is an actual observation that is most central. For clinical interpretation, the medoid is more useful: you can look up patient 42 and read their actual record, rather than a hypothetical mean patient with Age = 54.3 and BMI = 27.1.</div>
 </div>
 
-<div class="sta230-quiz" data-question="The null model (predicting the mean for every observation) gives RMSPE = 18 mmHg. Your LASSO model gives RMSPE = 16 mmHg. How should you interpret this?">
-  <div class="q-opt" data-correct="false">LASSO is an excellent model — 16 &lt; 18</div>
-  <div class="q-opt" data-correct="false">The model is useless since it doesn't predict perfectly</div>
-  <div class="q-opt" data-correct="true">LASSO reduces RMSPE by about 11% over the null — modest improvement, worth interpreting in clinical context</div>
-  <div class="q-opt" data-correct="false">The null model should never be used as a baseline for RMSPE</div>
-  <div class="q-exp">The null RMSPE (SD of Y) is the natural baseline — it's what you get by ignoring all predictors. Going from 18 to 16 mmHg (~11% reduction) is a meaningful but modest improvement. Whether it's clinically useful depends on the application. For individual patient risk prediction, 16 mmHg error may still be too imprecise. Always contextualise RMSPE against domain-specific requirements.</div>
+<div class="sta230-quiz" data-question="A patient has silhouette width s = –0.15. What does this indicate?">
+  <div class="q-opt" data-correct="false">The patient is well-assigned to their cluster</div>
+  <div class="q-opt" data-correct="false">The patient is on the exact boundary between two clusters</div>
+  <div class="q-opt" data-correct="true">The patient is closer on average to a neighbouring cluster than to their own — they may be misclassified</div>
+  <div class="q-opt" data-correct="false">The clustering algorithm failed to converge</div>
+  <div class="q-exp">A negative silhouette means b(i) &lt; a(i): the observation is on average closer to members of another cluster than to its own. This suggests the observation is in the wrong cluster, or that the clusters are not well-separated at this value of K. It does not mean the algorithm failed — it just means this particular observation sits in an ambiguous region of the data.</div>
+</div>
+
+<div class="sta230-quiz" data-question="You run PAM for K = 2, 3, 4, 5. The average silhouette widths are 0.38, 0.44, 0.41, 0.35. Which K do you choose?">
+  <div class="q-opt" data-correct="false">K = 2, because simpler is always better</div>
+  <div class="q-opt" data-correct="true">K = 3, because it has the highest average silhouette width</div>
+  <div class="q-opt" data-correct="false">K = 5, because more clusters capture more variation</div>
+  <div class="q-opt" data-correct="false">None — a maximum silhouette of 0.44 is too low to trust</div>
+  <div class="q-exp">The silhouette method selects the K that maximises the average silhouette width. K = 3 gives 0.44, the highest value, so it provides the best separation given the data geometry. There is no absolute threshold for "good enough" silhouette — 0.44 indicates reasonable but not perfect structure. Compare to an elbow plot from k-means to see if both methods agree.</div>
 </div>
 <hr>
 </section>
-<section id="worked-example-full-comparison-on-nhanes" class="level1" data-number="3">
-<h1 data-number="3"><span class="header-section-number">3</span> Worked Example: Full Comparison on NHANES</h1>
+<section id="worked-example-patient-profiles-with-pam-in-nhanes" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Worked Example: Patient Profiles with PAM in NHANES</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>tr_idx <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">nrow</span>(nhanes_cc), <span class="fu">round</span>(<span class="fl">0.7</span> <span class="sc">*</span> <span class="fu">nrow</span>(nhanes_cc)))</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>X_tr <span class="ot">&lt;-</span> X[tr_idx, ];  y_tr <span class="ot">&lt;-</span> y[tr_idx]</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>X_te <span class="ot">&lt;-</span> X[<span class="sc">-</span>tr_idx, ]; y_te <span class="ot">&lt;-</span> y[<span class="sc">-</span>tr_idx]</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Null model baseline</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>null_rmspe <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_te <span class="sc">-</span> <span class="fu">mean</span>(y_tr))<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># OLS</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>ols <span class="ot">&lt;-</span> <span class="fu">lm</span>(y_tr <span class="sc">~</span> X_tr)</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>ols_rmspe <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_te <span class="sc">-</span> <span class="fu">cbind</span>(<span class="dv">1</span>, X_te) <span class="sc">%*%</span> <span class="fu">coef</span>(ols))<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Forward stepwise (AIC) — refit on training data</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>tr_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">cbind</span>(<span class="at">SBP =</span> y_tr, X_tr))</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>fwd <span class="ot">&lt;-</span> <span class="fu">step</span>(<span class="fu">lm</span>(SBP <span class="sc">~</span> <span class="dv">1</span>, <span class="at">data=</span>tr_df),</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>            <span class="at">scope =</span> <span class="fu">list</span>(<span class="at">upper =</span> <span class="fu">lm</span>(SBP <span class="sc">~</span> ., <span class="at">data=</span>tr_df)),</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>            <span class="at">direction =</span> <span class="st">"forward"</span>, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>te_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">cbind</span>(<span class="at">SBP =</span> y_te, X_te))</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>fwd_rmspe <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_te <span class="sc">-</span> <span class="fu">predict</span>(fwd, <span class="at">newdata=</span>te_df))<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Ridge and LASSO via CV</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>cv_ridge <span class="ot">&lt;-</span> <span class="fu">cv.glmnet</span>(X_tr, y_tr, <span class="at">alpha =</span> <span class="dv">0</span>, <span class="at">nfolds =</span> <span class="dv">10</span>)</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>cv_lasso <span class="ot">&lt;-</span> <span class="fu">cv.glmnet</span>(X_tr, y_tr, <span class="at">alpha =</span> <span class="dv">1</span>, <span class="at">nfolds =</span> <span class="dv">10</span>)</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>ridge_rmspe <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_te <span class="sc">-</span> <span class="fu">predict</span>(cv_ridge, X_te, <span class="at">s=</span><span class="st">"lambda.min"</span>))<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>lasso_rmspe <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((y_te <span class="sc">-</span> <span class="fu">predict</span>(cv_lasso, X_te, <span class="at">s=</span><span class="st">"lambda.min"</span>))<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary table</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">Method =</span> <span class="fu">c</span>(<span class="st">"Null (mean)"</span>, <span class="st">"OLS"</span>, <span class="st">"Forward (AIC)"</span>, <span class="st">"Ridge"</span>, <span class="st">"LASSO"</span>),</span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">Test_RMSPE =</span> <span class="fu">round</span>(<span class="fu">c</span>(null_rmspe, ols_rmspe, fwd_rmspe, ridge_rmspe, lasso_rmspe), <span class="dv">3</span>)</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>results<span class="sc">$</span>vs_Null <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> results<span class="sc">$</span>Test_RMSPE <span class="sc">/</span> null_rmspe), <span class="dv">1</span>)</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(results)[<span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="st">"% better than null"</span></span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(results)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Age"</span>, <span class="st">"BMI"</span>, <span class="st">"Waist"</span>, <span class="st">"Cholesterol"</span>, <span class="st">"SBP"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>dat  <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(nhanes[, vars])</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>X    <span class="ot">&lt;-</span> <span class="fu">scale</span>(dat)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Choose K using average silhouette width</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>sil_widths <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">8</span>, <span class="cf">function</span>(k) <span class="fu">pam</span>(X, <span class="at">k =</span> k)<span class="sc">$</span>silinfo<span class="sc">$</span>avg.width)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">K =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">8</span>, <span class="at">AvgSilhouette =</span> <span class="fu">round</span>(sil_widths, <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>         Method Test_RMSPE % better than null
-1   Null (mean)     18.777                0.0
-2           OLS     17.368                7.5
-3 Forward (AIC)     17.368                7.5
-4         Ridge     17.398                7.3
-5         LASSO     17.375                7.5</code></pre>
+<pre><code>  K AvgSilhouette
+1 2         0.235
+2 3         0.237
+3 4         0.235
+4 5         0.210
+5 6         0.177
+6 7         0.187
+7 8         0.195</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(results, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(Method, Test_RMSPE),</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                     <span class="at">y =</span> Test_RMSPE, <span class="at">fill =</span> Method <span class="sc">==</span> <span class="st">"Null (mean)"</span>)) <span class="sc">+</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">alpha =</span> <span class="fl">0.85</span>) <span class="sc">+</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> null_rmspe, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">colour =</span> <span class="st">"#888"</span>) <span class="sc">+</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">round</span>(Test_RMSPE, <span class="dv">2</span>)), <span class="at">hjust =</span> <span class="sc">-</span><span class="fl">0.2</span>, <span class="at">size =</span> <span class="fl">3.5</span>) <span class="sc">+</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"TRUE"</span> <span class="ot">=</span> <span class="st">"#bdc3c7"</span>, <span class="st">"FALSE"</span> <span class="ot">=</span> <span class="st">"#2980b9"</span>),</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                    <span class="at">guide =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Test RMSPE by method (NHANES → SBP, mmHg)"</span>,</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Dashed = null model (predict mean). Lower is better."</span>,</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Test RMSPE (mmHg)"</span>) <span class="sc">+</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">data.frame</span>(<span class="at">K =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">8</span>, <span class="at">sil =</span> sil_widths), <span class="fu">aes</span>(K, sil)) <span class="sc">+</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#3498db"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">colour =</span> <span class="st">"#2c3e50"</span>) <span class="sc">+</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">8</span>) <span class="sc">+</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Choosing K for PAM — average silhouette width"</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Number of clusters K"</span>, <span class="at">y =</span> <span class="st">"Average silhouette width"</span>) <span class="sc">+</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="05-model-comparison_files/figure-html/comparison-plot-1.png" class="img-fluid figure-img" width="768"></p>
+<p><img src="04-pam_files/figure-html/sil-plot-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>pam3 <span class="ot">&lt;-</span> <span class="fu">pam</span>(X, <span class="at">k =</span> <span class="dv">3</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The medoids — actual row numbers in X</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>pam3<span class="sc">$</span>id.med</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 4889  411  563</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Medoid profiles on original scale</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>dat[pam3<span class="sc">$</span>id.med, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 5
+    Age   BMI Waist Cholesterol   SBP
+  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;       &lt;dbl&gt; &lt;dbl&gt;
+1    59  26.9  95.7         200  131.
+2    46  34.7 117           182  123.
+3    28  24.2  84.5         165  111.</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(pam3, <span class="at">which.plots =</span> <span class="dv">2</span>, <span class="at">main =</span> <span class="st">"Silhouette plot — PAM, K = 3"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04-pam_files/figure-html/sil-plot-full-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>pca <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(X)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>scores <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(pca<span class="sc">$</span>x[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], <span class="at">cluster =</span> <span class="fu">factor</span>(pam3<span class="sc">$</span>clustering))</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>medoid_scores <span class="ot">&lt;-</span> scores[pam3<span class="sc">$</span>id.med, ]</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(scores, <span class="fu">aes</span>(PC1, PC2, <span class="at">colour =</span> cluster)) <span class="sc">+</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> medoid_scores, <span class="at">size =</span> <span class="dv">5</span>, <span class="at">shape =</span> <span class="dv">18</span>) <span class="sc">+</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_ellipse</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#e74c3c"</span>, <span class="st">"#3498db"</span>, <span class="st">"#2ecc71"</span>)) <span class="sc">+</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"PAM clusters (K = 3) on PC1–PC2"</span>,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Diamonds = medoids"</span>,</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">colour =</span> <span class="st">"Cluster"</span>) <span class="sc">+</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04-pam_files/figure-html/pam-pca-plot-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Interpretation:</strong> The medoids are real patients — you can read their actual Age, BMI, SBP, etc. This is a key interpretive advantage over k-means, where the centroid is a hypothetical average.</p>
 <hr>
 </section>
-<section id="guided-practice-full-workflow" class="level1" data-number="4">
-<h1 data-number="4"><span class="header-section-number">4</span> Guided Practice: Full Workflow</h1>
+<section id="guided-practice" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Guided Practice</h1>
 <div class="webr-loading-note">
-<p><strong>R is loading in the background</strong> — exercises below will be interactive once ready.</p>
+<p><strong>R is loading in the background</strong> — exercises will be interactive once the status bar disappears.</p>
 </div>
 <div id="qwebr-insertion-location-2"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 <div id="qwebr-insertion-location-3"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Hints
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ul>
+<li><code>pam(X, k = K)$silinfo$avg.width</code> returns the average silhouette for K clusters</li>
+<li><code>pam3$id.med</code> gives the row indices of the medoids in X</li>
+<li>Index into <code>dat</code> (unscaled) to read medoid profiles in interpretable units</li>
+<li>Compare the silhouette plot to the k-means elbow — do they agree on K?</li>
+</ul>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="retrieval-challenge" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Retrieval Challenge</h1>
 <div id="qwebr-insertion-location-4"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 <div class="callout callout-style-default callout-tip callout-titled">
@@ -2435,38 +2514,41 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Questions to answer
+<span class="screen-reader-only">Tip</span>Model Answer
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<ol type="1">
-<li>Does regularisation (ridge or LASSO) outperform plain OLS on this dataset? Why or why not?</li>
-<li>Which predictors does LASSO select? Are they clinically plausible?</li>
-<li>How much better is the best model vs the null baseline (in % RMSPE reduction)?</li>
-<li>Is an RMSPE of ~16 mmHg clinically useful for individual SBP prediction?</li>
-</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>pam3 <span class="ot">&lt;-</span> <span class="fu">pam</span>(X, <span class="at">k =</span> <span class="dv">3</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>km3  <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(X, <span class="at">centers =</span> <span class="dv">3</span>, <span class="at">nstart =</span> <span class="dv">25</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Cross-tabulation — rows = PAM, columns = K-means</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="at">PAM =</span> pam3<span class="sc">$</span>clustering, <span class="at">KMeans =</span> km3<span class="sc">$</span>cluster)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Note: cluster labels are arbitrary — the same cluster may be</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co"># labelled "1" in PAM and "2" in K-means</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The cross-table typically shows high agreement — most cells in each row have one dominant column. Where they disagree is often near cluster boundaries, where the medoid-based and centroid-based rules pull in different directions.</p>
 </div>
 </div>
 </div>
 <hr>
 </section>
-<section id="why-questions" class="level1" data-number="5">
-<h1 data-number="5"><span class="header-section-number">5</span> Why-Questions</h1>
+<section id="why-questions" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Why-Questions</h1>
 <div class="callout callout-style-default callout-caution callout-titled">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Caution</span>Q: “Should I report OLS p-values after doing LASSO selection?”
+<span class="screen-reader-only">Caution</span>Q: “When should I use PAM instead of K-means?”
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-3" class="callout-3-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>No — this is <strong>selective inference</strong>, and p-values are invalid after model selection. LASSO selected the variables partly based on the data, so performing OLS inference on the selected subset gives inflated Type I error. Options: (1) report only prediction performance from LASSO; (2) use a pre-specified confirmatory model for inference; (3) use methods designed for post-selection inference (e.g., the <code>selectiveInference</code> package).</p>
+<p>Use PAM when: (1) interpretability matters and you want a real representative patient, not a hypothetical average; (2) the data contain outliers that could shift a K-means centroid; (3) you want a built-in quality measure (silhouette) to guide the choice of K. K-means is preferred when n is very large (PAM is O(n²) per iteration, k-means is O(nKd)) or when you need fast re-clustering of new observations.</p>
 </div>
 </div>
 </div>
@@ -2476,13 +2558,29 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Caution</span>Q: “My train and test RMSPE are nearly identical. Is that good?”
+<span class="screen-reader-only">Caution</span>Q: “A silhouette of 0.3 — is that good or bad?”
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-4" class="callout-4-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>It means the model generalises well — no overfitting. With n=3500 training and p=7, OLS already has low variance, so regularisation adds little. Large train-test gaps indicate overfitting; nearly equal performance indicates good generalisation.</p>
+<p>Silhouette values above 0.5 are generally considered strong structure; 0.25–0.5 is weak but present; below 0.25 suggests no real cluster structure. However, these thresholds depend on the number of dimensions and the nature of the data. Health data with many correlated variables often produces moderate silhouettes even when the clusters are clinically meaningful. Always combine silhouette width with clinical interpretation of the cluster profiles.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-caution callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Caution</span>Q: “How does PAM connect to what I did in the STA230 exercises?”
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In Exercise 5, you ran PAM on the iris dataset and used the silhouette plot to evaluate whether K = 2 or K = 3 best described the flower measurements. You saw that setosa was well-separated (high silhouette) while versicolor and virginica overlapped (lower silhouette). The same logic applies here: NHANES patients in the “healthy” profile cluster tightly, while borderline patients near the cluster boundary have lower silhouette values.</p>
 </div>
 </div>
 </div>
@@ -2496,7 +2594,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>James et al.&nbsp;(2021). <em>An Introduction to Statistical Learning</em>. — Chapter 6 (full chapter)</p>
+<p>James et al.&nbsp;(2021). <em>An Introduction to Statistical Learning</em>. — Chapter 12.4</p>
 </div>
 </div>
 
@@ -3336,13 +3434,13 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../regression/04-lasso.html" class="pagination-link" aria-label="R4 — LASSO">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">R4 — LASSO</span>
+      <a href="../unsupervised/03-hierarchical-clustering.html" class="pagination-link" aria-label="U3 — Hierarchical Clustering">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">U3 — Hierarchical Clustering</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../classification/01-logistic-regression.html" class="pagination-link" aria-label="C1 — Logistic Regression">
-        <span class="nav-page-text">C1 — Logistic Regression</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../unsupervised/05-tsne.html" class="pagination-link" aria-label="U5 — t-SNE: Nonlinear Dimensionality Reduction">
+        <span class="nav-page-text">U5 — t-SNE: Nonlinear Dimensionality Reduction</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

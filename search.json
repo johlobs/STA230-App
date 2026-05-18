@@ -1,323 +1,350 @@
 [
   {
-    "objectID": "unsupervised/03-hierarchical-clustering.html#why-hierarchical-clustering",
-    "href": "unsupervised/03-hierarchical-clustering.html#why-hierarchical-clustering",
-    "title": "U3 — Hierarchical Clustering",
-    "section": "1.1 Why hierarchical clustering?",
-    "text": "1.1 Why hierarchical clustering?\nK-means requires you to choose \\(K\\) before you start. Hierarchical clustering builds a tree (dendrogram) that shows the nested cluster structure at every level — you choose \\(K\\) after seeing the tree. It is also deterministic: the same data always gives the same result, unlike k-means.\nA second advantage: the dendrogram reveals how clusters relate to each other. Are clusters 1 and 2 more similar to each other than to cluster 3? The tree shows this immediately.",
+    "objectID": "unsupervised/06-umap.html#what-umap-adds-over-t-sne",
+    "href": "unsupervised/06-umap.html#what-umap-adds-over-t-sne",
+    "title": "U6 — UMAP: Uniform Manifold Approximation and Projection",
+    "section": "1.1 What UMAP adds over t-SNE",
+    "text": "1.1 What UMAP adds over t-SNE\nUMAP (Uniform Manifold Approximation and Projection) is a nonlinear dimensionality reduction method with a similar goal to t-SNE: project high-dimensional data into 2D while preserving local structure. It differs in two important ways:\n\n\n\n\n\n\n\n\n\nt-SNE\nUMAP\n\n\n\n\nMathematical basis\nKL divergence between probability distributions\nTopological data analysis (Riemannian geometry)\n\n\nGlobal structure\nOften distorted — cluster distances not reliable\nBetter preserved — relative distances between clusters are more meaningful\n\n\nSpeed\nSlow on large datasets\nSubstantially faster\n\n\nReproducibility\nStochastic by default\nReproducible for fixed seed\n\n\nNew data\nCannot project new points\nCan project new observations onto existing embedding",
     "crumbs": [
       "Home",
       "Block 3: Unsupervised",
-      "U3 — Hierarchical Clustering"
+      "U6 — UMAP: Uniform Manifold Approximation and Projection"
     ]
   },
   {
-    "objectID": "unsupervised/03-hierarchical-clustering.html#bottom-up-agglomerative-clustering",
-    "href": "unsupervised/03-hierarchical-clustering.html#bottom-up-agglomerative-clustering",
-    "title": "U3 — Hierarchical Clustering",
-    "section": "1.2 Bottom-up (agglomerative) clustering",
-    "text": "1.2 Bottom-up (agglomerative) clustering\nThe most common approach:\n\nStart with \\(n\\) clusters — every observation is its own cluster\nMerge the two most similar clusters\nRepeat until all observations are in one cluster\n\nThe result is a dendrogram. To get \\(K\\) clusters, cut the tree at height \\(h\\) such that exactly \\(K\\) branches extend below the cut.",
+    "objectID": "unsupervised/06-umap.html#key-hyperparameters",
+    "href": "unsupervised/06-umap.html#key-hyperparameters",
+    "title": "U6 — UMAP: Uniform Manifold Approximation and Projection",
+    "section": "1.2 Key hyperparameters",
+    "text": "1.2 Key hyperparameters\nn_neighbors (default 15): How many neighbours each point considers. Like perplexity in t-SNE:\n\nLow (e.g. 5): captures very local structure, can fragment real clusters\nHigh (e.g. 50): captures broader structure, more similar to PCA\n\nmin_dist (default 0.1): How tightly points are packed in the 2D embedding:\n\nLow (e.g. 0.01): tighter clusters, more separated\nHigh (e.g. 0.5): smoother, more spread-out embedding\n\nRun with multiple n_neighbors values to check stability, just as you would with t-SNE perplexity.",
     "crumbs": [
       "Home",
       "Block 3: Unsupervised",
-      "U3 — Hierarchical Clustering"
+      "U6 — UMAP: Uniform Manifold Approximation and Projection"
     ]
   },
   {
-    "objectID": "unsupervised/03-hierarchical-clustering.html#linkage-how-similarity-is-measured-between-clusters",
-    "href": "unsupervised/03-hierarchical-clustering.html#linkage-how-similarity-is-measured-between-clusters",
-    "title": "U3 — Hierarchical Clustering",
-    "section": "1.3 Linkage — how similarity is measured between clusters",
-    "text": "1.3 Linkage — how similarity is measured between clusters\nOnce clusters contain multiple observations, we need to define distance between clusters (not just individual points).\n\n\n\n\n\n\n\nLinkage\nDistance between clusters A and B\n\n\n\n\nComplete\nMaximum distance between any point in A and any point in B\n\n\nSingle\nMinimum distance (nearest neighbours)\n\n\nAverage\nAverage distance between all pairs\n\n\nWard’s\nIncrease in total WCSS when merging A and B\n\n\n\nWard’s linkage is usually recommended for health data — it produces compact, similarly sized clusters and connects directly to k-means (both minimise WCSS).",
+    "objectID": "unsupervised/06-umap.html#when-to-use-umap-vs-t-sne",
+    "href": "unsupervised/06-umap.html#when-to-use-umap-vs-t-sne",
+    "title": "U6 — UMAP: Uniform Manifold Approximation and Projection",
+    "section": "1.3 When to use UMAP vs t-SNE",
+    "text": "1.3 When to use UMAP vs t-SNE\n\nFor visualisation of high-dimensional data (scRNA-seq, image embeddings): both work; UMAP is now the default in most genomics pipelines\nWhen global structure matters (are cluster A and cluster B more similar to each other than to cluster C?): prefer UMAP\nWhen speed is a constraint on large datasets: prefer UMAP\nFor teaching and comparison: use both and compare",
     "crumbs": [
       "Home",
       "Block 3: Unsupervised",
-      "U3 — Hierarchical Clustering"
+      "U6 — UMAP: Uniform Manifold Approximation and Projection"
     ]
   },
   {
-    "objectID": "unsupervised/03-hierarchical-clustering.html#reading-a-dendrogram",
-    "href": "unsupervised/03-hierarchical-clustering.html#reading-a-dendrogram",
-    "title": "U3 — Hierarchical Clustering",
-    "section": "1.4 Reading a dendrogram",
-    "text": "1.4 Reading a dendrogram\n\nHeight of a merge = dissimilarity at which two clusters joined\nLong vertical lines = large gap between levels = natural cluster boundary\nShort lines = clusters joined at similar dissimilarity = less clear separation\nCut the tree where you see the longest vertical lines before the cut",
+    "objectID": "unsupervised/04-pam.html#medoids-vs-centroids",
+    "href": "unsupervised/04-pam.html#medoids-vs-centroids",
+    "title": "U4 — PAM: Partitioning Around Medoids",
+    "section": "1.1 Medoids vs centroids",
+    "text": "1.1 Medoids vs centroids\nK-means represents each cluster by its centroid — the mean of all observations in that cluster. The centroid is usually not an actual data point. PAM uses a medoid instead: the actual observation that minimises the total dissimilarity to all other members of its cluster.\n\n\n\n\n\n\n\n\n\nK-means\nPAM\n\n\n\n\nCluster representative\nCentroid (mean — not a real data point)\nMedoid (an actual observation)\n\n\nObjective\nMinimise total within-cluster SS\nMinimise total dissimilarity to medoids\n\n\nRobustness to outliers\nLow — mean shifts toward extremes\nHigher — medoid is a typical, central point\n\n\nMust choose K?\nYes\nYes\n\n\nDistance measure\nEuclidean only\nAny dissimilarity matrix\n\n\n\nBecause the medoid is an actual observation, PAM clusters are more interpretable: you can inspect the representative patient directly rather than a hypothetical average.",
     "crumbs": [
       "Home",
       "Block 3: Unsupervised",
-      "U3 — Hierarchical Clustering"
+      "U4 — PAM: Partitioning Around Medoids"
     ]
   },
   {
-    "objectID": "unsupervised/01-pca.html#you-have-seen-this-before",
-    "href": "unsupervised/01-pca.html#you-have-seen-this-before",
-    "title": "U1 — Principal Component Analysis",
-    "section": "1.1 You have seen this before",
-    "text": "1.1 You have seen this before\nIn STA220 you used factor analysis (FA) on the HAD scale — 14 items measuring depression and anxiety. FA found two latent factors: one loading on depression items, one on anxiety. Both factors were hidden dimensions that explained the correlations among items.\nPCA asks a related but different question:\n\n\n\n\n\n\n\n\n\nFactor Analysis (STA220)\nPCA (STA230)\n\n\n\n\nGoal\nFind latent factors that cause correlations\nFind directions that capture maximum variance\n\n\nModel\n\\(\\mathbf{X} = \\boldsymbol{\\Lambda}\\mathbf{f} + \\boldsymbol{\\varepsilon}\\) (generative)\nGeometric rotation of the data cloud\n\n\nOutput\nInterpretable factors (depression, anxiety)\nPrincipal components ordered by variance\n\n\nUse case\nPsychological measurement, construct validity\nCompression, visualisation, multicollinearity\n\n\n\nBoth methods reduce many correlated variables to a smaller set of dimensions. PCA is simpler and makes no distributional assumptions — it is purely about variance.",
+    "objectID": "unsupervised/04-pam.html#the-silhouette-width",
+    "href": "unsupervised/04-pam.html#the-silhouette-width",
+    "title": "U4 — PAM: Partitioning Around Medoids",
+    "section": "1.2 The silhouette width",
+    "text": "1.2 The silhouette width\nPAM uses the silhouette width as a built-in quality measure. For each observation \\(i\\):\n\\[s(i) = \\frac{b(i) - a(i)}{\\max(a(i),\\, b(i))}\\]\nwhere \\(a(i)\\) is the mean distance to other observations in the same cluster, and \\(b(i)\\) is the mean distance to observations in the nearest other cluster.\n\n\n\n\n\n\n\nValue\nInterpretation\n\n\n\n\n\\(s(i) \\approx 1\\)\nObservation fits well inside its cluster\n\n\n\\(s(i) \\approx 0\\)\nObservation lies on the border between two clusters\n\n\n\\(s(i) &lt; 0\\)\nObservation may belong to a neighbouring cluster\n\n\n\nThe average silhouette width summarises overall cluster quality. To choose K, run PAM for K = 2, 3, … and pick the K that maximises the average silhouette width.",
     "crumbs": [
       "Home",
       "Block 3: Unsupervised",
-      "U1 — Principal Component Analysis"
+      "U4 — PAM: Partitioning Around Medoids"
     ]
   },
   {
-    "objectID": "unsupervised/01-pca.html#the-geometry-of-pca",
-    "href": "unsupervised/01-pca.html#the-geometry-of-pca",
-    "title": "U1 — Principal Component Analysis",
-    "section": "1.2 The geometry of PCA",
-    "text": "1.2 The geometry of PCA\nGiven \\(n\\) observations on \\(p\\) variables, PCA finds a sequence of orthogonal directions (principal components) \\(\\mathbf{z}_1, \\mathbf{z}_2, \\ldots\\) such that:\n\\[\\mathbf{z}_1 = \\mathbf{X}\\mathbf{v}_1, \\quad \\text{where } \\mathbf{v}_1 = \\arg\\max_{\\|\\mathbf{v}\\|=1} \\text{Var}(\\mathbf{X}\\mathbf{v})\\]\nEach subsequent component captures the maximum remaining variance, orthogonal to all previous ones.\nIn practice: standardise the variables (subtract mean, divide by SD), then compute the eigendecomposition of the covariance (or correlation) matrix:\n\\[\\mathbf{\\Sigma} = \\mathbf{V} \\mathbf{D} \\mathbf{V}^\\top\\]\n\n\\(\\mathbf{V}\\): eigenvectors = directions of principal components (loadings)\n\\(\\mathbf{D}\\): diagonal matrix of eigenvalues = variance explained by each component\n\nProportion of variance explained by component \\(k\\): \\(\\lambda_k / \\sum_j \\lambda_j\\)",
+    "objectID": "unsupervised/04-pam.html#scaling",
+    "href": "unsupervised/04-pam.html#scaling",
+    "title": "U4 — PAM: Partitioning Around Medoids",
+    "section": "1.3 Scaling",
+    "text": "1.3 Scaling\nPAM uses dissimilarities (Euclidean by default). Like k-means, standardise all variables before running PAM so no single variable dominates the distance calculation.",
     "crumbs": [
       "Home",
       "Block 3: Unsupervised",
-      "U1 — Principal Component Analysis"
+      "U4 — PAM: Partitioning Around Medoids"
     ]
   },
   {
-    "objectID": "unsupervised/01-pca.html#reading-pca-output",
-    "href": "unsupervised/01-pca.html#reading-pca-output",
-    "title": "U1 — Principal Component Analysis",
-    "section": "1.3 Reading PCA output",
-    "text": "1.3 Reading PCA output\n\n\n\n\n\n\n\nOutput\nWhat it tells you\n\n\n\n\nScree plot\nEigenvalues in decreasing order — look for an “elbow”\n\n\nLoadings\nHow much each original variable contributes to each PC\n\n\nBiplot\nObservations (points) and variables (arrows) in PC space\n\n\nCumulative variance\nHow many PCs needed to explain e.g. 80% of variance",
+    "objectID": "unsupervised/02-clustering-kmeans.html#supervised-vs-unsupervised-the-key-distinction",
+    "href": "unsupervised/02-clustering-kmeans.html#supervised-vs-unsupervised-the-key-distinction",
+    "title": "U2 — K-Means Clustering",
+    "section": "1.1 Supervised vs unsupervised — the key distinction",
+    "text": "1.1 Supervised vs unsupervised — the key distinction\nIn Blocks 1 and 2 you always had a response variable Y: SBP to predict, disease to classify. Clustering has no Y. You observe \\(\\mathbf{X}\\) and ask: are there natural subgroups in this data?\nIn STA220 you asked a related question: do HAD items group into depression and anxiety? Factor analysis answered this by finding latent dimensions. Clustering answers a different version: do patients group into distinct health profiles? No labels are assumed — the groups emerge from the data geometry.",
     "crumbs": [
       "Home",
       "Block 3: Unsupervised",
-      "U1 — Principal Component Analysis"
+      "U2 — K-Means Clustering"
     ]
   },
   {
-    "objectID": "unsupervised/01-pca.html#scaling-matters",
-    "href": "unsupervised/01-pca.html#scaling-matters",
-    "title": "U1 — Principal Component Analysis",
-    "section": "1.4 Scaling matters",
-    "text": "1.4 Scaling matters\nAlways use scale = TRUE in prcomp(). Variables on different scales (age in years, cholesterol in mmol/L) would otherwise be dominated by whichever has the largest variance — purely an artefact of measurement units, not biology.",
+    "objectID": "unsupervised/02-clustering-kmeans.html#the-k-means-algorithm",
+    "href": "unsupervised/02-clustering-kmeans.html#the-k-means-algorithm",
+    "title": "U2 — K-Means Clustering",
+    "section": "1.2 The k-means algorithm",
+    "text": "1.2 The k-means algorithm\nGiven \\(n\\) observations and a chosen number of clusters \\(K\\), k-means minimises the total within-cluster sum of squares (WCSS):\n\\[\\text{WCSS} = \\sum_{k=1}^{K} \\sum_{i \\in C_k} \\|\\mathbf{x}_i - \\boldsymbol{\\mu}_k\\|^2\\]\nwhere \\(\\boldsymbol{\\mu}_k\\) is the centroid (mean) of cluster \\(k\\).\nAlgorithm (Lloyd’s):\n\nRandomly initialise \\(K\\) centroids\nAssign each observation to the nearest centroid\nUpdate each centroid as the mean of its assigned observations\nRepeat steps 2–3 until assignments stop changing\n\nThe algorithm converges to a local minimum — not necessarily the global minimum. Always run with multiple random starts (nstart in R) and take the best result.",
     "crumbs": [
       "Home",
       "Block 3: Unsupervised",
-      "U1 — Principal Component Analysis"
+      "U2 — K-Means Clustering"
     ]
   },
   {
-    "objectID": "regression/04-lasso.html#the-lasso-objective",
-    "href": "regression/04-lasso.html#the-lasso-objective",
-    "title": "R4 — LASSO",
-    "section": "1.1 The LASSO objective",
-    "text": "1.1 The LASSO objective\nLASSO (Least Absolute Shrinkage and Selection Operator) uses an \\(L_1\\) penalty:\n\\[\\hat{\\boldsymbol{\\beta}}^{\\text{lasso}} = \\arg\\min_{\\boldsymbol{\\beta}} \\left\\{ \\sum_{i=1}^n (y_i - \\mathbf{x}_i^\\top\\boldsymbol{\\beta})^2 + \\lambda \\sum_{j=1}^p |\\beta_j| \\right\\}\\]\nThe key difference from ridge: the \\(L_1\\) penalty produces sparse solutions — many \\(\\hat{\\beta}_j = 0\\) exactly. LASSO does variable selection automatically.",
+    "objectID": "unsupervised/02-clustering-kmeans.html#choosing-k-the-elbow-method",
+    "href": "unsupervised/02-clustering-kmeans.html#choosing-k-the-elbow-method",
+    "title": "U2 — K-Means Clustering",
+    "section": "1.3 Choosing K — the elbow method",
+    "text": "1.3 Choosing K — the elbow method\nRun k-means for \\(K = 1, 2, \\ldots, K_{\\max}\\) and plot WCSS against \\(K\\). WCSS always decreases as \\(K\\) increases (more clusters = smaller groups = tighter fit). Look for an elbow — the point where the rate of decrease slows sharply.\nThere is no objectively correct \\(K\\). Domain knowledge matters: do you expect 2 patient profiles or 5? The elbow is a heuristic, not a rule.",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U2 — K-Means Clustering"
+    ]
+  },
+  {
+    "objectID": "unsupervised/02-clustering-kmeans.html#important-scale-your-variables",
+    "href": "unsupervised/02-clustering-kmeans.html#important-scale-your-variables",
+    "title": "U2 — K-Means Clustering",
+    "section": "1.4 Important: scale your variables",
+    "text": "1.4 Important: scale your variables\nK-means uses Euclidean distance. If Age is measured in years (range 20–80) and Cholesterol in mmol/L (range 2–8), Age will dominate purely because of its larger scale. Always standardise before clustering.",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U2 — K-Means Clustering"
+    ]
+  },
+  {
+    "objectID": "regression/05-model-comparison.html#the-complete-regression-workflow",
+    "href": "regression/05-model-comparison.html#the-complete-regression-workflow",
+    "title": "R5 — Model Comparison & Workflow",
+    "section": "1.1 The complete regression workflow",
+    "text": "1.1 The complete regression workflow\n1. Explore data          → distributions, missingness, outliers\n2. Pre-process           → log-transform skewed outcomes, standardise predictors\n3. Split data            → train (70%) / test (30%) — or use CV throughout\n4. Fit candidate models  → OLS, forward stepwise, ridge, LASSO\n5. Select model          → by CV RMSPE on training data only\n6. Evaluate              → test RMSPE on held-out test set (once, at the end)\n7. Report                → coefficients, CIs, test performance, clinical interpretation\n\n\n\n\n\n\nWarningThe golden rule\n\n\n\nThe test set is used exactly once — at the end. If you look at the test set to make model choices, it is no longer a clean test set.",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R4 — LASSO"
+      "R5 — Model Comparison & Workflow"
     ]
   },
   {
-    "objectID": "regression/04-lasso.html#why-does-l1-produce-zeros",
-    "href": "regression/04-lasso.html#why-does-l1-produce-zeros",
-    "title": "R4 — LASSO",
-    "section": "1.2 Why does L1 produce zeros?",
-    "text": "1.2 Why does L1 produce zeros?\nGeometrically, the \\(L_1\\) constraint region (a diamond in 2D) has corners on the axes. The OLS ellipsoidal contours are likely to first touch one of these corners, where one or more \\(\\beta_j = 0\\). The \\(L_2\\) constraint (a circle) has no corners, so the solution is rarely exactly zero.",
+    "objectID": "regression/05-model-comparison.html#which-method-to-choose",
+    "href": "regression/05-model-comparison.html#which-method-to-choose",
+    "title": "R5 — Model Comparison & Workflow",
+    "section": "1.2 Which method to choose?",
+    "text": "1.2 Which method to choose?\n\n\n\nSituation\nRecommended method\n\n\n\n\n\\(p\\) small, inference goal\nOLS with stepwise/AIC selection\n\n\n\\(p\\) moderate, prediction goal\nLASSO or elastic net\n\n\n\\(p\\) large, many small effects\nRidge\n\n\nCorrelated predictors\nRidge or elastic net\n\n\nNeed sparse, interpretable model\nLASSO",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R4 — LASSO"
+      "R5 — Model Comparison & Workflow"
     ]
   },
   {
-    "objectID": "regression/04-lasso.html#lasso-vs-ridge",
-    "href": "regression/04-lasso.html#lasso-vs-ridge",
-    "title": "R4 — LASSO",
-    "section": "1.3 LASSO vs Ridge",
-    "text": "1.3 LASSO vs Ridge\n\n\n\n\n\n\n\n\n\nLASSO\nRidge\n\n\n\n\nPenalty\n\\(\\lambda \\sum |\\beta_j|\\)\n\\(\\lambda \\sum \\beta_j^2\\)\n\n\nSparsity\nYes — sets coefficients to exactly 0\nNo — shrinks toward 0 but not to 0\n\n\nVariable selection\nYes\nNo\n\n\nBest when\nFew predictors truly matter\nMany predictors with small effects\n\n\nCorrelated predictors\nSelects one arbitrarily\nShrinks all equally",
+    "objectID": "regression/05-model-comparison.html#reporting-test-performance",
+    "href": "regression/05-model-comparison.html#reporting-test-performance",
+    "title": "R5 — Model Comparison & Workflow",
+    "section": "1.3 Reporting test performance",
+    "text": "1.3 Reporting test performance\nReport RMSPE (or MAE) on the test set with a confidence interval:\n\\[\\text{RMSPE} \\pm 1.96 \\times \\frac{\\text{SD of squared errors}}{\\sqrt{n_{\\text{test}}}}\\]\nNever report only training performance. Always compare to a baseline (e.g., predicting the mean: \\(\\text{RMSPE}_{\\text{null}} = \\text{SD}(Y)\\)).",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R4 — LASSO"
+      "R5 — Model Comparison & Workflow"
     ]
   },
   {
-    "objectID": "regression/04-lasso.html#elastic-net",
-    "href": "regression/04-lasso.html#elastic-net",
-    "title": "R4 — LASSO",
-    "section": "1.4 Elastic Net",
-    "text": "1.4 Elastic Net\nThe elastic net combines both penalties:\n\\[\\lambda \\left[\\alpha \\sum |\\beta_j| + (1-\\alpha) \\sum \\beta_j^2 \\right]\\]\nWith \\(\\alpha=1\\) this is LASSO; \\(\\alpha=0\\) is ridge. Elastic net handles correlated predictors better than pure LASSO. In glmnet(), alpha controls the mix.",
+    "objectID": "regression/03-ridge-regression.html#the-ridge-objective",
+    "href": "regression/03-ridge-regression.html#the-ridge-objective",
+    "title": "R3 — Ridge Regression",
+    "section": "1.1 The ridge objective",
+    "text": "1.1 The ridge objective\nRidge regression adds an \\(L_2\\) penalty to the OLS loss:\n\\[\\hat{\\boldsymbol{\\beta}}^{\\text{ridge}} = \\arg\\min_{\\boldsymbol{\\beta}} \\left\\{ \\sum_{i=1}^n (y_i - \\mathbf{x}_i^\\top\\boldsymbol{\\beta})^2 + \\lambda \\sum_{j=1}^p \\beta_j^2 \\right\\}\\]\nThe penalty \\(\\lambda \\sum \\beta_j^2\\) shrinks all coefficients toward zero. The tuning parameter \\(\\lambda \\geq 0\\) controls the amount of shrinkage:\n\n\\(\\lambda = 0\\): OLS (no shrinkage)\n\\(\\lambda \\to \\infty\\): all \\(\\hat{\\beta}_j \\to 0\\)",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R4 — LASSO"
+      "R3 — Ridge Regression"
     ]
   },
   {
-    "objectID": "regression/02-variable-selection.html#why-not-include-everything",
-    "href": "regression/02-variable-selection.html#why-not-include-everything",
-    "title": "R2 — Variable Selection",
-    "section": "1.1 Why not include everything?",
-    "text": "1.1 Why not include everything?\nAdding predictors always reduces training error but increases variance. With \\(p\\) predictors, OLS has \\(p+1\\) parameters to estimate. When \\(p\\) is large:\n\nVariance of \\(\\hat{\\beta}\\) increases\nTest MSE may be higher than a model with fewer predictors\nInterpretation becomes harder\n\nVariable selection finds the subset of predictors that minimises test error.",
+    "objectID": "regression/03-ridge-regression.html#closed-form-solution",
+    "href": "regression/03-ridge-regression.html#closed-form-solution",
+    "title": "R3 — Ridge Regression",
+    "section": "1.2 Closed-form solution",
+    "text": "1.2 Closed-form solution\n\\[\\hat{\\boldsymbol{\\beta}}^{\\text{ridge}} = (\\mathbf{X}^\\top\\mathbf{X} + \\lambda\\mathbf{I})^{-1}\\mathbf{X}^\\top\\mathbf{y}\\]\nAdding \\(\\lambda\\mathbf{I}\\) makes the matrix invertible even when \\(\\mathbf{X}^\\top\\mathbf{X}\\) is singular or near-singular — this is why ridge works when \\(p \\geq n\\).",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R2 — Variable Selection"
+      "R3 — Ridge Regression"
     ]
   },
   {
-    "objectID": "regression/02-variable-selection.html#best-subset-selection",
-    "href": "regression/02-variable-selection.html#best-subset-selection",
-    "title": "R2 — Variable Selection",
-    "section": "1.2 Best subset selection",
-    "text": "1.2 Best subset selection\nFit all \\(2^p\\) possible models, evaluate each by CV or an information criterion, pick the best. Exact but computationally infeasible for large \\(p\\) — for \\(p=20\\) there are over one million models.",
+    "objectID": "regression/03-ridge-regression.html#bias-variance-effect",
+    "href": "regression/03-ridge-regression.html#bias-variance-effect",
+    "title": "R3 — Ridge Regression",
+    "section": "1.3 Bias-variance effect",
+    "text": "1.3 Bias-variance effect\n\n\n\n\\(\\lambda\\)\nBias\nVariance\nTest MSE\n\n\n\n\n0 (OLS)\n0\nHigh\nMay be high\n\n\nSmall\nLow\nLower\nOften lower\n\n\nLarge\nHigh\nVery low\nMay be high\n\n\n\nKey insight: Ridge introduces bias but reduces variance. The optimal \\(\\lambda\\) minimises test MSE — found via cross-validation.",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R2 — Variable Selection"
+      "R3 — Ridge Regression"
     ]
   },
   {
-    "objectID": "regression/02-variable-selection.html#forward-stepwise-selection",
-    "href": "regression/02-variable-selection.html#forward-stepwise-selection",
-    "title": "R2 — Variable Selection",
-    "section": "1.3 Forward stepwise selection",
-    "text": "1.3 Forward stepwise selection\n\nStart with the null model (intercept only)\nAt each step, add the predictor that most improves fit\nStop when adding more predictors no longer helps (by CV or AIC)\n\nMuch faster than best subset (\\(O(p^2)\\) models), but not guaranteed to find the globally best subset.",
+    "objectID": "regression/03-ridge-regression.html#important-standardise-predictors",
+    "href": "regression/03-ridge-regression.html#important-standardise-predictors",
+    "title": "R3 — Ridge Regression",
+    "section": "1.4 Important: standardise predictors",
+    "text": "1.4 Important: standardise predictors\nRidge shrinks coefficients, but the amount of shrinkage depends on predictor scale. Always standardise predictors before applying ridge (and LASSO). glmnet() does this automatically by default.",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R2 — Variable Selection"
+      "R3 — Ridge Regression"
     ]
   },
   {
-    "objectID": "regression/02-variable-selection.html#backward-stepwise-selection",
-    "href": "regression/02-variable-selection.html#backward-stepwise-selection",
-    "title": "R2 — Variable Selection",
-    "section": "1.4 Backward stepwise selection",
-    "text": "1.4 Backward stepwise selection\nStart with the full model, remove the least useful predictor at each step. Requires \\(n &gt; p\\) to fit the full model.",
+    "objectID": "regression/01-ols-review.html#the-ols-estimator",
+    "href": "regression/01-ols-review.html#the-ols-estimator",
+    "title": "R1 — OLS Review & Diagnostics",
+    "section": "1.1 The OLS estimator",
+    "text": "1.1 The OLS estimator\nFor \\(Y = \\mathbf{X}\\boldsymbol{\\beta} + \\boldsymbol{\\varepsilon}\\), OLS minimises the residual sum of squares:\n\\[\\hat{\\boldsymbol{\\beta}} = \\arg\\min_{\\boldsymbol{\\beta}} \\|\\mathbf{y} - \\mathbf{X}\\boldsymbol{\\beta}\\|^2 = (\\mathbf{X}^\\top\\mathbf{X})^{-1}\\mathbf{X}^\\top\\mathbf{y}\\]\nProperties (when assumptions hold):\n\nUnbiased: \\(\\mathbb{E}[\\hat{\\boldsymbol{\\beta}}] = \\boldsymbol{\\beta}\\)\nBLUE: Best Linear Unbiased Estimator (Gauss-Markov)\nVariance: \\(\\text{Var}(\\hat{\\boldsymbol{\\beta}}) = \\sigma^2 (\\mathbf{X}^\\top\\mathbf{X})^{-1}\\)",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R2 — Variable Selection"
+      "R1 — OLS Review & Diagnostics"
     ]
   },
   {
-    "objectID": "regression/02-variable-selection.html#criteria-for-stopping",
-    "href": "regression/02-variable-selection.html#criteria-for-stopping",
-    "title": "R2 — Variable Selection",
-    "section": "1.5 Criteria for stopping",
-    "text": "1.5 Criteria for stopping\n\n\n\n\n\n\n\n\nCriterion\nFormula\nPenalises\n\n\n\n\nAIC\n\\(-2\\ell + 2p\\)\nPredictive accuracy\n\n\nBIC\n\\(-2\\ell + p\\log(n)\\)\nHarder penalty, simpler models\n\n\nAdjusted R²\n\\(1 - \\frac{\\text{RSS}/(n-p-1)}{\\text{TSS}/(n-1)}\\)\nExtra parameters\n\n\nCV error\nEstimated test MSE\nDirectly estimates generalisation",
+    "objectID": "regression/01-ols-review.html#when-ols-struggles",
+    "href": "regression/01-ols-review.html#when-ols-struggles",
+    "title": "R1 — OLS Review & Diagnostics",
+    "section": "1.2 When OLS struggles",
+    "text": "1.2 When OLS struggles\n\n\n\n\n\n\n\n\nProblem\nSymptom\nConsequence\n\n\n\n\n\\(p \\approx n\\)\nMany predictors, small sample\nHigh variance, unstable \\(\\hat{\\beta}\\)\n\n\n\\(p &gt; n\\)\nMore predictors than observations\n\\((\\mathbf{X}^\\top\\mathbf{X})\\) singular — OLS undefined\n\n\nMulticollinearity\nPredictors correlated\nInflated SE, unreliable coefficients\n\n\nIrrelevant predictors\nNoise variables included\nHigher variance, worse prediction",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R2 — Variable Selection"
+      "R1 — OLS Review & Diagnostics"
     ]
   },
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "STA230 — Statistical Learning",
-    "section": "",
-    "text": "Welcome to the interactive learning companion for STA230 Statistical Learning at the University of Gothenburg.\nThis site covers all three course blocks — with concept explanations, multiple-choice quizzes, and interactive R code you can run and modify directly in the browser."
+    "objectID": "regression/01-ols-review.html#assumptions-and-diagnostics",
+    "href": "regression/01-ols-review.html#assumptions-and-diagnostics",
+    "title": "R1 — OLS Review & Diagnostics",
+    "section": "1.3 Assumptions and diagnostics",
+    "text": "1.3 Assumptions and diagnostics\n\n\n\nPlot\nWhat to look for\n\n\n\n\nResiduals vs fitted\nRandom scatter (linearity + homoskedasticity)\n\n\nQQ-plot\nPoints on diagonal (normality)\n\n\nScale-location\nFlat line (constant variance)\n\n\nResiduals vs leverage\nNo high-leverage + high-residual outliers",
+    "crumbs": [
+      "Home",
+      "Block 1: Regression",
+      "R1 — OLS Review & Diagnostics"
+    ]
   },
   {
-    "objectID": "index.html#course-structure",
-    "href": "index.html#course-structure",
-    "title": "STA230 — Statistical Learning",
-    "section": "1 Course structure",
-    "text": "1 Course structure\n\n\n\n\n\n\n\nBlock\nTopics\n\n\n\n\nFoundations\nWhat is statistical learning? Bias-variance tradeoff, training vs test error, cross-validation\n\n\nBlock 1: Regression\nOLS, variable selection, ridge regression, LASSO\n\n\nBlock 2: Classification\nLogistic regression, LDA/kNN, decision trees, random forests, boosting, ROC/AUC\n\n\nBlock 3: Unsupervised\nPCA, k-means clustering, hierarchical clustering"
-  },
-  {
-    "objectID": "index.html#how-to-use-this-site",
-    "href": "index.html#how-to-use-this-site",
-    "title": "STA230 — Statistical Learning",
-    "section": "2 How to use this site",
-    "text": "2 How to use this site\n\nRead the concept section — short and focused\nAnswer the quiz — tests comprehension before you see code\nRun and modify the code — the key learning step\nUse the Guided Practice exercises with real datasets\nClick Mark as complete when done — your progress is saved in the browser\n\n\n\n\n\n\n\nTipCoding is the way to learn\n\n\n\nThe central principle of STA230: understanding comes from doing, not reading. Every section ends with hands-on exercises using real datasets (Hitters, NHANES, SWP_CTW)."
-  },
-  {
-    "objectID": "foundations/04-resampling-overview.html",
-    "href": "foundations/04-resampling-overview.html",
-    "title": "F4 — Resampling Methods Overview",
-    "section": "",
-    "text": "We established that training error is optimistic. A single train/test split gives an unbiased but noisy estimate. Resampling methods use the available data more efficiently by repeatedly fitting models on subsets and averaging the results.\n\n\n\n\n\n\n\n\n\n\n\n\n\nMethod\nIdea\nBias\nVariance\nUse when\n\n\n\n\nValidation set\nSingle 70/30 split\nLow\nHigh\nVery large n\n\n\nk-fold CV\nRotate through k folds\nModerate\nModerate\nStandard choice\n\n\nLOOCV\nk = n\nVery low\nHigh\nSmall n, cheap models\n\n\nBootstrap\nSample with replacement\nLow\nLow\nAlso estimates parameter uncertainty\n\n\n\n\n\n\n\nRandomly divide data into \\(k\\) equal folds\nFor \\(j = 1, \\ldots, k\\): fit model on all folds except \\(j\\), predict on fold \\(j\\)\nAverage the \\(k\\) test errors: \\(\\text{CV}_{(k)} = \\frac{1}{k}\\sum_{j=1}^k \\text{MSE}_j\\)\n\nTypical choices: \\(k=5\\) or \\(k=10\\). These balance bias (LOOCV has lowest) and variance (smaller \\(k\\) has lower variance because training sets are less similar).\n\n\n\nDraw \\(B\\) samples of size \\(n\\) with replacement from the training data. Fit the model on each bootstrap sample, evaluate on the original data (out-of-bag observations). Useful for estimating both test error and parameter uncertainty.",
+    "objectID": "foundations/05-cross-validation.html#the-one-standard-error-rule",
+    "href": "foundations/05-cross-validation.html#the-one-standard-error-rule",
+    "title": "F5 — Cross-Validation in Practice",
+    "section": "1.1 The one-standard-error rule",
+    "text": "1.1 The one-standard-error rule\nWhen selecting the best model via CV, the minimum CV error may not be the best choice. The 1-SE rule selects the simplest model whose CV error is within one standard error of the minimum.\n\\[d^* = \\min \\{d : \\text{CV}(d) \\leq \\text{CV}(d_{\\min}) + \\text{SE}(d_{\\min})\\}\\]\nThis guards against selecting an unnecessarily complex model when a simpler one performs nearly as well.",
     "crumbs": [
       "Home",
       "Foundations",
-      "F4 — Resampling Methods Overview"
+      "F5 — Cross-Validation in Practice"
     ]
   },
   {
-    "objectID": "foundations/04-resampling-overview.html#why-resampling",
-    "href": "foundations/04-resampling-overview.html#why-resampling",
-    "title": "F4 — Resampling Methods Overview",
-    "section": "",
-    "text": "We established that training error is optimistic. A single train/test split gives an unbiased but noisy estimate. Resampling methods use the available data more efficiently by repeatedly fitting models on subsets and averaging the results.",
+    "objectID": "foundations/05-cross-validation.html#cv-in-glmnet-choosing-λ",
+    "href": "foundations/05-cross-validation.html#cv-in-glmnet-choosing-λ",
+    "title": "F5 — Cross-Validation in Practice",
+    "section": "1.2 CV in glmnet: choosing λ",
+    "text": "1.2 CV in glmnet: choosing λ\nFor ridge and LASSO regression, cv.glmnet() automates k-fold CV over a grid of \\(\\lambda\\) values and returns:\n\nlambda.min: the \\(\\lambda\\) minimising CV error\nlambda.1se: the largest \\(\\lambda\\) within 1 SE of the minimum (more regularisation, simpler model)\n\nIn practice, lambda.1se is often preferred for parsimony.",
     "crumbs": [
       "Home",
       "Foundations",
-      "F4 — Resampling Methods Overview"
+      "F5 — Cross-Validation in Practice"
     ]
   },
   {
-    "objectID": "foundations/04-resampling-overview.html#three-approaches",
-    "href": "foundations/04-resampling-overview.html#three-approaches",
-    "title": "F4 — Resampling Methods Overview",
-    "section": "",
-    "text": "Method\nIdea\nBias\nVariance\nUse when\n\n\n\n\nValidation set\nSingle 70/30 split\nLow\nHigh\nVery large n\n\n\nk-fold CV\nRotate through k folds\nModerate\nModerate\nStandard choice\n\n\nLOOCV\nk = n\nVery low\nHigh\nSmall n, cheap models\n\n\nBootstrap\nSample with replacement\nLow\nLow\nAlso estimates parameter uncertainty",
+    "objectID": "foundations/05-cross-validation.html#pitfalls",
+    "href": "foundations/05-cross-validation.html#pitfalls",
+    "title": "F5 — Cross-Validation in Practice",
+    "section": "1.3 Pitfalls",
+    "text": "1.3 Pitfalls\n\nInformation leakage: never standardise predictors on all data before CV — standardise inside each fold\nNested CV: if you select both the model class and its hyperparameters, you need outer CV for honest evaluation\nClassification: use stratified folds to preserve class proportions across folds",
     "crumbs": [
       "Home",
       "Foundations",
-      "F4 — Resampling Methods Overview"
+      "F5 — Cross-Validation in Practice"
     ]
   },
   {
-    "objectID": "foundations/04-resampling-overview.html#k-fold-cross-validation",
-    "href": "foundations/04-resampling-overview.html#k-fold-cross-validation",
-    "title": "F4 — Resampling Methods Overview",
-    "section": "",
-    "text": "Randomly divide data into \\(k\\) equal folds\nFor \\(j = 1, \\ldots, k\\): fit model on all folds except \\(j\\), predict on fold \\(j\\)\nAverage the \\(k\\) test errors: \\(\\text{CV}_{(k)} = \\frac{1}{k}\\sum_{j=1}^k \\text{MSE}_j\\)\n\nTypical choices: \\(k=5\\) or \\(k=10\\). These balance bias (LOOCV has lowest) and variance (smaller \\(k\\) has lower variance because training sets are less similar).",
+    "objectID": "foundations/03-training-vs-test-error.html#optimism-of-training-error",
+    "href": "foundations/03-training-vs-test-error.html#optimism-of-training-error",
+    "title": "F3 — Training vs Test Error",
+    "section": "1.1 Optimism of training error",
+    "text": "1.1 Optimism of training error\nWhen we fit \\(\\hat{f}\\) on training data and then evaluate on the same data, the estimate is optimistically biased. The model has already adapted to the specific noise in the training set.\nThe expected optimism is:\n\\[\\text{Optimism} = \\mathbb{E}[\\text{Test MSE}] - \\mathbb{E}[\\text{Train MSE}] = \\frac{2}{n} \\sum_{i=1}^n \\text{Cov}(\\hat{y}_i, y_i)\\]\nFor OLS with \\(p\\) predictors: \\(\\text{Optimism} = 2p\\sigma^2 / n\\). This is why AIC and Mallow’s \\(C_p\\) add a penalty of \\(2p\\hat\\sigma^2 / n\\) to the training RSS.",
     "crumbs": [
       "Home",
       "Foundations",
-      "F4 — Resampling Methods Overview"
+      "F3 — Training vs Test Error"
     ]
   },
   {
-    "objectID": "foundations/04-resampling-overview.html#the-bootstrap",
-    "href": "foundations/04-resampling-overview.html#the-bootstrap",
-    "title": "F4 — Resampling Methods Overview",
-    "section": "",
-    "text": "Draw \\(B\\) samples of size \\(n\\) with replacement from the training data. Fit the model on each bootstrap sample, evaluate on the original data (out-of-bag observations). Useful for estimating both test error and parameter uncertainty.",
+    "objectID": "foundations/03-training-vs-test-error.html#traintest-split-as-the-direct-approach",
+    "href": "foundations/03-training-vs-test-error.html#traintest-split-as-the-direct-approach",
+    "title": "F3 — Training vs Test Error",
+    "section": "1.2 Train/test split as the direct approach",
+    "text": "1.2 Train/test split as the direct approach\nThe simplest approach: split data once into training and test sets (e.g., 70/30). Fit on training, evaluate on test.\nAdvantage: Simple, unbiased estimate of test error.\nDisadvantage: Wastes data; test MSE estimate has high variance (depends on which observations ended up in the test set).\nCross-validation (F5) improves on this by reusing all data.",
     "crumbs": [
       "Home",
       "Foundations",
-      "F4 — Resampling Methods Overview"
+      "F3 — Training vs Test Error"
     ]
   },
   {
-    "objectID": "foundations/02-bias-variance-tradeoff.html#decomposing-prediction-error",
-    "href": "foundations/02-bias-variance-tradeoff.html#decomposing-prediction-error",
-    "title": "F2 — Bias-Variance Tradeoff",
-    "section": "1.1 Decomposing prediction error",
-    "text": "1.1 Decomposing prediction error\nFor a fixed test point \\(x_0\\), the expected test MSE decomposes as:\n\\[\\underbrace{\\mathbb{E}\\left[(y_0 - \\hat{f}(x_0))^2\\right]}_{\\text{Expected test MSE}} = \\underbrace{\\left[\\text{Bias}(\\hat{f}(x_0))\\right]^2}_{\\text{Bias}^2} + \\underbrace{\\text{Var}(\\hat{f}(x_0))}_{\\text{Variance}} + \\underbrace{\\sigma^2_\\varepsilon}_{\\text{Irreducible}}\\]\nwhere the expectation is over repeated training sets.\n\n\n\n\n\n\n\n\nComponent\nDefinition\nChanges with complexity?\n\n\n\n\nBias²\nHow far \\(\\mathbb{E}[\\hat{f}(x_0)]\\) is from \\(f(x_0)\\)\nDecreases as complexity increases\n\n\nVariance\nHow much \\(\\hat{f}(x_0)\\) varies across training sets\nIncreases as complexity increases\n\n\nIrreducible\n\\(\\sigma^2_\\varepsilon\\) — noise floor\nFixed, never changes",
+    "objectID": "foundations/01-what-is-statistical-learning.html#the-statistical-learning-framework",
+    "href": "foundations/01-what-is-statistical-learning.html#the-statistical-learning-framework",
+    "title": "F1 — What is Statistical Learning?",
+    "section": "1.1 The statistical learning framework",
+    "text": "1.1 The statistical learning framework\nWe observe data \\((x_1, y_1), \\ldots, (x_n, y_n)\\) and assume:\n\\[Y = f(\\mathbf{X}) + \\varepsilon\\]\nwhere \\(f\\) is the true unknown function we want to estimate, and \\(\\varepsilon\\) is irreducible noise with \\(\\mathbb{E}[\\varepsilon] = 0\\).\nStatistical learning is the task of estimating \\(\\hat{f}\\) from data, so that:\n\\[\\hat{Y} = \\hat{f}(\\mathbf{X})\\]\ngives useful predictions for new observations.",
     "crumbs": [
       "Home",
       "Foundations",
-      "F2 — Bias-Variance Tradeoff"
+      "F1 — What is Statistical Learning?"
     ]
   },
   {
-    "objectID": "foundations/02-bias-variance-tradeoff.html#the-u-shaped-test-error-curve-esl-figure-7.1",
-    "href": "foundations/02-bias-variance-tradeoff.html#the-u-shaped-test-error-curve-esl-figure-7.1",
-    "title": "F2 — Bias-Variance Tradeoff",
-    "section": "1.2 The U-shaped test error curve (ESL Figure 7.1)",
-    "text": "1.2 The U-shaped test error curve (ESL Figure 7.1)\nThis is the central figure of the course:\n\nTraining error (blue): monotonically decreasing — more complex models always fit the training data better\nTest error (red): U-shaped — first decreases as we reduce bias, then increases as variance dominates\nThe minimum of the test error curve is the sweet spot: not too simple, not too complex\n\n\n\n\n\n\n\nImportantKey message\n\n\n\nA model that fits the training data perfectly is not necessarily a good model. The goal is to generalise to new data — and that requires balancing bias against variance.",
+    "objectID": "foundations/01-what-is-statistical-learning.html#two-goals-inference-vs-prediction",
+    "href": "foundations/01-what-is-statistical-learning.html#two-goals-inference-vs-prediction",
+    "title": "F1 — What is Statistical Learning?",
+    "section": "1.2 Two goals: inference vs prediction",
+    "text": "1.2 Two goals: inference vs prediction\n\n\n\n\n\n\n\n\nGoal\nQuestion\nInterpretability needed?\n\n\n\n\nInference\nHow does \\(X_j\\) affect \\(Y\\)?\nYes — coefficient meaning matters\n\n\nPrediction\nWhat is \\(\\hat{Y}\\) for new \\(X\\)?\nNo — accuracy is the criterion\n\n\n\nIn STA230, we move toward prediction: we evaluate models by how well they perform on unseen data, not how well they fit the data they were trained on.",
     "crumbs": [
       "Home",
       "Foundations",
-      "F2 — Bias-Variance Tradeoff"
+      "F1 — What is Statistical Learning?"
     ]
   },
   {
-    "objectID": "foundations/02-bias-variance-tradeoff.html#two-approaches-to-finding-the-sweet-spot",
-    "href": "foundations/02-bias-variance-tradeoff.html#two-approaches-to-finding-the-sweet-spot",
-    "title": "F2 — Bias-Variance Tradeoff",
-    "section": "1.3 Two approaches to finding the sweet spot",
-    "text": "1.3 Two approaches to finding the sweet spot\n\nAnalytical — penalise model complexity in the selection criterion (AIC, BIC, adjusted R²)\nData-driven (resampling) — directly estimate test error from data (cross-validation, train/test split)\n\nBlock 1 uses both. Cross-validation is covered in F5.",
+    "objectID": "foundations/01-what-is-statistical-learning.html#supervised-vs-unsupervised",
+    "href": "foundations/01-what-is-statistical-learning.html#supervised-vs-unsupervised",
+    "title": "F1 — What is Statistical Learning?",
+    "section": "1.3 Supervised vs unsupervised",
+    "text": "1.3 Supervised vs unsupervised\n\nSupervised: we have both \\(\\mathbf{X}\\) and \\(Y\\). Regression (continuous \\(Y\\)) or classification (categorical \\(Y\\)).\nUnsupervised: no \\(Y\\). We look for structure in \\(\\mathbf{X}\\) alone — clusters, principal components.\n\nThe course covers all three: supervised regression (Block 1), supervised classification (Block 2), unsupervised methods (Block 3).",
     "crumbs": [
       "Home",
       "Foundations",
-      "F2 — Bias-Variance Tradeoff"
+      "F1 — What is Statistical Learning?"
+    ]
+  },
+  {
+    "objectID": "foundations/01-what-is-statistical-learning.html#the-irreducible-error",
+    "href": "foundations/01-what-is-statistical-learning.html#the-irreducible-error",
+    "title": "F1 — What is Statistical Learning?",
+    "section": "1.4 The irreducible error",
+    "text": "1.4 The irreducible error\nNo matter how good \\(\\hat{f}\\) is, we cannot reduce the prediction error below:\n\\[\\text{Var}(\\varepsilon) = \\sigma^2_\\varepsilon\\]\nThis is the irreducible error — noise inherent in the data generating process. The reducible part is \\(\\mathbb{E}[(f(\\mathbf{X}) - \\hat{f}(\\mathbf{X}))^2]\\), which we can minimise by choosing \\(\\hat{f}\\) well.",
+    "crumbs": [
+      "Home",
+      "Foundations",
+      "F1 — What is Statistical Learning?"
     ]
   },
   {
@@ -597,279 +624,408 @@
     ]
   },
   {
-    "objectID": "foundations/01-what-is-statistical-learning.html#the-statistical-learning-framework",
-    "href": "foundations/01-what-is-statistical-learning.html#the-statistical-learning-framework",
-    "title": "F1 — What is Statistical Learning?",
-    "section": "1.1 The statistical learning framework",
-    "text": "1.1 The statistical learning framework\nWe observe data \\((x_1, y_1), \\ldots, (x_n, y_n)\\) and assume:\n\\[Y = f(\\mathbf{X}) + \\varepsilon\\]\nwhere \\(f\\) is the true unknown function we want to estimate, and \\(\\varepsilon\\) is irreducible noise with \\(\\mathbb{E}[\\varepsilon] = 0\\).\nStatistical learning is the task of estimating \\(\\hat{f}\\) from data, so that:\n\\[\\hat{Y} = \\hat{f}(\\mathbf{X})\\]\ngives useful predictions for new observations.",
+    "objectID": "classification/07-calibration.html#auc-tells-you-about-ranking-calibration-tells-you-about-probabilities",
+    "href": "classification/07-calibration.html#auc-tells-you-about-ranking-calibration-tells-you-about-probabilities",
+    "title": "C7 — Calibration of Prediction Models",
+    "section": "1.1 AUC tells you about ranking — calibration tells you about probabilities",
+    "text": "1.1 AUC tells you about ranking — calibration tells you about probabilities\nA model with AUC = 0.85 ranks patients well: those with higher predicted probability tend to have the outcome more often. But a good AUC does not mean the probabilities are meaningful as numbers.\nCalibration asks: if my model assigns probability 0.7 to a group of patients, do roughly 70% of them actually have the outcome?\n\nA well-calibrated model: predicted probabilities match observed proportions\nAn overconfident model: probabilities close to 0 and 1, actual rates more moderate\nAn underconfident model: probabilities cluster near 0.5 even when outcomes are certain\n\nCalibration is crucial for clinical decision-making. A model used to decide whether to screen a patient, prescribe a drug, or allocate an ICU bed must give meaningful probabilities — not just good rankings.",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C7 — Calibration of Prediction Models"
+    ]
+  },
+  {
+    "objectID": "classification/07-calibration.html#the-calibration-plot",
+    "href": "classification/07-calibration.html#the-calibration-plot",
+    "title": "C7 — Calibration of Prediction Models",
+    "section": "1.2 The calibration plot",
+    "text": "1.2 The calibration plot\nThe standard diagnostic is a calibration plot (also called a calibration curve):\n\nDivide predicted probabilities into \\(g\\) groups (typically \\(g = 10\\) deciles)\nFor each group, compute the mean predicted probability and the observed event rate\nPlot: x-axis = mean predicted probability, y-axis = observed proportion\nA perfectly calibrated model falls on the diagonal\n\nPoints above the diagonal: observed rate exceeds prediction — model is underestimating risk. Points below the diagonal: observed rate below prediction — model is overestimating risk.",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C7 — Calibration of Prediction Models"
+    ]
+  },
+  {
+    "objectID": "classification/07-calibration.html#hosmerlemeshow-test",
+    "href": "classification/07-calibration.html#hosmerlemeshow-test",
+    "title": "C7 — Calibration of Prediction Models",
+    "section": "1.3 Hosmer–Lemeshow test",
+    "text": "1.3 Hosmer–Lemeshow test\nThe Hosmer–Lemeshow (HL) test formally tests whether the calibration plot departs from the diagonal. It computes a chi-squared statistic over the \\(g\\) groups.\n\nA large p-value (e.g. &gt; 0.05): no evidence of miscalibration — observed and expected counts are close\nA small p-value: significant miscalibration detected\n\nCaveat: The HL test is sensitive to sample size. With large \\(n\\) it detects trivial departures; with small \\(n\\) it has low power. Always look at the calibration plot alongside the test.",
+    "crumbs": [
+      "Home",
+      "Block 2: Classification",
+      "C7 — Calibration of Prediction Models"
+    ]
+  },
+  {
+    "objectID": "foundations/02-bias-variance-tradeoff.html#decomposing-prediction-error",
+    "href": "foundations/02-bias-variance-tradeoff.html#decomposing-prediction-error",
+    "title": "F2 — Bias-Variance Tradeoff",
+    "section": "1.1 Decomposing prediction error",
+    "text": "1.1 Decomposing prediction error\nFor a fixed test point \\(x_0\\), the expected test MSE decomposes as:\n\\[\\underbrace{\\mathbb{E}\\left[(y_0 - \\hat{f}(x_0))^2\\right]}_{\\text{Expected test MSE}} = \\underbrace{\\left[\\text{Bias}(\\hat{f}(x_0))\\right]^2}_{\\text{Bias}^2} + \\underbrace{\\text{Var}(\\hat{f}(x_0))}_{\\text{Variance}} + \\underbrace{\\sigma^2_\\varepsilon}_{\\text{Irreducible}}\\]\nwhere the expectation is over repeated training sets.\n\n\n\n\n\n\n\n\nComponent\nDefinition\nChanges with complexity?\n\n\n\n\nBias²\nHow far \\(\\mathbb{E}[\\hat{f}(x_0)]\\) is from \\(f(x_0)\\)\nDecreases as complexity increases\n\n\nVariance\nHow much \\(\\hat{f}(x_0)\\) varies across training sets\nIncreases as complexity increases\n\n\nIrreducible\n\\(\\sigma^2_\\varepsilon\\) — noise floor\nFixed, never changes",
     "crumbs": [
       "Home",
       "Foundations",
-      "F1 — What is Statistical Learning?"
+      "F2 — Bias-Variance Tradeoff"
     ]
   },
   {
-    "objectID": "foundations/01-what-is-statistical-learning.html#two-goals-inference-vs-prediction",
-    "href": "foundations/01-what-is-statistical-learning.html#two-goals-inference-vs-prediction",
-    "title": "F1 — What is Statistical Learning?",
-    "section": "1.2 Two goals: inference vs prediction",
-    "text": "1.2 Two goals: inference vs prediction\n\n\n\n\n\n\n\n\nGoal\nQuestion\nInterpretability needed?\n\n\n\n\nInference\nHow does \\(X_j\\) affect \\(Y\\)?\nYes — coefficient meaning matters\n\n\nPrediction\nWhat is \\(\\hat{Y}\\) for new \\(X\\)?\nNo — accuracy is the criterion\n\n\n\nIn STA230, we move toward prediction: we evaluate models by how well they perform on unseen data, not how well they fit the data they were trained on.",
+    "objectID": "foundations/02-bias-variance-tradeoff.html#the-u-shaped-test-error-curve-esl-figure-7.1",
+    "href": "foundations/02-bias-variance-tradeoff.html#the-u-shaped-test-error-curve-esl-figure-7.1",
+    "title": "F2 — Bias-Variance Tradeoff",
+    "section": "1.2 The U-shaped test error curve (ESL Figure 7.1)",
+    "text": "1.2 The U-shaped test error curve (ESL Figure 7.1)\nThis is the central figure of the course:\n\nTraining error (blue): monotonically decreasing — more complex models always fit the training data better\nTest error (red): U-shaped — first decreases as we reduce bias, then increases as variance dominates\nThe minimum of the test error curve is the sweet spot: not too simple, not too complex\n\n\n\n\n\n\n\nImportantKey message\n\n\n\nA model that fits the training data perfectly is not necessarily a good model. The goal is to generalise to new data — and that requires balancing bias against variance.",
     "crumbs": [
       "Home",
       "Foundations",
-      "F1 — What is Statistical Learning?"
+      "F2 — Bias-Variance Tradeoff"
     ]
   },
   {
-    "objectID": "foundations/01-what-is-statistical-learning.html#supervised-vs-unsupervised",
-    "href": "foundations/01-what-is-statistical-learning.html#supervised-vs-unsupervised",
-    "title": "F1 — What is Statistical Learning?",
-    "section": "1.3 Supervised vs unsupervised",
-    "text": "1.3 Supervised vs unsupervised\n\nSupervised: we have both \\(\\mathbf{X}\\) and \\(Y\\). Regression (continuous \\(Y\\)) or classification (categorical \\(Y\\)).\nUnsupervised: no \\(Y\\). We look for structure in \\(\\mathbf{X}\\) alone — clusters, principal components.\n\nThe course covers all three: supervised regression (Block 1), supervised classification (Block 2), unsupervised methods (Block 3).",
+    "objectID": "foundations/02-bias-variance-tradeoff.html#two-approaches-to-finding-the-sweet-spot",
+    "href": "foundations/02-bias-variance-tradeoff.html#two-approaches-to-finding-the-sweet-spot",
+    "title": "F2 — Bias-Variance Tradeoff",
+    "section": "1.3 Two approaches to finding the sweet spot",
+    "text": "1.3 Two approaches to finding the sweet spot\n\nAnalytical — penalise model complexity in the selection criterion (AIC, BIC, adjusted R²)\nData-driven (resampling) — directly estimate test error from data (cross-validation, train/test split)\n\nBlock 1 uses both. Cross-validation is covered in F5.",
     "crumbs": [
       "Home",
       "Foundations",
-      "F1 — What is Statistical Learning?"
+      "F2 — Bias-Variance Tradeoff"
     ]
   },
   {
-    "objectID": "foundations/01-what-is-statistical-learning.html#the-irreducible-error",
-    "href": "foundations/01-what-is-statistical-learning.html#the-irreducible-error",
-    "title": "F1 — What is Statistical Learning?",
-    "section": "1.4 The irreducible error",
-    "text": "1.4 The irreducible error\nNo matter how good \\(\\hat{f}\\) is, we cannot reduce the prediction error below:\n\\[\\text{Var}(\\varepsilon) = \\sigma^2_\\varepsilon\\]\nThis is the irreducible error — noise inherent in the data generating process. The reducible part is \\(\\mathbb{E}[(f(\\mathbf{X}) - \\hat{f}(\\mathbf{X}))^2]\\), which we can minimise by choosing \\(\\hat{f}\\) well.",
+    "objectID": "foundations/04-resampling-overview.html",
+    "href": "foundations/04-resampling-overview.html",
+    "title": "F4 — Resampling Methods Overview",
+    "section": "",
+    "text": "We established that training error is optimistic. A single train/test split gives an unbiased but noisy estimate. Resampling methods use the available data more efficiently by repeatedly fitting models on subsets and averaging the results.\n\n\n\n\n\n\n\n\n\n\n\n\n\nMethod\nIdea\nBias\nVariance\nUse when\n\n\n\n\nValidation set\nSingle 70/30 split\nLow\nHigh\nVery large n\n\n\nk-fold CV\nRotate through k folds\nModerate\nModerate\nStandard choice\n\n\nLOOCV\nk = n\nVery low\nHigh\nSmall n, cheap models\n\n\nBootstrap\nSample with replacement\nLow\nLow\nAlso estimates parameter uncertainty\n\n\n\n\n\n\n\nRandomly divide data into \\(k\\) equal folds\nFor \\(j = 1, \\ldots, k\\): fit model on all folds except \\(j\\), predict on fold \\(j\\)\nAverage the \\(k\\) test errors: \\(\\text{CV}_{(k)} = \\frac{1}{k}\\sum_{j=1}^k \\text{MSE}_j\\)\n\nTypical choices: \\(k=5\\) or \\(k=10\\). These balance bias (LOOCV has lowest) and variance (smaller \\(k\\) has lower variance because training sets are less similar).\n\n\n\nDraw \\(B\\) samples of size \\(n\\) with replacement from the training data. Fit the model on each bootstrap sample, evaluate on the original data (out-of-bag observations). Useful for estimating both test error and parameter uncertainty.",
     "crumbs": [
       "Home",
       "Foundations",
-      "F1 — What is Statistical Learning?"
+      "F4 — Resampling Methods Overview"
     ]
   },
   {
-    "objectID": "foundations/03-training-vs-test-error.html#optimism-of-training-error",
-    "href": "foundations/03-training-vs-test-error.html#optimism-of-training-error",
-    "title": "F3 — Training vs Test Error",
-    "section": "1.1 Optimism of training error",
-    "text": "1.1 Optimism of training error\nWhen we fit \\(\\hat{f}\\) on training data and then evaluate on the same data, the estimate is optimistically biased. The model has already adapted to the specific noise in the training set.\nThe expected optimism is:\n\\[\\text{Optimism} = \\mathbb{E}[\\text{Test MSE}] - \\mathbb{E}[\\text{Train MSE}] = \\frac{2}{n} \\sum_{i=1}^n \\text{Cov}(\\hat{y}_i, y_i)\\]\nFor OLS with \\(p\\) predictors: \\(\\text{Optimism} = 2p\\sigma^2 / n\\). This is why AIC and Mallow’s \\(C_p\\) add a penalty of \\(2p\\hat\\sigma^2 / n\\) to the training RSS.",
+    "objectID": "foundations/04-resampling-overview.html#why-resampling",
+    "href": "foundations/04-resampling-overview.html#why-resampling",
+    "title": "F4 — Resampling Methods Overview",
+    "section": "",
+    "text": "We established that training error is optimistic. A single train/test split gives an unbiased but noisy estimate. Resampling methods use the available data more efficiently by repeatedly fitting models on subsets and averaging the results.",
     "crumbs": [
       "Home",
       "Foundations",
-      "F3 — Training vs Test Error"
+      "F4 — Resampling Methods Overview"
     ]
   },
   {
-    "objectID": "foundations/03-training-vs-test-error.html#traintest-split-as-the-direct-approach",
-    "href": "foundations/03-training-vs-test-error.html#traintest-split-as-the-direct-approach",
-    "title": "F3 — Training vs Test Error",
-    "section": "1.2 Train/test split as the direct approach",
-    "text": "1.2 Train/test split as the direct approach\nThe simplest approach: split data once into training and test sets (e.g., 70/30). Fit on training, evaluate on test.\nAdvantage: Simple, unbiased estimate of test error.\nDisadvantage: Wastes data; test MSE estimate has high variance (depends on which observations ended up in the test set).\nCross-validation (F5) improves on this by reusing all data.",
+    "objectID": "foundations/04-resampling-overview.html#three-approaches",
+    "href": "foundations/04-resampling-overview.html#three-approaches",
+    "title": "F4 — Resampling Methods Overview",
+    "section": "",
+    "text": "Method\nIdea\nBias\nVariance\nUse when\n\n\n\n\nValidation set\nSingle 70/30 split\nLow\nHigh\nVery large n\n\n\nk-fold CV\nRotate through k folds\nModerate\nModerate\nStandard choice\n\n\nLOOCV\nk = n\nVery low\nHigh\nSmall n, cheap models\n\n\nBootstrap\nSample with replacement\nLow\nLow\nAlso estimates parameter uncertainty",
     "crumbs": [
       "Home",
       "Foundations",
-      "F3 — Training vs Test Error"
+      "F4 — Resampling Methods Overview"
     ]
   },
   {
-    "objectID": "foundations/05-cross-validation.html#the-one-standard-error-rule",
-    "href": "foundations/05-cross-validation.html#the-one-standard-error-rule",
-    "title": "F5 — Cross-Validation in Practice",
-    "section": "1.1 The one-standard-error rule",
-    "text": "1.1 The one-standard-error rule\nWhen selecting the best model via CV, the minimum CV error may not be the best choice. The 1-SE rule selects the simplest model whose CV error is within one standard error of the minimum.\n\\[d^* = \\min \\{d : \\text{CV}(d) \\leq \\text{CV}(d_{\\min}) + \\text{SE}(d_{\\min})\\}\\]\nThis guards against selecting an unnecessarily complex model when a simpler one performs nearly as well.",
+    "objectID": "foundations/04-resampling-overview.html#k-fold-cross-validation",
+    "href": "foundations/04-resampling-overview.html#k-fold-cross-validation",
+    "title": "F4 — Resampling Methods Overview",
+    "section": "",
+    "text": "Randomly divide data into \\(k\\) equal folds\nFor \\(j = 1, \\ldots, k\\): fit model on all folds except \\(j\\), predict on fold \\(j\\)\nAverage the \\(k\\) test errors: \\(\\text{CV}_{(k)} = \\frac{1}{k}\\sum_{j=1}^k \\text{MSE}_j\\)\n\nTypical choices: \\(k=5\\) or \\(k=10\\). These balance bias (LOOCV has lowest) and variance (smaller \\(k\\) has lower variance because training sets are less similar).",
     "crumbs": [
       "Home",
       "Foundations",
-      "F5 — Cross-Validation in Practice"
+      "F4 — Resampling Methods Overview"
     ]
   },
   {
-    "objectID": "foundations/05-cross-validation.html#cv-in-glmnet-choosing-λ",
-    "href": "foundations/05-cross-validation.html#cv-in-glmnet-choosing-λ",
-    "title": "F5 — Cross-Validation in Practice",
-    "section": "1.2 CV in glmnet: choosing λ",
-    "text": "1.2 CV in glmnet: choosing λ\nFor ridge and LASSO regression, cv.glmnet() automates k-fold CV over a grid of \\(\\lambda\\) values and returns:\n\nlambda.min: the \\(\\lambda\\) minimising CV error\nlambda.1se: the largest \\(\\lambda\\) within 1 SE of the minimum (more regularisation, simpler model)\n\nIn practice, lambda.1se is often preferred for parsimony.",
+    "objectID": "foundations/04-resampling-overview.html#the-bootstrap",
+    "href": "foundations/04-resampling-overview.html#the-bootstrap",
+    "title": "F4 — Resampling Methods Overview",
+    "section": "",
+    "text": "Draw \\(B\\) samples of size \\(n\\) with replacement from the training data. Fit the model on each bootstrap sample, evaluate on the original data (out-of-bag observations). Useful for estimating both test error and parameter uncertainty.",
     "crumbs": [
       "Home",
       "Foundations",
-      "F5 — Cross-Validation in Practice"
+      "F4 — Resampling Methods Overview"
     ]
   },
   {
-    "objectID": "foundations/05-cross-validation.html#pitfalls",
-    "href": "foundations/05-cross-validation.html#pitfalls",
-    "title": "F5 — Cross-Validation in Practice",
-    "section": "1.3 Pitfalls",
-    "text": "1.3 Pitfalls\n\nInformation leakage: never standardise predictors on all data before CV — standardise inside each fold\nNested CV: if you select both the model class and its hyperparameters, you need outer CV for honest evaluation\nClassification: use stratified folds to preserve class proportions across folds",
-    "crumbs": [
-      "Home",
-      "Foundations",
-      "F5 — Cross-Validation in Practice"
-    ]
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "STA230 — Statistical Learning",
+    "section": "",
+    "text": "Welcome to the interactive learning companion for STA230 Statistical Learning at the University of Gothenburg.\nThis site covers all three course blocks — with concept explanations, multiple-choice quizzes, and interactive R code you can run and modify directly in the browser."
   },
   {
-    "objectID": "regression/01-ols-review.html#the-ols-estimator",
-    "href": "regression/01-ols-review.html#the-ols-estimator",
-    "title": "R1 — OLS Review & Diagnostics",
-    "section": "1.1 The OLS estimator",
-    "text": "1.1 The OLS estimator\nFor \\(Y = \\mathbf{X}\\boldsymbol{\\beta} + \\boldsymbol{\\varepsilon}\\), OLS minimises the residual sum of squares:\n\\[\\hat{\\boldsymbol{\\beta}} = \\arg\\min_{\\boldsymbol{\\beta}} \\|\\mathbf{y} - \\mathbf{X}\\boldsymbol{\\beta}\\|^2 = (\\mathbf{X}^\\top\\mathbf{X})^{-1}\\mathbf{X}^\\top\\mathbf{y}\\]\nProperties (when assumptions hold):\n\nUnbiased: \\(\\mathbb{E}[\\hat{\\boldsymbol{\\beta}}] = \\boldsymbol{\\beta}\\)\nBLUE: Best Linear Unbiased Estimator (Gauss-Markov)\nVariance: \\(\\text{Var}(\\hat{\\boldsymbol{\\beta}}) = \\sigma^2 (\\mathbf{X}^\\top\\mathbf{X})^{-1}\\)",
-    "crumbs": [
-      "Home",
-      "Block 1: Regression",
-      "R1 — OLS Review & Diagnostics"
-    ]
+    "objectID": "index.html#course-structure",
+    "href": "index.html#course-structure",
+    "title": "STA230 — Statistical Learning",
+    "section": "1 Course structure",
+    "text": "1 Course structure\n\n\n\n\n\n\n\nBlock\nTopics\n\n\n\n\nFoundations\nWhat is statistical learning? Bias-variance tradeoff, training vs test error, cross-validation\n\n\nBlock 1: Regression\nOLS, variable selection, ridge regression, LASSO\n\n\nBlock 2: Classification\nLogistic regression, LDA/kNN, decision trees, random forests, boosting, ROC/AUC, calibration\n\n\nBlock 3: Unsupervised\nPCA, k-means clustering, hierarchical clustering, PAM, t-SNE, UMAP"
   },
   {
-    "objectID": "regression/01-ols-review.html#when-ols-struggles",
-    "href": "regression/01-ols-review.html#when-ols-struggles",
-    "title": "R1 — OLS Review & Diagnostics",
-    "section": "1.2 When OLS struggles",
-    "text": "1.2 When OLS struggles\n\n\n\n\n\n\n\n\nProblem\nSymptom\nConsequence\n\n\n\n\n\\(p \\approx n\\)\nMany predictors, small sample\nHigh variance, unstable \\(\\hat{\\beta}\\)\n\n\n\\(p &gt; n\\)\nMore predictors than observations\n\\((\\mathbf{X}^\\top\\mathbf{X})\\) singular — OLS undefined\n\n\nMulticollinearity\nPredictors correlated\nInflated SE, unreliable coefficients\n\n\nIrrelevant predictors\nNoise variables included\nHigher variance, worse prediction",
+    "objectID": "index.html#how-to-use-this-site",
+    "href": "index.html#how-to-use-this-site",
+    "title": "STA230 — Statistical Learning",
+    "section": "2 How to use this site",
+    "text": "2 How to use this site\n\nRead the concept section — short and focused\nAnswer the quiz — tests comprehension before you see code\nRun and modify the code — the key learning step\nUse the Guided Practice exercises with real datasets\nClick Mark as complete when done — your progress is saved in the browser\n\n\n\n\n\n\n\nTipCoding is the way to learn\n\n\n\nThe central principle of STA230: understanding comes from doing, not reading. Every section ends with hands-on exercises using real datasets (Hitters, NHANES, SWP_CTW)."
+  },
+  {
+    "objectID": "regression/02-variable-selection.html#why-not-include-everything",
+    "href": "regression/02-variable-selection.html#why-not-include-everything",
+    "title": "R2 — Variable Selection",
+    "section": "1.1 Why not include everything?",
+    "text": "1.1 Why not include everything?\nAdding predictors always reduces training error but increases variance. With \\(p\\) predictors, OLS has \\(p+1\\) parameters to estimate. When \\(p\\) is large:\n\nVariance of \\(\\hat{\\beta}\\) increases\nTest MSE may be higher than a model with fewer predictors\nInterpretation becomes harder\n\nVariable selection finds the subset of predictors that minimises test error.",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R1 — OLS Review & Diagnostics"
+      "R2 — Variable Selection"
     ]
   },
   {
-    "objectID": "regression/01-ols-review.html#assumptions-and-diagnostics",
-    "href": "regression/01-ols-review.html#assumptions-and-diagnostics",
-    "title": "R1 — OLS Review & Diagnostics",
-    "section": "1.3 Assumptions and diagnostics",
-    "text": "1.3 Assumptions and diagnostics\n\n\n\nPlot\nWhat to look for\n\n\n\n\nResiduals vs fitted\nRandom scatter (linearity + homoskedasticity)\n\n\nQQ-plot\nPoints on diagonal (normality)\n\n\nScale-location\nFlat line (constant variance)\n\n\nResiduals vs leverage\nNo high-leverage + high-residual outliers",
+    "objectID": "regression/02-variable-selection.html#best-subset-selection",
+    "href": "regression/02-variable-selection.html#best-subset-selection",
+    "title": "R2 — Variable Selection",
+    "section": "1.2 Best subset selection",
+    "text": "1.2 Best subset selection\nFit all \\(2^p\\) possible models, evaluate each by CV or an information criterion, pick the best. Exact but computationally infeasible for large \\(p\\) — for \\(p=20\\) there are over one million models.",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R1 — OLS Review & Diagnostics"
+      "R2 — Variable Selection"
     ]
   },
   {
-    "objectID": "regression/03-ridge-regression.html#the-ridge-objective",
-    "href": "regression/03-ridge-regression.html#the-ridge-objective",
-    "title": "R3 — Ridge Regression",
-    "section": "1.1 The ridge objective",
-    "text": "1.1 The ridge objective\nRidge regression adds an \\(L_2\\) penalty to the OLS loss:\n\\[\\hat{\\boldsymbol{\\beta}}^{\\text{ridge}} = \\arg\\min_{\\boldsymbol{\\beta}} \\left\\{ \\sum_{i=1}^n (y_i - \\mathbf{x}_i^\\top\\boldsymbol{\\beta})^2 + \\lambda \\sum_{j=1}^p \\beta_j^2 \\right\\}\\]\nThe penalty \\(\\lambda \\sum \\beta_j^2\\) shrinks all coefficients toward zero. The tuning parameter \\(\\lambda \\geq 0\\) controls the amount of shrinkage:\n\n\\(\\lambda = 0\\): OLS (no shrinkage)\n\\(\\lambda \\to \\infty\\): all \\(\\hat{\\beta}_j \\to 0\\)",
+    "objectID": "regression/02-variable-selection.html#forward-stepwise-selection",
+    "href": "regression/02-variable-selection.html#forward-stepwise-selection",
+    "title": "R2 — Variable Selection",
+    "section": "1.3 Forward stepwise selection",
+    "text": "1.3 Forward stepwise selection\n\nStart with the null model (intercept only)\nAt each step, add the predictor that most improves fit\nStop when adding more predictors no longer helps (by CV or AIC)\n\nMuch faster than best subset (\\(O(p^2)\\) models), but not guaranteed to find the globally best subset.",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R3 — Ridge Regression"
+      "R2 — Variable Selection"
     ]
   },
   {
-    "objectID": "regression/03-ridge-regression.html#closed-form-solution",
-    "href": "regression/03-ridge-regression.html#closed-form-solution",
-    "title": "R3 — Ridge Regression",
-    "section": "1.2 Closed-form solution",
-    "text": "1.2 Closed-form solution\n\\[\\hat{\\boldsymbol{\\beta}}^{\\text{ridge}} = (\\mathbf{X}^\\top\\mathbf{X} + \\lambda\\mathbf{I})^{-1}\\mathbf{X}^\\top\\mathbf{y}\\]\nAdding \\(\\lambda\\mathbf{I}\\) makes the matrix invertible even when \\(\\mathbf{X}^\\top\\mathbf{X}\\) is singular or near-singular — this is why ridge works when \\(p \\geq n\\).",
+    "objectID": "regression/02-variable-selection.html#backward-stepwise-selection",
+    "href": "regression/02-variable-selection.html#backward-stepwise-selection",
+    "title": "R2 — Variable Selection",
+    "section": "1.4 Backward stepwise selection",
+    "text": "1.4 Backward stepwise selection\nStart with the full model, remove the least useful predictor at each step. Requires \\(n &gt; p\\) to fit the full model.",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R3 — Ridge Regression"
+      "R2 — Variable Selection"
     ]
   },
   {
-    "objectID": "regression/03-ridge-regression.html#bias-variance-effect",
-    "href": "regression/03-ridge-regression.html#bias-variance-effect",
-    "title": "R3 — Ridge Regression",
-    "section": "1.3 Bias-variance effect",
-    "text": "1.3 Bias-variance effect\n\n\n\n\\(\\lambda\\)\nBias\nVariance\nTest MSE\n\n\n\n\n0 (OLS)\n0\nHigh\nMay be high\n\n\nSmall\nLow\nLower\nOften lower\n\n\nLarge\nHigh\nVery low\nMay be high\n\n\n\nKey insight: Ridge introduces bias but reduces variance. The optimal \\(\\lambda\\) minimises test MSE — found via cross-validation.",
+    "objectID": "regression/02-variable-selection.html#criteria-for-stopping",
+    "href": "regression/02-variable-selection.html#criteria-for-stopping",
+    "title": "R2 — Variable Selection",
+    "section": "1.5 Criteria for stopping",
+    "text": "1.5 Criteria for stopping\n\n\n\n\n\n\n\n\nCriterion\nFormula\nPenalises\n\n\n\n\nAIC\n\\(-2\\ell + 2p\\)\nPredictive accuracy\n\n\nBIC\n\\(-2\\ell + p\\log(n)\\)\nHarder penalty, simpler models\n\n\nAdjusted R²\n\\(1 - \\frac{\\text{RSS}/(n-p-1)}{\\text{TSS}/(n-1)}\\)\nExtra parameters\n\n\nCV error\nEstimated test MSE\nDirectly estimates generalisation",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R3 — Ridge Regression"
+      "R2 — Variable Selection"
     ]
   },
   {
-    "objectID": "regression/03-ridge-regression.html#important-standardise-predictors",
-    "href": "regression/03-ridge-regression.html#important-standardise-predictors",
-    "title": "R3 — Ridge Regression",
-    "section": "1.4 Important: standardise predictors",
-    "text": "1.4 Important: standardise predictors\nRidge shrinks coefficients, but the amount of shrinkage depends on predictor scale. Always standardise predictors before applying ridge (and LASSO). glmnet() does this automatically by default.",
+    "objectID": "regression/04-lasso.html#the-lasso-objective",
+    "href": "regression/04-lasso.html#the-lasso-objective",
+    "title": "R4 — LASSO",
+    "section": "1.1 The LASSO objective",
+    "text": "1.1 The LASSO objective\nLASSO (Least Absolute Shrinkage and Selection Operator) uses an \\(L_1\\) penalty:\n\\[\\hat{\\boldsymbol{\\beta}}^{\\text{lasso}} = \\arg\\min_{\\boldsymbol{\\beta}} \\left\\{ \\sum_{i=1}^n (y_i - \\mathbf{x}_i^\\top\\boldsymbol{\\beta})^2 + \\lambda \\sum_{j=1}^p |\\beta_j| \\right\\}\\]\nThe key difference from ridge: the \\(L_1\\) penalty produces sparse solutions — many \\(\\hat{\\beta}_j = 0\\) exactly. LASSO does variable selection automatically.",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R3 — Ridge Regression"
+      "R4 — LASSO"
     ]
   },
   {
-    "objectID": "regression/05-model-comparison.html#the-complete-regression-workflow",
-    "href": "regression/05-model-comparison.html#the-complete-regression-workflow",
-    "title": "R5 — Model Comparison & Workflow",
-    "section": "1.1 The complete regression workflow",
-    "text": "1.1 The complete regression workflow\n1. Explore data          → distributions, missingness, outliers\n2. Pre-process           → log-transform skewed outcomes, standardise predictors\n3. Split data            → train (70%) / test (30%) — or use CV throughout\n4. Fit candidate models  → OLS, forward stepwise, ridge, LASSO\n5. Select model          → by CV RMSPE on training data only\n6. Evaluate              → test RMSPE on held-out test set (once, at the end)\n7. Report                → coefficients, CIs, test performance, clinical interpretation\n\n\n\n\n\n\nWarningThe golden rule\n\n\n\nThe test set is used exactly once — at the end. If you look at the test set to make model choices, it is no longer a clean test set.",
+    "objectID": "regression/04-lasso.html#why-does-l1-produce-zeros",
+    "href": "regression/04-lasso.html#why-does-l1-produce-zeros",
+    "title": "R4 — LASSO",
+    "section": "1.2 Why does L1 produce zeros?",
+    "text": "1.2 Why does L1 produce zeros?\nGeometrically, the \\(L_1\\) constraint region (a diamond in 2D) has corners on the axes. The OLS ellipsoidal contours are likely to first touch one of these corners, where one or more \\(\\beta_j = 0\\). The \\(L_2\\) constraint (a circle) has no corners, so the solution is rarely exactly zero.",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R5 — Model Comparison & Workflow"
+      "R4 — LASSO"
     ]
   },
   {
-    "objectID": "regression/05-model-comparison.html#which-method-to-choose",
-    "href": "regression/05-model-comparison.html#which-method-to-choose",
-    "title": "R5 — Model Comparison & Workflow",
-    "section": "1.2 Which method to choose?",
-    "text": "1.2 Which method to choose?\n\n\n\nSituation\nRecommended method\n\n\n\n\n\\(p\\) small, inference goal\nOLS with stepwise/AIC selection\n\n\n\\(p\\) moderate, prediction goal\nLASSO or elastic net\n\n\n\\(p\\) large, many small effects\nRidge\n\n\nCorrelated predictors\nRidge or elastic net\n\n\nNeed sparse, interpretable model\nLASSO",
+    "objectID": "regression/04-lasso.html#lasso-vs-ridge",
+    "href": "regression/04-lasso.html#lasso-vs-ridge",
+    "title": "R4 — LASSO",
+    "section": "1.3 LASSO vs Ridge",
+    "text": "1.3 LASSO vs Ridge\n\n\n\n\n\n\n\n\n\nLASSO\nRidge\n\n\n\n\nPenalty\n\\(\\lambda \\sum |\\beta_j|\\)\n\\(\\lambda \\sum \\beta_j^2\\)\n\n\nSparsity\nYes — sets coefficients to exactly 0\nNo — shrinks toward 0 but not to 0\n\n\nVariable selection\nYes\nNo\n\n\nBest when\nFew predictors truly matter\nMany predictors with small effects\n\n\nCorrelated predictors\nSelects one arbitrarily\nShrinks all equally",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R5 — Model Comparison & Workflow"
+      "R4 — LASSO"
     ]
   },
   {
-    "objectID": "regression/05-model-comparison.html#reporting-test-performance",
-    "href": "regression/05-model-comparison.html#reporting-test-performance",
-    "title": "R5 — Model Comparison & Workflow",
-    "section": "1.3 Reporting test performance",
-    "text": "1.3 Reporting test performance\nReport RMSPE (or MAE) on the test set with a confidence interval:\n\\[\\text{RMSPE} \\pm 1.96 \\times \\frac{\\text{SD of squared errors}}{\\sqrt{n_{\\text{test}}}}\\]\nNever report only training performance. Always compare to a baseline (e.g., predicting the mean: \\(\\text{RMSPE}_{\\text{null}} = \\text{SD}(Y)\\)).",
+    "objectID": "regression/04-lasso.html#elastic-net",
+    "href": "regression/04-lasso.html#elastic-net",
+    "title": "R4 — LASSO",
+    "section": "1.4 Elastic Net",
+    "text": "1.4 Elastic Net\nThe elastic net combines both penalties:\n\\[\\lambda \\left[\\alpha \\sum |\\beta_j| + (1-\\alpha) \\sum \\beta_j^2 \\right]\\]\nWith \\(\\alpha=1\\) this is LASSO; \\(\\alpha=0\\) is ridge. Elastic net handles correlated predictors better than pure LASSO. In glmnet(), alpha controls the mix.",
     "crumbs": [
       "Home",
       "Block 1: Regression",
-      "R5 — Model Comparison & Workflow"
+      "R4 — LASSO"
     ]
   },
   {
-    "objectID": "unsupervised/02-clustering-kmeans.html#supervised-vs-unsupervised-the-key-distinction",
-    "href": "unsupervised/02-clustering-kmeans.html#supervised-vs-unsupervised-the-key-distinction",
-    "title": "U2 — K-Means Clustering",
-    "section": "1.1 Supervised vs unsupervised — the key distinction",
-    "text": "1.1 Supervised vs unsupervised — the key distinction\nIn Blocks 1 and 2 you always had a response variable Y: SBP to predict, disease to classify. Clustering has no Y. You observe \\(\\mathbf{X}\\) and ask: are there natural subgroups in this data?\nIn STA220 you asked a related question: do HAD items group into depression and anxiety? Factor analysis answered this by finding latent dimensions. Clustering answers a different version: do patients group into distinct health profiles? No labels are assumed — the groups emerge from the data geometry.",
+    "objectID": "unsupervised/01-pca.html#you-have-seen-this-before",
+    "href": "unsupervised/01-pca.html#you-have-seen-this-before",
+    "title": "U1 — Principal Component Analysis",
+    "section": "1.1 You have seen this before",
+    "text": "1.1 You have seen this before\nIn STA220 you used factor analysis (FA) on the HAD scale — 14 items measuring depression and anxiety. FA found two latent factors: one loading on depression items, one on anxiety. Both factors were hidden dimensions that explained the correlations among items.\nPCA asks a related but different question:\n\n\n\n\n\n\n\n\n\nFactor Analysis (STA220)\nPCA (STA230)\n\n\n\n\nGoal\nFind latent factors that cause correlations\nFind directions that capture maximum variance\n\n\nModel\n\\(\\mathbf{X} = \\boldsymbol{\\Lambda}\\mathbf{f} + \\boldsymbol{\\varepsilon}\\) (generative)\nGeometric rotation of the data cloud\n\n\nOutput\nInterpretable factors (depression, anxiety)\nPrincipal components ordered by variance\n\n\nUse case\nPsychological measurement, construct validity\nCompression, visualisation, multicollinearity\n\n\n\nBoth methods reduce many correlated variables to a smaller set of dimensions. PCA is simpler and makes no distributional assumptions — it is purely about variance.",
     "crumbs": [
       "Home",
       "Block 3: Unsupervised",
-      "U2 — K-Means Clustering"
+      "U1 — Principal Component Analysis"
     ]
   },
   {
-    "objectID": "unsupervised/02-clustering-kmeans.html#the-k-means-algorithm",
-    "href": "unsupervised/02-clustering-kmeans.html#the-k-means-algorithm",
-    "title": "U2 — K-Means Clustering",
-    "section": "1.2 The k-means algorithm",
-    "text": "1.2 The k-means algorithm\nGiven \\(n\\) observations and a chosen number of clusters \\(K\\), k-means minimises the total within-cluster sum of squares (WCSS):\n\\[\\text{WCSS} = \\sum_{k=1}^{K} \\sum_{i \\in C_k} \\|\\mathbf{x}_i - \\boldsymbol{\\mu}_k\\|^2\\]\nwhere \\(\\boldsymbol{\\mu}_k\\) is the centroid (mean) of cluster \\(k\\).\nAlgorithm (Lloyd’s):\n\nRandomly initialise \\(K\\) centroids\nAssign each observation to the nearest centroid\nUpdate each centroid as the mean of its assigned observations\nRepeat steps 2–3 until assignments stop changing\n\nThe algorithm converges to a local minimum — not necessarily the global minimum. Always run with multiple random starts (nstart in R) and take the best result.",
+    "objectID": "unsupervised/01-pca.html#the-geometry-of-pca",
+    "href": "unsupervised/01-pca.html#the-geometry-of-pca",
+    "title": "U1 — Principal Component Analysis",
+    "section": "1.2 The geometry of PCA",
+    "text": "1.2 The geometry of PCA\nGiven \\(n\\) observations on \\(p\\) variables, PCA finds a sequence of orthogonal directions (principal components) \\(\\mathbf{z}_1, \\mathbf{z}_2, \\ldots\\) such that:\n\\[\\mathbf{z}_1 = \\mathbf{X}\\mathbf{v}_1, \\quad \\text{where } \\mathbf{v}_1 = \\arg\\max_{\\|\\mathbf{v}\\|=1} \\text{Var}(\\mathbf{X}\\mathbf{v})\\]\nEach subsequent component captures the maximum remaining variance, orthogonal to all previous ones.\nIn practice: standardise the variables (subtract mean, divide by SD), then compute the eigendecomposition of the covariance (or correlation) matrix:\n\\[\\mathbf{\\Sigma} = \\mathbf{V} \\mathbf{D} \\mathbf{V}^\\top\\]\n\n\\(\\mathbf{V}\\): eigenvectors = directions of principal components (loadings)\n\\(\\mathbf{D}\\): diagonal matrix of eigenvalues = variance explained by each component\n\nProportion of variance explained by component \\(k\\): \\(\\lambda_k / \\sum_j \\lambda_j\\)",
     "crumbs": [
       "Home",
       "Block 3: Unsupervised",
-      "U2 — K-Means Clustering"
+      "U1 — Principal Component Analysis"
     ]
   },
   {
-    "objectID": "unsupervised/02-clustering-kmeans.html#choosing-k-the-elbow-method",
-    "href": "unsupervised/02-clustering-kmeans.html#choosing-k-the-elbow-method",
-    "title": "U2 — K-Means Clustering",
-    "section": "1.3 Choosing K — the elbow method",
-    "text": "1.3 Choosing K — the elbow method\nRun k-means for \\(K = 1, 2, \\ldots, K_{\\max}\\) and plot WCSS against \\(K\\). WCSS always decreases as \\(K\\) increases (more clusters = smaller groups = tighter fit). Look for an elbow — the point where the rate of decrease slows sharply.\nThere is no objectively correct \\(K\\). Domain knowledge matters: do you expect 2 patient profiles or 5? The elbow is a heuristic, not a rule.",
+    "objectID": "unsupervised/01-pca.html#reading-pca-output",
+    "href": "unsupervised/01-pca.html#reading-pca-output",
+    "title": "U1 — Principal Component Analysis",
+    "section": "1.3 Reading PCA output",
+    "text": "1.3 Reading PCA output\n\n\n\n\n\n\n\nOutput\nWhat it tells you\n\n\n\n\nScree plot\nEigenvalues in decreasing order — look for an “elbow”\n\n\nLoadings\nHow much each original variable contributes to each PC\n\n\nBiplot\nObservations (points) and variables (arrows) in PC space\n\n\nCumulative variance\nHow many PCs needed to explain e.g. 80% of variance",
     "crumbs": [
       "Home",
       "Block 3: Unsupervised",
-      "U2 — K-Means Clustering"
+      "U1 — Principal Component Analysis"
     ]
   },
   {
-    "objectID": "unsupervised/02-clustering-kmeans.html#important-scale-your-variables",
-    "href": "unsupervised/02-clustering-kmeans.html#important-scale-your-variables",
-    "title": "U2 — K-Means Clustering",
-    "section": "1.4 Important: scale your variables",
-    "text": "1.4 Important: scale your variables\nK-means uses Euclidean distance. If Age is measured in years (range 20–80) and Cholesterol in mmol/L (range 2–8), Age will dominate purely because of its larger scale. Always standardise before clustering.",
+    "objectID": "unsupervised/01-pca.html#scaling-matters",
+    "href": "unsupervised/01-pca.html#scaling-matters",
+    "title": "U1 — Principal Component Analysis",
+    "section": "1.4 Scaling matters",
+    "text": "1.4 Scaling matters\nAlways use scale = TRUE in prcomp(). Variables on different scales (age in years, cholesterol in mmol/L) would otherwise be dominated by whichever has the largest variance — purely an artefact of measurement units, not biology.",
     "crumbs": [
       "Home",
       "Block 3: Unsupervised",
-      "U2 — K-Means Clustering"
+      "U1 — Principal Component Analysis"
+    ]
+  },
+  {
+    "objectID": "unsupervised/03-hierarchical-clustering.html#why-hierarchical-clustering",
+    "href": "unsupervised/03-hierarchical-clustering.html#why-hierarchical-clustering",
+    "title": "U3 — Hierarchical Clustering",
+    "section": "1.1 Why hierarchical clustering?",
+    "text": "1.1 Why hierarchical clustering?\nK-means requires you to choose \\(K\\) before you start. Hierarchical clustering builds a tree (dendrogram) that shows the nested cluster structure at every level — you choose \\(K\\) after seeing the tree. It is also deterministic: the same data always gives the same result, unlike k-means.\nA second advantage: the dendrogram reveals how clusters relate to each other. Are clusters 1 and 2 more similar to each other than to cluster 3? The tree shows this immediately.",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U3 — Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "unsupervised/03-hierarchical-clustering.html#bottom-up-agglomerative-clustering",
+    "href": "unsupervised/03-hierarchical-clustering.html#bottom-up-agglomerative-clustering",
+    "title": "U3 — Hierarchical Clustering",
+    "section": "1.2 Bottom-up (agglomerative) clustering",
+    "text": "1.2 Bottom-up (agglomerative) clustering\nThe most common approach:\n\nStart with \\(n\\) clusters — every observation is its own cluster\nMerge the two most similar clusters\nRepeat until all observations are in one cluster\n\nThe result is a dendrogram. To get \\(K\\) clusters, cut the tree at height \\(h\\) such that exactly \\(K\\) branches extend below the cut.",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U3 — Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "unsupervised/03-hierarchical-clustering.html#linkage-how-similarity-is-measured-between-clusters",
+    "href": "unsupervised/03-hierarchical-clustering.html#linkage-how-similarity-is-measured-between-clusters",
+    "title": "U3 — Hierarchical Clustering",
+    "section": "1.3 Linkage — how similarity is measured between clusters",
+    "text": "1.3 Linkage — how similarity is measured between clusters\nOnce clusters contain multiple observations, we need to define distance between clusters (not just individual points).\n\n\n\n\n\n\n\nLinkage\nDistance between clusters A and B\n\n\n\n\nComplete\nMaximum distance between any point in A and any point in B\n\n\nSingle\nMinimum distance (nearest neighbours)\n\n\nAverage\nAverage distance between all pairs\n\n\nWard’s\nIncrease in total WCSS when merging A and B\n\n\n\nWard’s linkage is usually recommended for health data — it produces compact, similarly sized clusters and connects directly to k-means (both minimise WCSS).",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U3 — Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "unsupervised/03-hierarchical-clustering.html#reading-a-dendrogram",
+    "href": "unsupervised/03-hierarchical-clustering.html#reading-a-dendrogram",
+    "title": "U3 — Hierarchical Clustering",
+    "section": "1.4 Reading a dendrogram",
+    "text": "1.4 Reading a dendrogram\n\nHeight of a merge = dissimilarity at which two clusters joined\nLong vertical lines = large gap between levels = natural cluster boundary\nShort lines = clusters joined at similar dissimilarity = less clear separation\nCut the tree where you see the longest vertical lines before the cut",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U3 — Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "unsupervised/05-tsne.html#pca-is-linear-that-is-a-limitation",
+    "href": "unsupervised/05-tsne.html#pca-is-linear-that-is-a-limitation",
+    "title": "U5 — t-SNE: Nonlinear Dimensionality Reduction",
+    "section": "1.1 PCA is linear — that is a limitation",
+    "text": "1.1 PCA is linear — that is a limitation\nPCA finds the directions of maximum variance by a linear transformation of the data. If the true structure is curved or folded — as is common in high-dimensional biological or image data — PCA flattens it out and loses the local neighbourhood relationships.\nt-SNE (t-distributed Stochastic Neighbour Embedding) is a nonlinear method designed to preserve local structure: observations that are close in high-dimensional space are placed close together in the 2D map.",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U5 — t-SNE: Nonlinear Dimensionality Reduction"
+    ]
+  },
+  {
+    "objectID": "unsupervised/05-tsne.html#how-t-sne-works-intuitively",
+    "href": "unsupervised/05-tsne.html#how-t-sne-works-intuitively",
+    "title": "U5 — t-SNE: Nonlinear Dimensionality Reduction",
+    "section": "1.2 How t-SNE works (intuitively)",
+    "text": "1.2 How t-SNE works (intuitively)\n\nIn the high-dimensional space, compute a probability that observation \\(j\\) is a neighbour of \\(i\\): observations close together get high probability, distant ones near zero.\nIn the 2D embedding, compute corresponding probabilities.\nMinimise the KL divergence between the two probability distributions by adjusting the 2D positions.\n\nThe result is a 2D map that reflects the local neighbourhood structure. Unlike PCA, the axes of a t-SNE plot have no interpretation — they are not “components” explaining variance. The distances between clusters are also not directly interpretable.",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U5 — t-SNE: Nonlinear Dimensionality Reduction"
+    ]
+  },
+  {
+    "objectID": "unsupervised/05-tsne.html#perplexity",
+    "href": "unsupervised/05-tsne.html#perplexity",
+    "title": "U5 — t-SNE: Nonlinear Dimensionality Reduction",
+    "section": "1.3 Perplexity",
+    "text": "1.3 Perplexity\nPerplexity is the main hyperparameter. It controls how many neighbours each observation “cares about” when building the high-dimensional probability distribution.\n\n\n\n\n\n\n\nPerplexity\nEffect\n\n\n\n\nLow (e.g. 5)\nFocuses on very local structure — can fragment real clusters\n\n\nMedium (e.g. 30)\nStandard default — balances local and semi-global structure\n\n\nHigh (e.g. 100)\nConsiders more neighbours — blurs local detail, shows broader structure\n\n\n\nAlways run t-SNE with multiple perplexity values and check whether the structure is stable.",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U5 — t-SNE: Nonlinear Dimensionality Reduction"
+    ]
+  },
+  {
+    "objectID": "unsupervised/05-tsne.html#important-limitations",
+    "href": "unsupervised/05-tsne.html#important-limitations",
+    "title": "U5 — t-SNE: Nonlinear Dimensionality Reduction",
+    "section": "1.4 Important limitations",
+    "text": "1.4 Important limitations\n\nt-SNE is stochastic — different runs give different layouts. Use set.seed().\nCluster sizes and distances in the 2D plot are not meaningful — a compact cluster is not necessarily more homogeneous than a spread-out one.\nt-SNE is designed for high-dimensional data (hundreds or thousands of variables). On five NHANES variables it is demonstrative only; PCA is usually sufficient at low dimensions.\nt-SNE does not produce a transformation that can be applied to new data (unlike PCA).",
+    "crumbs": [
+      "Home",
+      "Block 3: Unsupervised",
+      "U5 — t-SNE: Nonlinear Dimensionality Reduction"
     ]
   }
 ]
