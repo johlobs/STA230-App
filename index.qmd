@@ -12,8 +12,8 @@ This site covers all three course blocks — with concept explanations, multiple
 |-------|--------|
 | **Foundations** | What is statistical learning? Bias-variance tradeoff, training vs test error, cross-validation |
 | **Block 1: Regression** | OLS, variable selection, ridge regression, LASSO |
-| **Block 2: Classification** | Logistic regression, LDA/kNN, decision trees, random forests, boosting, ROC/AUC |
-| **Block 3: Unsupervised** | PCA, k-means clustering, hierarchical clustering |
+| **Block 2: Classification** | Logistic regression, LDA/kNN, decision trees, random forests, boosting, ROC/AUC, calibration |
+| **Block 3: Unsupervised** | PCA, k-means clustering, hierarchical clustering, PAM, t-SNE, UMAP |
 
 ## How to use this site
 

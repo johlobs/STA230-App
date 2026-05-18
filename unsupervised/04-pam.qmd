@@ -1,0 +1,271 @@
+---
+title: "U4 — PAM: Partitioning Around Medoids"
+engine: knitr
+---
+
+```{=html}
+<script>document.body.classList.add("unsupervised");</script>
+```
+
+```{r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(cluster)
+nhanes <- readRDS(here::here("data/nhanes.rds"))
+```
+
+```{webr-r}
+#| context: setup
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(cluster)
+nhanes <- readRDS("https://johlobs.github.io/STA230-App/data/nhanes.rds")
+```
+
+# Concept: A More Robust Alternative to K-Means
+
+## Medoids vs centroids
+
+K-means represents each cluster by its **centroid** — the mean of all observations in that cluster. The centroid is usually not an actual data point. PAM uses a **medoid** instead: the actual observation that minimises the total dissimilarity to all other members of its cluster.
+
+| | K-means | PAM |
+|---|---|---|
+| **Cluster representative** | Centroid (mean — not a real data point) | Medoid (an actual observation) |
+| **Objective** | Minimise total within-cluster SS | Minimise total dissimilarity to medoids |
+| **Robustness to outliers** | Low — mean shifts toward extremes | Higher — medoid is a typical, central point |
+| **Must choose K?** | Yes | Yes |
+| **Distance measure** | Euclidean only | Any dissimilarity matrix |
+
+Because the medoid is an actual observation, PAM clusters are more interpretable: you can inspect the representative patient directly rather than a hypothetical average.
+
+## The silhouette width
+
+PAM uses the **silhouette width** as a built-in quality measure. For each observation $i$:
+
+$$s(i) = \frac{b(i) - a(i)}{\max(a(i),\, b(i))}$$
+
+where $a(i)$ is the mean distance to other observations in the same cluster, and $b(i)$ is the mean distance to observations in the nearest other cluster.
+
+| Value | Interpretation |
+|-------|---------------|
+| $s(i) \approx 1$ | Observation fits well inside its cluster |
+| $s(i) \approx 0$ | Observation lies on the border between two clusters |
+| $s(i) < 0$ | Observation may belong to a neighbouring cluster |
+
+The **average silhouette width** summarises overall cluster quality. To choose K, run PAM for K = 2, 3, … and pick the K that maximises the average silhouette width.
+
+## Scaling
+
+PAM uses dissimilarities (Euclidean by default). Like k-means, **standardise all variables** before running PAM so no single variable dominates the distance calculation.
+
+---
+
+# Quiz
+
+```{=html}
+<div class="sta230-quiz" data-question="What is a medoid, and how does it differ from a K-means centroid?">
+  <div class="q-opt" data-correct="false">A medoid is the mean of the cluster — identical to a K-means centroid</div>
+  <div class="q-opt" data-correct="true">A medoid is the actual data point that minimises total dissimilarity to other cluster members — unlike a centroid, it always exists in the dataset</div>
+  <div class="q-opt" data-correct="false">A medoid is the observation with the largest distance to the cluster centre</div>
+  <div class="q-opt" data-correct="false">A medoid is only used in hierarchical clustering</div>
+  <div class="q-exp">The centroid is the mean vector — it represents the "average" observation and is usually not one of the actual data points. The medoid is an actual observation that is most central. For clinical interpretation, the medoid is more useful: you can look up patient 42 and read their actual record, rather than a hypothetical mean patient with Age = 54.3 and BMI = 27.1.</div>
+</div>
+
+<div class="sta230-quiz" data-question="A patient has silhouette width s = –0.15. What does this indicate?">
+  <div class="q-opt" data-correct="false">The patient is well-assigned to their cluster</div>
+  <div class="q-opt" data-correct="false">The patient is on the exact boundary between two clusters</div>
+  <div class="q-opt" data-correct="true">The patient is closer on average to a neighbouring cluster than to their own — they may be misclassified</div>
+  <div class="q-opt" data-correct="false">The clustering algorithm failed to converge</div>
+  <div class="q-exp">A negative silhouette means b(i) &lt; a(i): the observation is on average closer to members of another cluster than to its own. This suggests the observation is in the wrong cluster, or that the clusters are not well-separated at this value of K. It does not mean the algorithm failed — it just means this particular observation sits in an ambiguous region of the data.</div>
+</div>
+
+<div class="sta230-quiz" data-question="You run PAM for K = 2, 3, 4, 5. The average silhouette widths are 0.38, 0.44, 0.41, 0.35. Which K do you choose?">
+  <div class="q-opt" data-correct="false">K = 2, because simpler is always better</div>
+  <div class="q-opt" data-correct="true">K = 3, because it has the highest average silhouette width</div>
+  <div class="q-opt" data-correct="false">K = 5, because more clusters capture more variation</div>
+  <div class="q-opt" data-correct="false">None — a maximum silhouette of 0.44 is too low to trust</div>
+  <div class="q-exp">The silhouette method selects the K that maximises the average silhouette width. K = 3 gives 0.44, the highest value, so it provides the best separation given the data geometry. There is no absolute threshold for "good enough" silhouette — 0.44 indicates reasonable but not perfect structure. Compare to an elbow plot from k-means to see if both methods agree.</div>
+</div>
+```
+
+---
+
+# Worked Example: Patient Profiles with PAM in NHANES
+
+```{r}
+#| label: pam-prep
+vars <- c("Age", "BMI", "Waist", "Cholesterol", "SBP")
+dat  <- na.omit(nhanes[, vars])
+X    <- scale(dat)
+
+# Choose K using average silhouette width
+set.seed(42)
+sil_widths <- sapply(2:8, function(k) pam(X, k = k)$silinfo$avg.width)
+data.frame(K = 2:8, AvgSilhouette = round(sil_widths, 3))
+```
+
+```{r}
+#| label: sil-plot
+#| fig-width: 7
+#| fig-height: 4
+ggplot(data.frame(K = 2:8, sil = sil_widths), aes(K, sil)) +
+  geom_line(colour = "#3498db", linewidth = 1) +
+  geom_point(size = 3, colour = "#2c3e50") +
+  scale_x_continuous(breaks = 2:8) +
+  labs(title = "Choosing K for PAM — average silhouette width",
+       x = "Number of clusters K", y = "Average silhouette width") +
+  theme_minimal()
+```
+
+```{r}
+#| label: pam-fit
+set.seed(42)
+pam3 <- pam(X, k = 3)
+
+# The medoids — actual row numbers in X
+pam3$id.med
+
+# Medoid profiles on original scale
+dat[pam3$id.med, ]
+```
+
+```{r}
+#| label: sil-plot-full
+#| fig-width: 8
+#| fig-height: 5
+plot(pam3, which.plots = 2, main = "Silhouette plot — PAM, K = 3")
+```
+
+```{r}
+#| label: pam-pca-plot
+#| fig-width: 8
+#| fig-height: 5
+pca <- prcomp(X)
+scores <- data.frame(pca$x[, 1:2], cluster = factor(pam3$clustering))
+medoid_scores <- scores[pam3$id.med, ]
+
+ggplot(scores, aes(PC1, PC2, colour = cluster)) +
+  geom_point(alpha = 0.3, size = 0.8) +
+  geom_point(data = medoid_scores, size = 5, shape = 18) +
+  stat_ellipse(linewidth = 0.8) +
+  scale_colour_manual(values = c("#e74c3c", "#3498db", "#2ecc71")) +
+  labs(title = "PAM clusters (K = 3) on PC1–PC2",
+       subtitle = "Diamonds = medoids",
+       colour = "Cluster") +
+  theme_minimal()
+```
+
+**Interpretation:** The medoids are real patients — you can read their actual Age, BMI, SBP, etc. This is a key interpretive advantage over k-means, where the centroid is a hypothetical average.
+
+---
+
+# Guided Practice
+
+::: {.webr-loading-note}
+**R is loading in the background** — exercises will be interactive once the status bar disappears.
+:::
+
+```{webr-r}
+#| label: guided-sil
+vars <- c("Age", "BMI", "Waist", "Cholesterol", "SBP")
+dat  <- na.omit(nhanes[, vars])
+X    <- scale(dat)
+
+# TASK 1: Run PAM for K = 2 to 6 and plot average silhouette width
+sil_widths <- sapply(2:6, function(k) pam(X, k = k)$silinfo$avg.width)
+plot(2:6, sil_widths, type = "b", pch = 19,
+     xlab = "K", ylab = "Average silhouette width",
+     main = "Choosing K — PAM silhouette")
+
+# TASK 2: Which K has the highest silhouette? Does it match the K-means elbow?
+cat("Best K by silhouette:", which.max(sil_widths) + 1, "\n")
+```
+
+```{webr-r}
+#| label: guided-pam
+vars <- c("Age", "BMI", "Waist", "Cholesterol", "SBP")
+dat  <- na.omit(nhanes[, vars])
+X    <- scale(dat)
+
+# TASK 3: Fit PAM with K = 3 and inspect the medoids
+pam3 <- pam(X, k = 3)
+
+cat("Medoid row indices:", pam3$id.med, "\n")
+cat("Average silhouette width:", round(pam3$silinfo$avg.width, 3), "\n")
+
+# TASK 4: Look at the actual medoid patients on the original scale
+dat[pam3$id.med, ]
+```
+
+::: {.callout-tip collapse="true"}
+## Hints
+- `pam(X, k = K)$silinfo$avg.width` returns the average silhouette for K clusters
+- `pam3$id.med` gives the row indices of the medoids in X
+- Index into `dat` (unscaled) to read medoid profiles in interpretable units
+- Compare the silhouette plot to the k-means elbow — do they agree on K?
+:::
+
+---
+
+# Retrieval Challenge
+
+```{webr-r}
+#| label: challenge
+# Compare PAM and K-means clusters on the same data:
+# 1. Run PAM with K = 3
+# 2. Run K-means with K = 3
+# 3. Build a cross-tabulation of PAM cluster vs K-means cluster
+# 4. Are the assignments mostly the same?
+
+vars <- c("Age", "BMI", "Waist", "Cholesterol", "SBP")
+dat  <- na.omit(nhanes[, vars])
+X    <- scale(dat)
+set.seed(42)
+
+# Your code here:
+```
+
+::: {.callout-tip collapse="true"}
+## Model Answer
+```r
+pam3 <- pam(X, k = 3)
+km3  <- kmeans(X, centers = 3, nstart = 25)
+
+# Cross-tabulation — rows = PAM, columns = K-means
+table(PAM = pam3$clustering, KMeans = km3$cluster)
+
+# Note: cluster labels are arbitrary — the same cluster may be
+# labelled "1" in PAM and "2" in K-means
+```
+The cross-table typically shows high agreement — most cells in each row have one dominant column. Where they disagree is often near cluster boundaries, where the medoid-based and centroid-based rules pull in different directions.
+:::
+
+---
+
+# Why-Questions
+
+::: {.callout-caution collapse="true"}
+## Q: "When should I use PAM instead of K-means?"
+
+Use PAM when: (1) interpretability matters and you want a real representative patient, not a hypothetical average; (2) the data contain outliers that could shift a K-means centroid; (3) you want a built-in quality measure (silhouette) to guide the choice of K. K-means is preferred when n is very large (PAM is O(n²) per iteration, k-means is O(nKd)) or when you need fast re-clustering of new observations.
+:::
+
+::: {.callout-caution collapse="true"}
+## Q: "A silhouette of 0.3 — is that good or bad?"
+
+Silhouette values above 0.5 are generally considered strong structure; 0.25–0.5 is weak but present; below 0.25 suggests no real cluster structure. However, these thresholds depend on the number of dimensions and the nature of the data. Health data with many correlated variables often produces moderate silhouettes even when the clusters are clinically meaningful. Always combine silhouette width with clinical interpretation of the cluster profiles.
+:::
+
+::: {.callout-caution collapse="true"}
+## Q: "How does PAM connect to what I did in the STA230 exercises?"
+
+In Exercise 5, you ran PAM on the iris dataset and used the silhouette plot to evaluate whether K = 2 or K = 3 best described the flower measurements. You saw that setosa was well-separated (high silhouette) while versicolor and virginica overlapped (lower silhouette). The same logic applies here: NHANES patients in the "healthy" profile cluster tightly, while borderline patients near the cluster boundary have lower silhouette values.
+:::
+
+::: {.callout-note}
+## Further reading
+James et al. (2021). *An Introduction to Statistical Learning*. — Chapter 12.4
+:::

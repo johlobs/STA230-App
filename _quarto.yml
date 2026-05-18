@@ -39,11 +39,15 @@ website:
           - classification/04-random-forests.qmd
           - classification/05-boosting-xgboost.qmd
           - classification/06-roc-auc.qmd
+          - classification/07-calibration.qmd
       - section: "Block 3: Unsupervised"
         contents:
           - unsupervised/01-pca.qmd
           - unsupervised/02-clustering-kmeans.qmd
           - unsupervised/03-hierarchical-clustering.qmd
+          - unsupervised/04-pam.qmd
+          - unsupervised/05-tsne.qmd
+          - unsupervised/06-umap.qmd
 
 format:
   html:
@@ -72,3 +76,6 @@ webr:
     - MASS
     - pROC
     - class
+    - cluster
+    - Rtsne
+    - uwot
