@@ -77,5 +77,3 @@ webr:
     - pROC
     - class
     - cluster
-    - Rtsne
-    - uwot

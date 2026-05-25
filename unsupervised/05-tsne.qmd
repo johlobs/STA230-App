@@ -21,6 +21,7 @@ nhanes <- readRDS(here::here("data/nhanes.rds"))
 #| include: false
 library(ggplot2)
 library(dplyr)
+webr::install("Rtsne")
 library(Rtsne)
 nhanes <- readRDS("https://johlobs.github.io/STA230-App/data/nhanes.rds")
 ```
