@@ -81,7 +81,7 @@ The Hosmer–Lemeshow (HL) test formally tests whether the calibration plot depa
 ```{=html}
 <div class="sta230-quiz" data-question="A model has AUC = 0.90 but the calibration plot shows all predicted probabilities between 0.3 and 0.6, while observed event rates range from 0.05 to 0.85. What is the problem?">
   <div class="q-opt" data-correct="false">The model cannot rank patients by risk — its probability estimates are essentially random</div>
-  <div class="q-opt" data-correct="true">Good discrimination (high AUC) but compressed probabilities — they do not reflect actual event rates and mislead absolute-risk decisions</div>
+  <div class="q-opt" data-correct="true">Good discrimination but compressed probabilities — they do not reflect actual event rates</div>
   <div class="q-opt" data-correct="false">AUC and calibration always agree — any discrepancy signals a data processing error</div>
   <div class="q-opt" data-correct="false">The model has overfit the training data and cannot generalise to new patients</div>
   <div class="q-exp">AUC measures discrimination: the probability that a randomly chosen case ranks above a randomly chosen control. It is unaffected by systematic shifts in the probability scale. A model that always predicts 0.4 ± 0.1 may discriminate well (the relative ordering is correct) but is miscalibrated (the absolute values are wrong). For decision-making — "should I screen this patient with predicted risk 0.6?" — calibration is essential.</div>
@@ -96,9 +96,9 @@ The Hosmer–Lemeshow (HL) test formally tests whether the calibration plot depa
 </div>
 
 <div class="sta230-quiz" data-question="The Hosmer–Lemeshow test gives p = 0.002 on a dataset with n = 50 000. What is the correct interpretation?">
-  <div class="q-opt" data-correct="false">The model is severely miscalibrated and should be discarded immediately</div>
+  <div class="q-opt" data-correct="false">The model is severely miscalibrated — p < 0.01 always warrants discarding the model</div>
   <div class="q-opt" data-correct="false">The model is well calibrated — p only needs to exceed 0.001 to confirm this</div>
-  <div class="q-opt" data-correct="true">Statistically significant, but n = 50 000 makes trivial deviations detectable — inspect the plot to judge clinical relevance</div>
+  <div class="q-opt" data-correct="true">Significant, but n = 50 000 makes even tiny errors detectable — the calibration plot judges clinical relevance</div>
   <div class="q-opt" data-correct="false">The Hosmer-Lemeshow test is not valid for datasets with more than 10 000 observations</div>
   <div class="q-exp">The HL test is a chi-squared test and gains power as n increases. With 50 000 observations, even a 2% deviation from the diagonal will be significant. A p-value of 0.002 does not tell you whether the miscalibration matters clinically. Always look at the calibration plot: if the curve hugs the diagonal with only small deviations, the model may still be clinically useful despite a significant HL test.</div>
 </div>

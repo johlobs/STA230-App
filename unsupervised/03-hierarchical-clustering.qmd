@@ -67,10 +67,10 @@ Once clusters contain multiple observations, we need to define distance between 
 
 ```{=html}
 <div class="sta230-quiz" data-question="What is the main advantage of hierarchical clustering over k-means?">
-  <div class="q-opt" data-correct="false">It always finds the globally optimal cluster assignment at every level</div>
-  <div class="q-opt" data-correct="false">It runs faster than k-means on large datasets in all cases</div>
-  <div class="q-opt" data-correct="true">No need to specify K in advance — the dendrogram reveals all levels of structure and K is chosen after seeing it</div>
-  <div class="q-opt" data-correct="false">It works correctly without standardising the variables first</div>
+  <div class="q-opt" data-correct="false">Hierarchical clustering guarantees the globally optimal cluster assignment at every level of the tree</div>
+  <div class="q-opt" data-correct="false">Hierarchical clustering always runs faster than k-means, regardless of dataset size or dimensionality</div>
+  <div class="q-opt" data-correct="true">K is not specified upfront — the dendrogram shows structure at all levels and K is chosen after viewing it</div>
+  <div class="q-opt" data-correct="false">Hierarchical clustering requires no standardisation because it adjusts for variable scale automatically</div>
   <div class="q-exp">K-means requires K as input. Hierarchical clustering builds a full tree and you choose K by deciding where to cut the dendrogram — after seeing the structure. This is useful when you have no prior expectation about the number of groups. Hierarchical clustering still requires standardisation and a choice of linkage method, so it is not assumption-free.</div>
 </div>
 
@@ -83,10 +83,10 @@ Once clusters contain multiple observations, we need to define distance between 
 </div>
 
 <div class="sta230-quiz" data-question="In a dendrogram, two clusters merge at height 4.2 and another pair merges at height 0.8. What does this mean?">
-  <div class="q-opt" data-correct="false">The first pair has 4.2 observations and the second has 0.8 observations</div>
-  <div class="q-opt" data-correct="true">The first pair was far more dissimilar at merge time — the large height gap suggests a natural cluster boundary between them</div>
-  <div class="q-opt" data-correct="false">The algorithm made an error — heights should be equal</div>
-  <div class="q-opt" data-correct="false">The first pair is a better cluster than the second</div>
+  <div class="q-opt" data-correct="false">Heights 4.2 and 0.8 indicate the number of observations present in each cluster when it is formed</div>
+  <div class="q-opt" data-correct="true">Merge height equals dissimilarity — the large gap from 0.8 to 4.2 signals a natural cluster boundary</div>
+  <div class="q-opt" data-correct="false">Equal heights across all merges is required — unequal values indicate a bug in the linkage calculation</div>
+  <div class="q-opt" data-correct="false">Higher merge height indicates a better, more clearly defined cluster with stronger internal homogeneity</div>
   <div class="q-exp">Height in a dendrogram = the dissimilarity (e.g. Euclidean distance) at which the merge happened. A large height means the two clusters were far apart before merging — cutting the tree just below this height preserves the separation. Long vertical lines in a dendrogram indicate natural boundaries. Short lines indicate clusters that were already very similar.</div>
 </div>
 ```

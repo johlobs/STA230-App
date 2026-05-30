@@ -76,10 +76,10 @@ Always use `scale = TRUE` in `prcomp()`. Variables on different scales (age in y
 
 ```{=html}
 <div class="sta230-quiz" data-question="In STA220, factor analysis on the HAD scale found two factors (depression, anxiety). What is the main difference if you run PCA on the same items instead?">
-  <div class="q-opt" data-correct="false">PCA would find more factors than FA because it uses all variance</div>
-  <div class="q-opt" data-correct="true">PCA maximises variance without a generative model — components are geometric projections, not latent constructs</div>
-  <div class="q-opt" data-correct="false">PCA and FA always give identical results on the same data</div>
-  <div class="q-opt" data-correct="false">PCA requires a response variable Y; FA does not</div>
+  <div class="q-opt" data-correct="false">PCA would extract more components than FA because it retains all variance, including noise</div>
+  <div class="q-opt" data-correct="true">PCA maximises variance geometrically — no generative model or latent constructs are assumed</div>
+  <div class="q-opt" data-correct="false">PCA and FA give identical factor solutions when fitted to the same data with the same number of factors</div>
+  <div class="q-opt" data-correct="false">PCA requires a labelled response variable Y to guide dimension extraction — FA does not need one</div>
   <div class="q-exp">FA assumes X = Λf + ε — latent factors causally produce the observed items. PCA makes no such assumption: it finds orthogonal directions that explain the most variance. On HAD data the first two PCs would likely align with the depression/anxiety split, but a PC is not a "latent factor" — it is a linear combination that maximises explained variance.</div>
 </div>
 

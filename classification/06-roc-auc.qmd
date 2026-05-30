@@ -118,10 +118,10 @@ With 89% SWP=1 in the SWP dataset, always predicting SWP=1 achieves 89% accuracy
 
 ```{=html}
 <div class="sta230-quiz" data-question="AUC = 0.75. What does this mean in plain language?">
-  <div class="q-opt" data-correct="false">The model correctly classifies 75% of observations</div>
-  <div class="q-opt" data-correct="true">For a random positive-negative pair, the model assigns a higher probability to the positive case 75% of the time</div>
-  <div class="q-opt" data-correct="false">The model has 75% sensitivity at the 0.5 threshold</div>
-  <div class="q-opt" data-correct="false">75% of the area under the precision-recall curve is captured</div>
+  <div class="q-opt" data-correct="false">The model correctly classifies 75% of all observations at the 0.5 threshold</div>
+  <div class="q-opt" data-correct="true">For a random positive-negative pair, the model ranks the positive higher 75% of the time</div>
+  <div class="q-opt" data-correct="false">The model achieves exactly 75% sensitivity and 75% specificity simultaneously</div>
+  <div class="q-opt" data-correct="false">75% of the area under the precision-recall curve is captured by the model</div>
   <div class="q-exp">AUC is a rank-based metric: it measures how well the model separates the two classes in terms of predicted probability. AUC=0.5 means random ordering (no discrimination). AUC=1.0 means all positives score higher than all negatives. AUC=0.75 means 75% of positive-negative pairs are correctly ranked. Crucially, AUC is threshold-independent — it evaluates the model's discrimination ability regardless of where you place the cutoff.</div>
 </div>
 

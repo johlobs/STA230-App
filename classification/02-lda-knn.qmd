@@ -77,10 +77,10 @@ Small $k$ = flexible, low bias, high variance. Large $k$ = smooth, high bias, lo
 </div>
 
 <div class="sta230-quiz" data-question="Why must predictors be standardised before applying kNN?">
-  <div class="q-opt" data-correct="false">kNN requires all predictors to be normally distributed before distances are computed</div>
-  <div class="q-opt" data-correct="true">Large-scale predictors dominate Euclidean distance — a range-50 variable overwhelms a range-5 one regardless of informativeness</div>
-  <div class="q-opt" data-correct="false">Standardisation is needed only to speed up convergence of the kNN search</div>
-  <div class="q-opt" data-correct="false">kNN requires integer-valued predictors to compute exact distances</div>
+  <div class="q-opt" data-correct="false">kNN requires all predictors to follow a normal distribution so that Euclidean distance is valid</div>
+  <div class="q-opt" data-correct="true">High-range predictors dominate Euclidean distance regardless of their actual predictive importance</div>
+  <div class="q-opt" data-correct="false">Standardisation only speeds up computation — the same neighbours are found regardless of scale</div>
+  <div class="q-opt" data-correct="false">kNN requires integer-valued predictors because Euclidean distance is undefined for continuous inputs</div>
   <div class="q-exp">kNN uses Euclidean distance. If Age ranges 18–70 and JobControl ranges 85–120, a 1-unit difference in Age contributes more to distance than a 1-unit difference in JobControl — even if JobControl is more informative. Standardising (subtract mean, divide by SD) puts all predictors on equal footing and is essential before kNN.</div>
 </div>
 ```

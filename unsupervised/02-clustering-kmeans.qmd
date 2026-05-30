@@ -72,18 +72,18 @@ K-means uses Euclidean distance. If Age is measured in years (range 20–80) and
 </div>
 
 <div class="sta230-quiz" data-question="You run kmeans(X, centers = 3, nstart = 1) twice and get different cluster assignments. Why?">
-  <div class="q-opt" data-correct="false">k-means is inherently random and never converges to any stable solution</div>
-  <div class="q-opt" data-correct="true">k-means finds a local minimum that depends on random initialisation — different seeds often reach different solutions</div>
-  <div class="q-opt" data-correct="false">The data changes randomly between algorithm runs</div>
-  <div class="q-opt" data-correct="false">K = 3 is too small — the algorithm needs K ≥ 5 to produce stable results</div>
+  <div class="q-opt" data-correct="false">k-means is inherently stochastic and cluster assignments never converge to any stable configuration</div>
+  <div class="q-opt" data-correct="true">Random starting centroids lead to different local minima and different final cluster assignments</div>
+  <div class="q-opt" data-correct="false">k-means randomly resamples the input data before each run, causing the cluster geometry to change</div>
+  <div class="q-opt" data-correct="false">k-means requires at least K ≥ 5 clusters for the algorithm to converge to a reproducible assignment</div>
   <div class="q-exp">With nstart = 1, k-means starts from one random set of centroids. Different starting points lead to different local minima. Always use nstart ≥ 20 and set.seed() for reproducibility. R's kmeans() returns the best result across all starts (lowest WCSS).</div>
 </div>
 
 <div class="sta230-quiz" data-question="You cluster patients on Age, BMI, Waist, and SBP without standardising. BMI ranges from 15–50 and SBP from 90–200. What is the problem?">
-  <div class="q-opt" data-correct="false">K-means is restricted to two variables and cannot process four simultaneously</div>
-  <div class="q-opt" data-correct="false">The clusters will form perfect spheres of equal volume in all dimensions</div>
-  <div class="q-opt" data-correct="true">SBP dominates the distance metric due to its larger scale — clusters will split mainly on blood pressure, ignoring other variables</div>
-  <div class="q-opt" data-correct="false">The algorithm will cycle indefinitely without converging to any solution</div>
+  <div class="q-opt" data-correct="false">K-means cannot process four variables simultaneously — it is restricted to working with only two dimensions</div>
+  <div class="q-opt" data-correct="false">K-means automatically forms perfectly spherical, equal-volume clusters regardless of variable scale</div>
+  <div class="q-opt" data-correct="true">Large-scale SBP dominates Euclidean distance — clusters reflect blood pressure above all other variables</div>
+  <div class="q-opt" data-correct="false">The algorithm will cycle indefinitely between inconsistent cluster assignments and never converge</div>
   <div class="q-exp">Euclidean distance treats all dimensions equally in units. SBP (range ~110) contributes 110² ≈ 12000 to squared distance per unit change; BMI (range ~35) contributes 35² ≈ 1225. SBP numerically dominates. Standardise first so each variable has mean 0 and SD 1, giving equal weight to all variables.</div>
 </div>
 ```

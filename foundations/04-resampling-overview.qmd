@@ -48,10 +48,10 @@ Draw $B$ samples of size $n$ **with replacement** from the training data. Fit th
 </div>
 
 <div class="sta240-quiz" data-question="LOOCV has lower bias but higher variance than 10-fold CV. Why?">
-  <div class="q-opt" data-correct="false">LOOCV uses less data for training than 10-fold CV</div>
-  <div class="q-opt" data-correct="true">Nearly identical training sets produce highly correlated MSE estimates — averaging them barely reduces variance</div>
-  <div class="q-opt" data-correct="false">LOOCV averages over fewer folds so the mean is less stable</div>
-  <div class="q-opt" data-correct="false">LOOCV gives biased estimates for nonlinear models</div>
+  <div class="q-opt" data-correct="false">LOOCV uses just one observation per test fold, so each single-point MSE is unreliable and highly variable</div>
+  <div class="q-opt" data-correct="true">Fold errors from near-identical training sets are correlated — their average barely reduces variance</div>
+  <div class="q-opt" data-correct="false">Averaging over n folds rather than 10 makes LOOCV's final estimate much less stable than 10-fold CV</div>
+  <div class="q-opt" data-correct="false">LOOCV systematically overestimates bias for nonlinear models due to the extreme n-1 training size</div>
   <div class="q-exp">In LOOCV, each training set of size n−1 differs from the others by just one observation. This means the n model fits (and their errors) are nearly identical — highly correlated. Averaging correlated estimates barely reduces variance. In 10-fold CV the 10 test sets are more distinct, giving less correlated estimates and lower variance of the CV estimate.</div>
 </div>
 ```

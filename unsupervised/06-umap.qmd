@@ -75,18 +75,18 @@ Run with multiple `n_neighbors` values to check stability, just as you would wit
 </div>
 
 <div class="sta230-quiz" data-question="You increase n_neighbors from 5 to 50. What do you expect to happen to the UMAP plot?">
-  <div class="q-opt" data-correct="false">The plot will show more fragmented, smaller clusters</div>
-  <div class="q-opt" data-correct="true">More neighbours are considered, so fine-grained local detail is lost and broader global structure dominates</div>
-  <div class="q-opt" data-correct="false">The axes will become interpretable as principal components</div>
-  <div class="q-opt" data-correct="false">The algorithm will fail to converge</div>
+  <div class="q-opt" data-correct="false">Increasing n_neighbors fragments the embedding into more, smaller disconnected clusters</div>
+  <div class="q-opt" data-correct="true">More neighbours blur fine local structure and emphasise broader global patterns instead</div>
+  <div class="q-opt" data-correct="false">The axes become interpretable as principal components once n_neighbors exceeds a certain threshold</div>
+  <div class="q-opt" data-correct="false">The UMAP algorithm fails to converge and produces empty output when n_neighbors is set too high</div>
   <div class="q-exp">n_neighbors controls the size of the local neighbourhood each point uses to build its representation of the manifold. Small n_neighbors captures fine-grained local structure but can fragment real clusters. Large n_neighbors considers more global context, producing smoother embeddings that resemble PCA more closely. The default of 15 is a reasonable starting point; always try at least one smaller and one larger value.</div>
 </div>
 
 <div class="sta230-quiz" data-question="What is the main practical advantage of UMAP over t-SNE on a dataset with 100 000 observations?">
-  <div class="q-opt" data-correct="false">UMAP consistently finds a greater number of clusters than t-SNE</div>
-  <div class="q-opt" data-correct="false">UMAP requires no hyperparameter tuning unlike t-SNE which needs perplexity</div>
-  <div class="q-opt" data-correct="true">UMAP scales much better computationally — t-SNE's O(n log n) complexity becomes prohibitive at 100k+ samples</div>
-  <div class="q-opt" data-correct="false">UMAP produces axes with the same interpretable meaning as PCA components</div>
+  <div class="q-opt" data-correct="false">UMAP finds more clusters than t-SNE on any dataset due to its superior optimisation algorithm</div>
+  <div class="q-opt" data-correct="false">UMAP needs no hyperparameter tuning — unlike t-SNE, all default settings produce reliable results</div>
+  <div class="q-opt" data-correct="true">UMAP's computational efficiency makes it far more practical than t-SNE at 100k+ observations</div>
+  <div class="q-opt" data-correct="false">UMAP axes are interpretable like PCA components, representing the main directions of variance in the data</div>
   <div class="q-exp">t-SNE uses Barnes-Hut approximation to achieve O(n log n) complexity, which is still slow for hundreds of thousands of points. UMAP uses approximate nearest-neighbour graphs and stochastic gradient descent, scaling much better to large datasets. On PBMC3k (2638 cells), both are fast. On a full single-cell atlas with 500 000 cells, UMAP runs in minutes while t-SNE may take hours.</div>
 </div>
 ```
