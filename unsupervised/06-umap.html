@@ -384,7 +384,7 @@ iframe.qwebr-output-code-browse {
 // Document level settings ----
 
 // Determine if we need to install R packages
-globalThis.qwebrInstallRPackagesList = ['ggplot2', 'dplyr', 'tidyr', 'glmnet', 'Matrix', 'MASS', 'pROC', 'class', 'cluster'];
+globalThis.qwebrInstallRPackagesList = ['ggplot2', 'dplyr', 'tidyr', 'glmnet', 'Matrix', 'MASS', 'pROC', 'class', 'cluster', 'rpart', 'randomForest', 'Rtsne'];
 
 // Specify possible locations to search for the repository
 globalThis.qwebrPackageRepoURLS = ['https://repo.r-wasm.org/'];
@@ -406,7 +406,7 @@ globalThis.qwebrCustomizedWebROptions = {
 };
 
 // Store cell data
-globalThis.qwebrCellDetails = [{"code":"library(ggplot2)\nlibrary(dplyr)\nwebr::install(\"uwot\")\nlibrary(uwot)\nnhanes <- readRDS(\"https://johlobs.github.io/STA230-App/data/nhanes.rds\")","id":1,"options":{"autorun":"true","classes":"","comment":"","context":"setup","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"include":"false","label":"unnamed-chunk-1","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"vars <- c(\"Age\", \"BMI\", \"Waist\", \"Cholesterol\", \"SBP\")\ndat  <- na.omit(nhanes[, vars])\nX    <- scale(dat)\nset.seed(42)\n\n# TASK 1: Run UMAP with n_neighbors = 15, min_dist = 0.1\numap_res <- umap(X, n_neighbors = 15, min_dist = 0.1)\n\n# TASK 2: Plot the result, coloured by SBP\ndf <- data.frame(Dim1 = umap_res[, 1], Dim2 = umap_res[, 2], SBP = dat$SBP)\n\nggplot(df, aes(Dim1, Dim2, colour = SBP)) +\n  geom_point(size = 1, alpha = 0.6) +\n  scale_colour_viridis_c() +\n  labs(title = \"UMAP — coloured by SBP\") +\n  theme_minimal()","id":2,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-umap","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"vars <- c(\"Age\", \"BMI\", \"Waist\", \"Cholesterol\", \"SBP\")\ndat  <- na.omit(nhanes[, vars])\nX    <- scale(dat)\n\n# TASK 3: Compare min_dist = 0.01 vs min_dist = 0.5\n# How does the compactness of the embedding change?\nset.seed(42)\numap_tight  <- umap(X, n_neighbors = 15, min_dist = 0.01)\numap_spread <- umap(X, n_neighbors = 15, min_dist = 0.5)\n\ndf <- rbind(\n  data.frame(Dim1 = umap_tight[, 1],  Dim2 = umap_tight[, 2],  min_dist = \"0.01\"),\n  data.frame(Dim1 = umap_spread[, 1], Dim2 = umap_spread[, 2], min_dist = \"0.5\")\n)\n\nggplot(df, aes(Dim1, Dim2)) +\n  geom_point(size = 0.8, alpha = 0.5, colour = \"#2ecc71\") +\n  facet_wrap(~ min_dist, scales = \"free\") +\n  labs(title = \"Effect of min_dist on UMAP embedding\") +\n  theme_minimal()","id":3,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"guided-mindist","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}},{"code":"# Full pipeline: scale → UMAP → K-means → visualise\n# 1. Run UMAP with n_neighbors = 15 on the scaled NHANES data\n# 2. Run k-means with K = 3 on the original scaled data (not UMAP coordinates)\n# 3. Colour the UMAP plot by the K-means cluster assignment\n# 4. Do the K-means clusters appear separated in UMAP space?\n\nvars <- c(\"Age\", \"BMI\", \"Waist\", \"Cholesterol\", \"SBP\")\ndat  <- na.omit(nhanes[, vars])\nX    <- scale(dat)\nset.seed(42)\n\n# Your code here:","id":4,"options":{"autorun":"false","classes":"","comment":"","context":"interactive","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"label":"challenge","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}}];
+globalThis.qwebrCellDetails = [{"code":"library(ggplot2)\nlibrary(dplyr)\nnhanes <- readRDS(\"https://johlobs.github.io/STA230-App/data/nhanes.rds\")","id":1,"options":{"autorun":"true","classes":"","comment":"","context":"setup","dpi":72,"editor-font-scale":"1","editor-max-height":"","editor-quick-suggestions":"false","editor-word-wrap":"true","fig-cap":"","fig-height":5,"fig-width":7,"include":"false","label":"unnamed-chunk-1","message":"true","out-height":"","out-width":"700px","output":"true","read-only":"false","results":"markup","warning":"true"}}];
 
 </script>
 <script type="module">
@@ -2398,15 +2398,75 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 </section>
 <section id="guided-practice" class="level1" data-number="4">
 <h1 data-number="4"><span class="header-section-number">4</span> Guided Practice</h1>
-<div class="webr-loading-note">
-<p><strong>R is loading in the background</strong> — exercises will be interactive once the status bar disappears.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<div id="qwebr-insertion-location-2"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
-<div id="qwebr-insertion-location-3"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Note:</strong> The <code>uwot</code> package requires compiled C++ dependencies that are not available in the browser-based R environment (WebR). The exercises below show pre-rendered output. Run the code in a local R session to interact with the results.</p>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Age"</span>, <span class="st">"BMI"</span>, <span class="st">"Waist"</span>, <span class="st">"Cholesterol"</span>, <span class="st">"SBP"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>dat  <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(nhanes[, vars])</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>X    <span class="ot">&lt;-</span> <span class="fu">scale</span>(dat)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># </span><span class="al">TASK</span><span class="co"> 1: Run UMAP with n_neighbors = 15, min_dist = 0.1</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>umap_res <span class="ot">&lt;-</span> <span class="fu">umap</span>(X, <span class="at">n_neighbors =</span> <span class="dv">15</span>, <span class="at">min_dist =</span> <span class="fl">0.1</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># </span><span class="al">TASK</span><span class="co"> 2: Plot the result, coloured by SBP</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Dim1 =</span> umap_res[, <span class="dv">1</span>], <span class="at">Dim2 =</span> umap_res[, <span class="dv">2</span>], <span class="at">SBP =</span> dat<span class="sc">$</span>SBP)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df, <span class="fu">aes</span>(Dim1, Dim2, <span class="at">colour =</span> SBP)) <span class="sc">+</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">1</span>, <span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_viridis_c</span>() <span class="sc">+</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"UMAP — coloured by SBP"</span>) <span class="sc">+</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="06-umap_files/figure-html/guided-umap-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Age"</span>, <span class="st">"BMI"</span>, <span class="st">"Waist"</span>, <span class="st">"Cholesterol"</span>, <span class="st">"SBP"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>dat  <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(nhanes[, vars])</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>X    <span class="ot">&lt;-</span> <span class="fu">scale</span>(dat)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># </span><span class="al">TASK</span><span class="co"> 3: Compare min_dist = 0.01 vs min_dist = 0.5</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># How does the compactness of the embedding change?</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>umap_tight  <span class="ot">&lt;-</span> <span class="fu">umap</span>(X, <span class="at">n_neighbors =</span> <span class="dv">15</span>, <span class="at">min_dist =</span> <span class="fl">0.01</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>umap_spread <span class="ot">&lt;-</span> <span class="fu">umap</span>(X, <span class="at">n_neighbors =</span> <span class="dv">15</span>, <span class="at">min_dist =</span> <span class="fl">0.5</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">Dim1 =</span> umap_tight[, <span class="dv">1</span>],  <span class="at">Dim2 =</span> umap_tight[, <span class="dv">2</span>],  <span class="at">min_dist =</span> <span class="st">"0.01"</span>),</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">Dim1 =</span> umap_spread[, <span class="dv">1</span>], <span class="at">Dim2 =</span> umap_spread[, <span class="dv">2</span>], <span class="at">min_dist =</span> <span class="st">"0.5"</span>)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df, <span class="fu">aes</span>(Dim1, Dim2)) <span class="sc">+</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">0.8</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>, <span class="at">colour =</span> <span class="st">"#2ecc71"</span>) <span class="sc">+</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> min_dist, <span class="at">scales =</span> <span class="st">"free"</span>) <span class="sc">+</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Effect of min_dist on UMAP embedding"</span>) <span class="sc">+</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="06-umap_files/figure-html/guided-mindist-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
 <div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -2415,7 +2475,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <ul>
 <li><code>umap(X, n_neighbors = 15, min_dist = 0.1)</code> returns an n×2 matrix</li>
@@ -2430,10 +2490,42 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 </section>
 <section id="retrieval-challenge" class="level1" data-number="5">
 <h1 data-number="5"><span class="header-section-number">5</span> Retrieval Challenge</h1>
-<div id="qwebr-insertion-location-4"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Full pipeline: scale → UMAP → K-means → visualise</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Run UMAP with n_neighbors = 15 on the scaled NHANES data</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Run k-means with K = 3 on the original scaled data (not UMAP coordinates)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Colour the UMAP plot by the K-means cluster assignment</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Do the K-means clusters appear separated in UMAP space?</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Age"</span>, <span class="st">"BMI"</span>, <span class="st">"Waist"</span>, <span class="st">"Cholesterol"</span>, <span class="st">"SBP"</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>dat  <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(nhanes[, vars])</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>X    <span class="ot">&lt;-</span> <span class="fu">scale</span>(dat)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>umap_res <span class="ot">&lt;-</span> <span class="fu">umap</span>(X, <span class="at">n_neighbors =</span> <span class="dv">15</span>, <span class="at">min_dist =</span> <span class="fl">0.1</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>km3      <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(X, <span class="at">centers =</span> <span class="dv">3</span>, <span class="at">nstart =</span> <span class="dv">25</span>)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">Dim1    =</span> umap_res[, <span class="dv">1</span>],</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">Dim2    =</span> umap_res[, <span class="dv">2</span>],</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">cluster =</span> <span class="fu">factor</span>(km3<span class="sc">$</span>cluster)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df, <span class="fu">aes</span>(Dim1, Dim2, <span class="at">colour =</span> cluster)) <span class="sc">+</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">1</span>, <span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#e74c3c"</span>, <span class="st">"#3498db"</span>, <span class="st">"#2ecc71"</span>)) <span class="sc">+</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"K-means clusters (K = 3) visualised in UMAP space"</span>) <span class="sc">+</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="06-umap_files/figure-html/challenge-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
 <div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -2442,22 +2534,22 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>umap_res <span class="ot">&lt;-</span> <span class="fu">umap</span>(X, <span class="at">n_neighbors =</span> <span class="dv">15</span>, <span class="at">min_dist =</span> <span class="fl">0.1</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>km3      <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(X, <span class="at">centers =</span> <span class="dv">3</span>, <span class="at">nstart =</span> <span class="dv">25</span>)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">Dim1    =</span> umap_res[, <span class="dv">1</span>],</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">Dim2    =</span> umap_res[, <span class="dv">2</span>],</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">cluster =</span> <span class="fu">factor</span>(km3<span class="sc">$</span>cluster)</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df, <span class="fu">aes</span>(Dim1, Dim2, <span class="at">colour =</span> cluster)) <span class="sc">+</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">1</span>, <span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#e74c3c"</span>, <span class="st">"#3498db"</span>, <span class="st">"#2ecc71"</span>)) <span class="sc">+</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"K-means clusters (K = 3) visualised in UMAP space"</span>) <span class="sc">+</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>umap_res <span class="ot">&lt;-</span> <span class="fu">umap</span>(X, <span class="at">n_neighbors =</span> <span class="dv">15</span>, <span class="at">min_dist =</span> <span class="fl">0.1</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>km3      <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(X, <span class="at">centers =</span> <span class="dv">3</span>, <span class="at">nstart =</span> <span class="dv">25</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">Dim1    =</span> umap_res[, <span class="dv">1</span>],</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">Dim2    =</span> umap_res[, <span class="dv">2</span>],</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">cluster =</span> <span class="fu">factor</span>(km3<span class="sc">$</span>cluster)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df, <span class="fu">aes</span>(Dim1, Dim2, <span class="at">colour =</span> cluster)) <span class="sc">+</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">1</span>, <span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#e74c3c"</span>, <span class="st">"#3498db"</span>, <span class="st">"#2ecc71"</span>)) <span class="sc">+</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"K-means clusters (K = 3) visualised in UMAP space"</span>) <span class="sc">+</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>If the k-means clusters appear well-separated in the UMAP plot, it confirms that UMAP has captured the same structure. If they overlap, it suggests either the clusters are not well-separated in the original space, or UMAP and k-means are picking up different aspects of the data structure.</p>
 </div>
 </div>
@@ -2467,7 +2559,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <section id="why-questions" class="level1" data-number="6">
 <h1 data-number="6"><span class="header-section-number">6</span> Why-Questions</h1>
 <div class="callout callout-style-default callout-caution callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -2476,25 +2568,9 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-3" class="callout-3-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p>The standard pipeline is: (1) PCA on the 2000 variable genes to reduce to 20–50 PCs; (2) UMAP (or t-SNE) on the PC scores for 2D visualisation; (3) cluster in PCA space (Seurat uses a graph-based Louvain algorithm on the PC-space nearest-neighbour graph). UMAP is now the default in Seurat. PCA alone is not sufficient — the cell type structure is nonlinear and only visible after UMAP/t-SNE.</p>
-</div>
-</div>
-</div>
-<div class="callout callout-style-default callout-caution callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Caution</span>Q: “If I run UMAP twice with the same seed, do I get the same result?”
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
 <div id="callout-4" class="callout-4-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>Yes — unlike t-SNE, UMAP is reproducible for a fixed seed. This makes it preferable for published figures and for comparing results across analyses. Set <code>set.seed()</code> immediately before calling <code>umap()</code>. Note that the result will still change if you change any hyperparameter (n_neighbors, min_dist) or if the data changes.</p>
+<p>The standard pipeline is: (1) PCA on the 2000 variable genes to reduce to 20–50 PCs; (2) UMAP (or t-SNE) on the PC scores for 2D visualisation; (3) cluster in PCA space (Seurat uses a graph-based Louvain algorithm on the PC-space nearest-neighbour graph). UMAP is now the default in Seurat. PCA alone is not sufficient — the cell type structure is nonlinear and only visible after UMAP/t-SNE.</p>
 </div>
 </div>
 </div>
@@ -2504,11 +2580,27 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Caution</span>Q: “Do the axes of a UMAP plot have any meaning?”
+<span class="screen-reader-only">Caution</span>Q: “If I run UMAP twice with the same seed, do I get the same result?”
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
 <div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Yes — unlike t-SNE, UMAP is reproducible for a fixed seed. This makes it preferable for published figures and for comparing results across analyses. Set <code>set.seed()</code> immediately before calling <code>umap()</code>. Note that the result will still change if you change any hyperparameter (n_neighbors, min_dist) or if the data changes.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-caution callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Caution</span>Q: “Do the axes of a UMAP plot have any meaning?”
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>No — like t-SNE, the axes have no intrinsic meaning. UMAP1 is not the direction of maximum variance (that is PC1). The axes can be rotated, reflected, or scaled without changing the information content. What matters is the relative position of points: nearby points were similar in the original high-dimensional space. When publishing or reporting UMAP plots, label the axes “UMAP1” and “UMAP2” and always state the n_neighbors and min_dist values used.</p>
 </div>
@@ -3035,7 +3127,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/johlobs\.github\.io\/STA230-App\/");
+        var filterRegex = new RegExp('/' + window.location.host + '/');
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
