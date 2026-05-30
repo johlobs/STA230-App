@@ -136,7 +136,7 @@ dat[pam3$id.med, ]
 #| label: sil-plot-full
 #| fig-width: 8
 #| fig-height: 5
-plot(pam3, which.plots = 2, main = "Silhouette plot — PAM, K = 3")
+plot(silhouette(pam3), main = "Silhouette plot — PAM, K = 3")
 ```
 
 ```{r}

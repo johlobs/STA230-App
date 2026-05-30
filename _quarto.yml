@@ -77,3 +77,6 @@ webr:
     - pROC
     - class
     - cluster
+    - rpart
+    - randomForest
+    - Rtsne
