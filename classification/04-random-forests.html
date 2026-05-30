@@ -2379,10 +2379,10 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <section id="quiz" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Quiz</h1>
 <div class="sta230-quiz" data-question="Random forests randomly select m predictors at each split. Why does this help?">
-  <div class="q-opt" data-correct="false">It reduces the computation time by considering fewer predictors</div>
-  <div class="q-opt" data-correct="true">Decorrelating the trees — without it all trees split on the same dominant predictor and become highly correlated</div>
-  <div class="q-opt" data-correct="false">It introduces beneficial randomness that increases variance beneficially</div>
-  <div class="q-opt" data-correct="false">It prevents overfitting by limiting the depth of each tree</div>
+  <div class="q-opt" data-correct="false">It reduces computation by evaluating only m &lt; p predictors at each node</div>
+  <div class="q-opt" data-correct="true">Tree decorrelation — without it all trees use the same top predictor and become highly correlated</div>
+  <div class="q-opt" data-correct="false">It introduces randomness that beneficially increases the variance of each individual tree</div>
+  <div class="q-opt" data-correct="false">It prevents overfitting by hard-limiting the maximum depth of each individual tree</div>
   <div class="q-exp">If one predictor is dominant (e.g., CTW strongly predicts SWP), all bagged trees will use it at the first split — making the trees highly correlated. Averaging correlated variables reduces variance by σ²/B + (1−1/B)·ρ·σ² — the ρ term prevents full variance reduction. Random forests reduce ρ by hiding the dominant predictor from some splits, making trees more independent and variance reduction more effective.</div>
 </div>
 

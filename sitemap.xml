@@ -2,15 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://johlobs.github.io/STA230-App/unsupervised/06-umap.html</loc>
-    <lastmod>2026-05-30T07:54:27.145Z</lastmod>
+    <lastmod>2026-05-30T11:26:01.259Z</lastmod>
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/unsupervised/04-pam.html</loc>
-    <lastmod>2026-05-30T07:54:04.274Z</lastmod>
+    <lastmod>2026-05-30T11:15:40.322Z</lastmod>
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/unsupervised/02-clustering-kmeans.html</loc>
-    <lastmod>2026-05-30T07:53:41.940Z</lastmod>
+    <lastmod>2026-05-30T11:25:28.134Z</lastmod>
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/regression/05-model-comparison.html</loc>
@@ -18,7 +18,7 @@
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/regression/03-ridge-regression.html</loc>
-    <lastmod>2026-05-30T07:51:41.268Z</lastmod>
+    <lastmod>2026-05-30T11:25:03.372Z</lastmod>
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/regression/01-ols-review.html</loc>
@@ -26,7 +26,7 @@
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/foundations/05-cross-validation.html</loc>
-    <lastmod>2026-05-30T07:51:18.998Z</lastmod>
+    <lastmod>2026-05-30T11:24:57.802Z</lastmod>
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/foundations/03-training-vs-test-error.html</loc>
@@ -38,15 +38,15 @@
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/classification/06-roc-auc.html</loc>
-    <lastmod>2026-05-30T07:52:50.782Z</lastmod>
+    <lastmod>2026-05-30T11:18:09.027Z</lastmod>
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/classification/04-random-forests.html</loc>
-    <lastmod>2026-05-30T07:52:33.895Z</lastmod>
+    <lastmod>2026-05-30T11:18:14.178Z</lastmod>
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/classification/02-lda-knn.html</loc>
-    <lastmod>2026-05-30T07:52:14.907Z</lastmod>
+    <lastmod>2026-05-30T11:25:08.851Z</lastmod>
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/classification/01-logistic-regression.html</loc>
@@ -62,7 +62,7 @@
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/classification/07-calibration.html</loc>
-    <lastmod>2026-05-30T07:53:09.527Z</lastmod>
+    <lastmod>2026-05-30T11:18:00.842Z</lastmod>
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/foundations/02-bias-variance-tradeoff.html</loc>
@@ -70,7 +70,7 @@
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/foundations/04-resampling-overview.html</loc>
-    <lastmod>2026-05-30T07:51:58.280Z</lastmod>
+    <lastmod>2026-05-30T11:24:43.902Z</lastmod>
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/index.html</loc>
@@ -86,14 +86,14 @@
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/unsupervised/01-pca.html</loc>
-    <lastmod>2026-05-30T07:53:23.513Z</lastmod>
+    <lastmod>2026-05-30T11:25:16.201Z</lastmod>
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/unsupervised/03-hierarchical-clustering.html</loc>
-    <lastmod>2026-05-30T07:53:56.902Z</lastmod>
+    <lastmod>2026-05-30T11:25:42.577Z</lastmod>
   </url>
   <url>
     <loc>https://johlobs.github.io/STA230-App/unsupervised/05-tsne.html</loc>
-    <lastmod>2026-05-30T07:54:11.725Z</lastmod>
+    <lastmod>2026-05-30T11:25:48.350Z</lastmod>
   </url>
 </urlset>

@@ -2327,10 +2327,10 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <section id="quiz" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Quiz</h1>
 <div class="sta230-quiz" data-question="PCA and t-SNE both produce 2D visualisations. What is the key difference?">
-  <div class="q-opt" data-correct="false">t-SNE maximises explained variance; PCA maximises neighbourhood preservation</div>
-  <div class="q-opt" data-correct="true">PCA finds global linear directions of maximum variance; t-SNE preserves local neighbourhoods via a nonlinear probabilistic embedding
-  <div class="q-opt" data-correct="false">They are equivalent methods — t-SNE is just a faster implementation of PCA</div>
-  <div class="q-opt" data-correct="false">PCA works on any data; t-SNE only works on images</div>
+  <div class="q-opt" data-correct="false">t-SNE maximises explained variance globally; PCA preserves local neighbourhood proximity in the 2D map</div>
+  <div class="q-opt" data-correct="true">PCA captures global linear variance; t-SNE embeds data to preserve local neighbourhood structure</div>
+  <div class="q-opt" data-correct="false">They produce identical 2D projections — t-SNE is simply a computationally faster implementation of PCA</div>
+  <div class="q-opt" data-correct="false">PCA applies to any numeric data; t-SNE is designed exclusively for high-dimensional image datasets</div>
   <div class="q-exp">PCA rotates the data so the first two axes capture the most variance globally. Two observations that are close in PC1–PC2 space may actually be separated on a higher PC. t-SNE, by contrast, directly optimises 2D positions to reflect proximity in the full high-dimensional space. t-SNE often reveals cluster structure invisible to PCA, but the axes are meaningless and cluster distances cannot be compared.</div>
 </div>
 
@@ -2350,7 +2350,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
   <div class="q-exp">t-SNE distorts distances to pack the high-dimensional structure into 2D. The algorithm can make a dense cluster look spread out and a loose cloud look compact, depending on the local neighbourhood sizes. Never interpret the physical size of clusters in a t-SNE plot as a measure of homogeneity. Use silhouette widths or within-cluster distances in the original space for that.</div>
 </div>
 <hr>
-</div></section>
+</section>
 <section id="worked-example-t-sne-on-nhanes-health-variables" class="level1" data-number="3">
 <h1 data-number="3"><span class="header-section-number">3</span> Worked Example: t-SNE on NHANES Health Variables</h1>
 <p>We use five health variables — note that t-SNE is most powerful for data with hundreds of variables. This example is illustrative; for scRNA-seq or image data the advantage over PCA is much larger.</p>
