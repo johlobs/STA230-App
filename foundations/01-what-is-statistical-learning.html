@@ -2326,7 +2326,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <h1 data-number="2"><span class="header-section-number">2</span> Quiz</h1>
 <div class="sta230-quiz" data-question="We observe data and fit ŷ = f̂(x). What is the 'irreducible error'?">
   <div class="q-opt" data-correct="false">The error caused by choosing the wrong model class</div>
-  <div class="q-opt" data-correct="true">The variance of ε — noise in Y that cannot be removed even with a perfect f̂</div>
+  <div class="q-opt" data-correct="true">Variance of ε — noise in Y that no model can eliminate, even a perfect f̂</div>
   <div class="q-opt" data-correct="false">The difference between training error and test error</div>
   <div class="q-opt" data-correct="false">The error from not having enough training data</div>
   <div class="q-exp">The model is Y = f(X) + ε. Even if we recover f exactly (f̂ = f), our predictions still have error Var(ε). This cannot be reduced — it reflects genuine randomness in the outcome. The reducible error E[(f(X) − f̂(X))²] is what better models, more data, or better features can address.</div>
@@ -2334,7 +2334,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 
 <div class="sta230-quiz" data-question="When is interpretability of f̂ most critical?">
   <div class="q-opt" data-correct="false">When we want to minimise test MSE on future data</div>
-  <div class="q-opt" data-correct="true">When the goal is inference — understanding how predictors affect the outcome</div>
+  <div class="q-opt" data-correct="true">When the goal is inference — understanding how each predictor affects the outcome</div>
   <div class="q-opt" data-correct="false">When n is very large relative to p</div>
   <div class="q-opt" data-correct="false">When we use cross-validation for model selection</div>
   <div class="q-exp">If the goal is prediction, a black-box model with low test error is fine. If the goal is inference — "does X₂ affect Y after adjusting for X₁?" — we need interpretable models (linear regression, LASSO) where coefficients have clear meaning. In clinical or policy applications, inference often matters as much as prediction accuracy.</div>

@@ -2356,7 +2356,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <h1 data-number="2"><span class="header-section-number">2</span> Quiz</h1>
 <div class="sta230-quiz" data-question="What is a medoid, and how does it differ from a K-means centroid?">
   <div class="q-opt" data-correct="false">A medoid is the mean of the cluster — identical to a K-means centroid</div>
-  <div class="q-opt" data-correct="true">A medoid is the actual data point that minimises total dissimilarity to other cluster members — unlike a centroid, it always exists in the dataset</div>
+  <div class="q-opt" data-correct="true">A medoid is the actual data point minimising within-cluster dissimilarity — unlike a centroid, it is always a real observation</div>
   <div class="q-opt" data-correct="false">A medoid is the observation with the largest distance to the cluster centre</div>
   <div class="q-opt" data-correct="false">A medoid is only used in hierarchical clustering</div>
   <div class="q-exp">The centroid is the mean vector — it represents the "average" observation and is usually not one of the actual data points. The medoid is an actual observation that is most central. For clinical interpretation, the medoid is more useful: you can look up patient 42 and read their actual record, rather than a hypothetical mean patient with Age = 54.3 and BMI = 27.1.</div>
@@ -2365,7 +2365,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <div class="sta230-quiz" data-question="A patient has silhouette width s = –0.15. What does this indicate?">
   <div class="q-opt" data-correct="false">The patient is well-assigned to their cluster</div>
   <div class="q-opt" data-correct="false">The patient is on the exact boundary between two clusters</div>
-  <div class="q-opt" data-correct="true">The patient is closer on average to a neighbouring cluster than to their own — they may be misclassified</div>
+  <div class="q-opt" data-correct="true">On average, this patient is closer to a neighbouring cluster than to their own — possible misassignment</div>
   <div class="q-opt" data-correct="false">The clustering algorithm failed to converge</div>
   <div class="q-exp">A negative silhouette means b(i) &lt; a(i): the observation is on average closer to members of another cluster than to its own. This suggests the observation is in the wrong cluster, or that the clusters are not well-separated at this value of K. It does not mean the algorithm failed — it just means this particular observation sits in an ambiguous region of the data.</div>
 </div>

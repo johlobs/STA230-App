@@ -2328,7 +2328,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <h1 data-number="2"><span class="header-section-number">2</span> Quiz</h1>
 <div class="sta230-quiz" data-question="PCA and t-SNE both produce 2D visualisations. What is the key difference?">
   <div class="q-opt" data-correct="false">t-SNE maximises explained variance; PCA maximises neighbourhood preservation</div>
-  <div class="q-opt" data-correct="true">PCA finds the linear directions of maximum variance — it is a global, linear method. t-SNE preserves local neighbourhood structure using a nonlinear, probabilistic approach</div>
+  <div class="q-opt" data-correct="true">PCA finds global linear directions of maximum variance; t-SNE preserves local neighbourhoods via a nonlinear probabilistic embedding
   <div class="q-opt" data-correct="false">They are equivalent methods — t-SNE is just a faster implementation of PCA</div>
   <div class="q-opt" data-correct="false">PCA works on any data; t-SNE only works on images</div>
   <div class="q-exp">PCA rotates the data so the first two axes capture the most variance globally. Two observations that are close in PC1–PC2 space may actually be separated on a higher PC. t-SNE, by contrast, directly optimises 2D positions to reflect proximity in the full high-dimensional space. t-SNE often reveals cluster structure invisible to PCA, but the axes are meaningless and cluster distances cannot be compared.</div>
@@ -2337,8 +2337,8 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <div class="sta230-quiz" data-question="You run t-SNE with perplexity = 5 and see 20 tiny disconnected islands. With perplexity = 50 you see 3 broad clusters. Which result should you trust?">
   <div class="q-opt" data-correct="false">Perplexity = 5, because more detail is always better</div>
   <div class="q-opt" data-correct="false">Perplexity = 50, because larger perplexity is always better</div>
-  <div class="q-opt" data-correct="true">Neither alone — run several values and look for structure that is stable across perplexities</div>
-  <div class="q-opt" data-correct="false">The average of the two plots</div>
+  <div class="q-opt" data-correct="true">Neither — only structure stable across several perplexity values should be trusted</div>
+  <div class="q-opt" data-correct="false">The average visual impression from combining the two plots</div>
   <div class="q-exp">Very low perplexity makes t-SNE focus on tiny local neighbourhoods and can fragment real clusters into many small islands. Very high perplexity approaches PCA-like global structure and may merge distinct groups. Reliable structure appears consistently across a range of perplexity values (e.g. 15, 30, 100). If a cluster only appears at one perplexity, treat it with scepticism.</div>
 </div>
 
@@ -2350,7 +2350,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
   <div class="q-exp">t-SNE distorts distances to pack the high-dimensional structure into 2D. The algorithm can make a dense cluster look spread out and a loose cloud look compact, depending on the local neighbourhood sizes. Never interpret the physical size of clusters in a t-SNE plot as a measure of homogeneity. Use silhouette widths or within-cluster distances in the original space for that.</div>
 </div>
 <hr>
-</section>
+</div></section>
 <section id="worked-example-t-sne-on-nhanes-health-variables" class="level1" data-number="3">
 <h1 data-number="3"><span class="header-section-number">3</span> Worked Example: t-SNE on NHANES Health Variables</h1>
 <p>We use five health variables — note that t-SNE is most powerful for data with hundreds of variables. This example is illustrative; for scRNA-seq or image data the advantage over PCA is much larger.</p>

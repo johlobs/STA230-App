@@ -2326,7 +2326,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <h1 data-number="2"><span class="header-section-number">2</span> Quiz</h1>
 <div class="sta230-quiz" data-question="Why does ridge regression shrink coefficients but never set them exactly to zero?">
   <div class="q-opt" data-correct="false">Because the L2 penalty is not large enough to force coefficients to zero</div>
-  <div class="q-opt" data-correct="true">The L2 penalty (β²) has a gradient that never reaches zero except at β=0, so it continuously shrinks but doesn't force exact zeros</div>
+  <div class="q-opt" data-correct="true">The L2 gradient (2λβ) shrinks toward zero as β shrinks — so the optimum is small but non-zero, never exactly zero</div>
   <div class="q-opt" data-correct="false">Because ridge uses a smooth penalty that cannot produce sparse solutions</div>
   <div class="q-opt" data-correct="false">Ridge sets small coefficients to zero but not large ones</div>
   <div class="q-exp">The L2 penalty contributes a gradient of 2λβ_j to each coefficient. As β_j gets small, the gradient also gets small — so the optimum is at some small but non-zero value. In contrast, the L1 penalty (LASSO) has a constant subgradient of λ near zero, which forces the optimum to exactly zero for small enough coefficients. This is why LASSO performs variable selection and ridge does not.</div>
@@ -2341,10 +2341,10 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 </div>
 
 <div class="sta230-quiz" data-question="You fit ridge regression on unstandardised predictors where Age is in years (0–80) and Cholesterol is in mg/dL (100–300). What problem arises?">
-  <div class="q-opt" data-correct="false">Ridge cannot handle variables on different scales</div>
-  <div class="q-opt" data-correct="true">The penalty shrinks large-scale predictors more than small-scale ones, unfairly penalising Cholesterol more than Age</div>
-  <div class="q-opt" data-correct="false">The model will fail to converge</div>
-  <div class="q-opt" data-correct="false">No problem — ridge is scale-invariant</div>
+  <div class="q-opt" data-correct="false">Ridge breaks down entirely when predictors are on different scales</div>
+  <div class="q-opt" data-correct="true">Large-scale predictors attract bigger β², so the penalty shrinks Cholesterol's coefficient more than Age's</div>
+  <div class="q-opt" data-correct="false">The algorithm will fail to converge to a stable solution</div>
+  <div class="q-opt" data-correct="false">No problem — the penalty automatically adjusts for predictor scale</div>
   <div class="q-exp">The L2 penalty is λΣβ_j². A predictor measured in large units (like Cholesterol in mg/dL) will have a small coefficient even for a strong association — so its coefficient gets penalised less. A predictor in small units has a large coefficient even for a weak effect — and gets penalised more. Standardising removes this scale dependence. glmnet() standardises by default.</div>
 </div>
 <hr>

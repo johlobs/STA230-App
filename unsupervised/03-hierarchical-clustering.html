@@ -2332,24 +2332,24 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <section id="quiz" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Quiz</h1>
 <div class="sta230-quiz" data-question="What is the main advantage of hierarchical clustering over k-means?">
-  <div class="q-opt" data-correct="false">It always finds the global optimum</div>
-  <div class="q-opt" data-correct="false">It runs faster on large datasets</div>
-  <div class="q-opt" data-correct="true">You do not need to specify K in advance — the dendrogram shows the structure at all levels and you choose the cut afterwards</div>
-  <div class="q-opt" data-correct="false">It works without standardising the variables</div>
+  <div class="q-opt" data-correct="false">It always finds the globally optimal cluster assignment at every level</div>
+  <div class="q-opt" data-correct="false">It runs faster than k-means on large datasets in all cases</div>
+  <div class="q-opt" data-correct="true">No need to specify K in advance — the dendrogram reveals all levels of structure and K is chosen after seeing it</div>
+  <div class="q-opt" data-correct="false">It works correctly without standardising the variables first</div>
   <div class="q-exp">K-means requires K as input. Hierarchical clustering builds a full tree and you choose K by deciding where to cut the dendrogram — after seeing the structure. This is useful when you have no prior expectation about the number of groups. Hierarchical clustering still requires standardisation and a choice of linkage method, so it is not assumption-free.</div>
 </div>
 
 <div class="sta230-quiz" data-question="Complete linkage uses the maximum distance between points in two clusters. What kind of clusters does this tend to produce?">
-  <div class="q-opt" data-correct="false">Very elongated, chain-like clusters</div>
-  <div class="q-opt" data-correct="true">Compact clusters — because merging requires that the farthest points in both clusters are still close</div>
-  <div class="q-opt" data-correct="false">Clusters of exactly equal size</div>
-  <div class="q-opt" data-correct="false">Clusters that always match k-means output</div>
+  <div class="q-opt" data-correct="false">Very elongated chain-like clusters that grow by absorbing nearby points one at a time</div>
+  <div class="q-opt" data-correct="true">Compact, roughly spherical clusters — merging only when even the most distant points are still close</div>
+  <div class="q-opt" data-correct="false">Clusters that are forced to contain exactly the same number of observations</div>
+  <div class="q-opt" data-correct="false">Clusters that always reproduce k-means output with the same K</div>
   <div class="q-exp">Complete linkage is conservative: two clusters only merge if their most distant members are still close enough. This prevents one large loose cluster from absorbing everything (the "chaining" problem of single linkage). The result is compact, roughly spherical clusters. Ward's linkage is similar in spirit but uses WCSS as the criterion.</div>
 </div>
 
 <div class="sta230-quiz" data-question="In a dendrogram, two clusters merge at height 4.2 and another pair merges at height 0.8. What does this mean?">
   <div class="q-opt" data-correct="false">The first pair has 4.2 observations and the second has 0.8 observations</div>
-  <div class="q-opt" data-correct="true">The first pair was much more dissimilar when they merged — a height of 4.2 vs 0.8 suggests a natural cluster boundary between them</div>
+  <div class="q-opt" data-correct="true">The first pair was far more dissimilar at merge time — the large height gap suggests a natural cluster boundary between them</div>
   <div class="q-opt" data-correct="false">The algorithm made an error — heights should be equal</div>
   <div class="q-opt" data-correct="false">The first pair is a better cluster than the second</div>
   <div class="q-exp">Height in a dendrogram = the dissimilarity (e.g. Euclidean distance) at which the merge happened. A large height means the two clusters were far apart before merging — cutting the tree just below this height preserves the separation. Long vertical lines in a dendrogram indicate natural boundaries. Short lines indicate clusters that were already very similar.</div>

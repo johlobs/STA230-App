@@ -2322,10 +2322,10 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 </div>
 
 <div class="sta230-quiz" data-question="Why do decision trees have high variance?">
-  <div class="q-opt" data-correct="false">They use too many predictors at each split</div>
-  <div class="q-opt" data-correct="true">Small changes in the training data can completely change the tree structure — early splits affect all downstream splits</div>
-  <div class="q-opt" data-correct="false">The Gini criterion is sensitive to outliers</div>
-  <div class="q-opt" data-correct="false">Pruning introduces bias that destabilises the tree</div>
+  <div class="q-opt" data-correct="false">They consider all p predictors at each split, which inflates variance dramatically</div>
+  <div class="q-opt" data-correct="true">A single different observation can flip an early split and restructure the entire tree below it</div>
+  <div class="q-opt" data-correct="false">The Gini criterion amplifies the effect of outliers at every split</div>
+  <div class="q-opt" data-correct="false">Pruning introduces bias that destabilises the remaining tree structure</div>
   <div class="q-exp">Trees are hierarchical: the first split affects all subsequent splits. If a slightly different training set causes a different top-level split, the entire tree changes. This makes trees unstable — high variance. Random forests fix this by averaging many trees grown on bootstrap samples, dramatically reducing variance while keeping the bias low.</div>
 </div>
 

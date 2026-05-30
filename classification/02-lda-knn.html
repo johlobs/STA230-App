@@ -2334,10 +2334,10 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 </div>
 
 <div class="sta230-quiz" data-question="Why must predictors be standardised before applying kNN?">
-  <div class="q-opt" data-correct="false">kNN requires normally distributed predictors</div>
-  <div class="q-opt" data-correct="true">Euclidean distance is dominated by predictors with large scales — age (range ~50) would overwhelm a predictor with range ~5 even if the latter is more informative</div>
-  <div class="q-opt" data-correct="false">Standardisation speeds up the kNN algorithm</div>
-  <div class="q-opt" data-correct="false">kNN requires integer-valued distances</div>
+  <div class="q-opt" data-correct="false">kNN requires all predictors to be normally distributed before distances are computed</div>
+  <div class="q-opt" data-correct="true">Large-scale predictors dominate Euclidean distance — a range-50 variable overwhelms a range-5 one regardless of informativeness</div>
+  <div class="q-opt" data-correct="false">Standardisation is needed only to speed up convergence of the kNN search</div>
+  <div class="q-opt" data-correct="false">kNN requires integer-valued predictors to compute exact distances</div>
   <div class="q-exp">kNN uses Euclidean distance. If Age ranges 18–70 and JobControl ranges 85–120, a 1-unit difference in Age contributes more to distance than a 1-unit difference in JobControl — even if JobControl is more informative. Standardising (subtract mean, divide by SD) puts all predictors on equal footing and is essential before kNN.</div>
 </div>
 <hr>

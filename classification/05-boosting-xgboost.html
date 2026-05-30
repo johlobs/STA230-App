@@ -2339,7 +2339,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 <h1 data-number="2"><span class="header-section-number">2</span> Quiz</h1>
 <div class="sta230-quiz" data-question="Boosting builds trees sequentially. What does the second tree learn?">
   <div class="q-opt" data-correct="false">The same pattern as the first tree, but on a different bootstrap sample</div>
-  <div class="q-opt" data-correct="true">The residuals (errors) of the first tree — it focuses on the observations the first tree got wrong</div>
+  <div class="q-opt" data-correct="true">The residuals of the first tree — it focuses on observations the first tree predicted poorly</div>
   <div class="q-opt" data-correct="false">A random subset of predictors ignored by the first tree</div>
   <div class="q-opt" data-correct="false">The inverse of the first tree's predictions</div>
   <div class="q-exp">In gradient boosting, the second tree is fitted to the negative gradient of the loss — for squared error this is exactly the residuals. For log-loss (binary classification), it's proportional to (y − p̂). Observations where the first tree was confident and correct get downweighted; misclassified observations get more focus. This sequential error-correction is why boosting can achieve very low bias.</div>
@@ -2355,7 +2355,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 
 <div class="sta230-quiz" data-question="XGBoost uses 'scale_pos_weight' for imbalanced classification. What does it do?">
   <div class="q-opt" data-correct="false">It resamples the training data to balance the classes</div>
-  <div class="q-opt" data-correct="true">It increases the weight of the minority class in the loss function, making misclassifying a minority observation more costly</div>
+  <div class="q-opt" data-correct="true">It upweights the minority class in the loss function, making their misclassification more costly to the model</div>
   <div class="q-opt" data-correct="false">It scales the predicted probabilities to match the class proportions</div>
   <div class="q-opt" data-correct="false">It clips probabilities to avoid extreme values near 0 or 1</div>
   <div class="q-exp">scale_pos_weight = (# negative) / (# positive) tells XGBoost to penalise misclassifying the positive class more heavily. For SWP with 89% SWP=1 and 11% SWP=0: set scale_pos_weight = 8897/1103 ≈ 8 to compensate for the imbalance. This shifts the decision boundary and increases sensitivity for the minority class (SWP=0), at the cost of some specificity.</div>
