@@ -72,7 +72,7 @@ With $\alpha=1$ this is LASSO; $\alpha=0$ is ridge. Elastic net handles correlat
 ```{=html}
 <div class="sta230-quiz" data-question="LASSO sets some coefficients exactly to zero. What practical advantage does this give?">
   <div class="q-opt" data-correct="false">It always produces a lower test MSE than ridge</div>
-  <div class="q-opt" data-correct="true">It performs automatic variable selection — the non-zero predictors form an interpretable sparse model</div>
+  <div class="q-opt" data-correct="true">It performs automatic variable selection — only predictors with non-zero coefficients remain</div>
   <div class="q-opt" data-correct="false">It avoids the need for cross-validation to choose λ</div>
   <div class="q-opt" data-correct="false">It guarantees unbiased coefficient estimates for non-zero predictors</div>
   <div class="q-exp">LASSO's sparsity is its key practical advantage. When p is large (say 100 predictors), LASSO might select 8 non-zero coefficients — these form a concise, interpretable model. In biostatistics, this is often exactly what's needed: a clinical risk score with a small number of measurable variables. Note: LASSO coefficients are biased (shrunk toward zero), so they should not be used directly for inference without correction.</div>
@@ -80,7 +80,7 @@ With $\alpha=1$ this is LASSO; $\alpha=0$ is ridge. Elastic net handles correlat
 
 <div class="sta230-quiz" data-question="cv.glmnet() returns lambda.min and lambda.1se. In practice, which is often preferred and why?">
   <div class="q-opt" data-correct="false">lambda.min — it minimises CV error so it is always the best choice</div>
-  <div class="q-opt" data-correct="true">lambda.1se — it selects the simplest model whose CV error is within 1 SE of the minimum, giving a sparser and more robust model</div>
+  <div class="q-opt" data-correct="true">lambda.1se — the sparsest model whose CV error is within 1 SE of the minimum, favouring parsimony</div>
   <div class="q-opt" data-correct="false">lambda.min for prediction, lambda.1se for hypothesis testing</div>
   <div class="q-opt" data-correct="false">lambda.1se — it always has lower test MSE</div>
   <div class="q-exp">lambda.min gives the best average CV performance. lambda.1se uses the 1-SE rule: pick the largest λ (most regularisation, fewest non-zero predictors) whose CV error is within 1 standard error of the minimum. Since the CV errors are often not statistically different across a range of λ, the 1-SE model is sparser but statistically comparable — a good default for building parsimonious models.</div>
@@ -89,7 +89,7 @@ With $\alpha=1$ this is LASSO; $\alpha=0$ is ridge. Elastic net handles correlat
 <div class="sta230-quiz" data-question="Two predictors X1 and X2 are perfectly correlated (r=1). What does LASSO do?">
   <div class="q-opt" data-correct="false">Includes both with equal coefficients</div>
   <div class="q-opt" data-correct="false">Excludes both since they are redundant</div>
-  <div class="q-opt" data-correct="true">Arbitrarily selects one and sets the other to zero — the solution is not unique</div>
+  <div class="q-opt" data-correct="true">Arbitrarily keeps one and zeroes the other — no unique solution exists when r=1</div>
   <div class="q-opt" data-correct="false">Crashes — LASSO cannot handle perfectly correlated predictors</div>
   <div class="q-exp">With perfect correlation, the LASSO problem has many equivalent solutions (any split of the effect between X1 and X2 gives the same fit). LASSO arbitrarily picks one. Elastic net handles this better: it groups correlated predictors and shrinks them together, distributing the effect across the group. For highly correlated predictors (like BMI and waist circumference), elastic net is more stable than LASSO.</div>
 </div>

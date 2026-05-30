@@ -55,7 +55,7 @@ In practice, `lambda.1se` is often preferred for parsimony.
 ```{=html}
 <div class="sta230-quiz" data-question="The 1-SE rule selects a simpler model than the one minimising CV error. Why might this be preferred?">
   <div class="q-opt" data-correct="false">It always gives lower test MSE</div>
-  <div class="q-opt" data-correct="true">When CV errors differ by less than one SE, they are statistically indistinguishable — preferring the simpler model avoids unnecessary complexity</div>
+  <div class="q-opt" data-correct="true">Models within 1 SE of each other are statistically tied — the simpler one is preferred by Occam's razor</div>
   <div class="q-opt" data-correct="false">It corrects for optimism in the CV estimate</div>
   <div class="q-opt" data-correct="false">It is required by glmnet and cannot be disabled</div>
   <div class="q-exp">CV error estimates have uncertainty (measured by the SE across folds). If two models' CV errors are within 1 SE of each other, we cannot distinguish them statistically. The 1-SE rule then picks the simpler one — Occam's razor applied to model selection. This is often more robust when deployed on new data.</div>
@@ -63,7 +63,7 @@ In practice, `lambda.1se` is often preferred for parsimony.
 
 <div class="sta240-quiz" data-question="You run cv.glmnet() for LASSO and see lambda.min = 0.01, lambda.1se = 0.08. What does this tell you?">
   <div class="q-opt" data-correct="false">The minimum CV error occurs at lambda = 0.08</div>
-  <div class="q-opt" data-correct="true">The most regularised model within 1 SE of the best uses lambda = 0.08 — it's sparser than the optimal-MSE model</div>
+  <div class="q-opt" data-correct="true">lambda.1se = 0.08 is the most penalised model still within 1 SE of the CV minimum — sparser than at 0.01</div>
   <div class="q-opt" data-correct="false">The model at lambda = 0.01 has higher test error than at 0.08</div>
   <div class="q-opt" data-correct="false">lambda.1se is always larger than lambda.min by definition of LASSO</div>
   <div class="q-exp">lambda.min = 0.01 minimises the cross-validated MSE. lambda.1se = 0.08 is the largest lambda whose CV MSE is within 1 SE of the minimum — meaning it produces a sparser (more zeros) but statistically comparable model. Higher lambda → more shrinkage → fewer non-zero coefficients in LASSO.</div>

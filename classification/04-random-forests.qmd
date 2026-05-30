@@ -62,6 +62,36 @@ In bagging, if one predictor is very strong, most trees will use it at the top s
 
 Each tree is trained on ~63% of data (the bootstrap sample). The remaining ~37% (out-of-bag) can be used to estimate test error **without a separate validation set**. OOB error is a nearly unbiased estimate of test error.
 
+## Variable importance and SHAP values
+
+**Variable importance** in random forests = average decrease in Gini impurity from all splits on a variable, averaged across all trees. A high value means the variable is both frequently used and creates pure splits.
+
+However, importance scores tell you *which* variables matter but not *how* they contribute for an individual observation. **SHAP** (SHapley Additive exPlanations) solves this.
+
+### The Shapley intuition
+
+Imagine you want to attribute a predicted value to each predictor. For a model with age = 60 and BMI = 30 (and a bias of 50):
+
+| Predictors used | Prediction |
+|-----------------|-----------|
+| {none} | 50 |
+| {age=60} | 70 |
+| {BMI=30} | 85 |
+| {age=60, BMI=30} | 100 |
+
+The Shapley value for age averages its marginal contribution across all orderings:
+
+- Adding age first: $70 - 50 = 20$
+- Adding age after BMI: $100 - 85 = 15$
+- **SHAP(age)** $= (20 + 15)/2 = 17.5$
+
+Unlike standardised regression coefficients (which are constant for every individual), SHAP values can differ for each observation — reflecting non-linear and interaction effects that trees capture naturally.
+
+::: {.callout-tip}
+## SHAP vs linear regression
+In a linear model, the contribution of BMI is always $\hat{\beta}_{\text{BMI}} \times \text{BMI}_i$ — a constant slope. With a random forest, SHAP might show a steep increase in contribution for very low BMI but a flat contribution in the normal range. This is the key advantage of tree-based SHAP over regression coefficients.
+:::
+
 ---
 
 # Quiz
@@ -69,23 +99,23 @@ Each tree is trained on ~63% of data (the bootstrap sample). The remaining ~37% 
 ```{=html}
 <div class="sta230-quiz" data-question="Random forests randomly select m predictors at each split. Why does this help?">
   <div class="q-opt" data-correct="false">It reduces the computation time by considering fewer predictors</div>
-  <div class="q-opt" data-correct="true">It decorrelates the trees — without random selection, all trees would use the same strong predictor at the top and be highly correlated</div>
+  <div class="q-opt" data-correct="true">Decorrelating the trees — without it all trees split on the same dominant predictor and become highly correlated</div>
   <div class="q-opt" data-correct="false">It introduces beneficial randomness that increases variance beneficially</div>
   <div class="q-opt" data-correct="false">It prevents overfitting by limiting the depth of each tree</div>
   <div class="q-exp">If one predictor is dominant (e.g., CTW strongly predicts SWP), all bagged trees will use it at the first split — making the trees highly correlated. Averaging correlated variables reduces variance by σ²/B + (1−1/B)·ρ·σ² — the ρ term prevents full variance reduction. Random forests reduce ρ by hiding the dominant predictor from some splits, making trees more independent and variance reduction more effective.</div>
 </div>
 
 <div class="sta230-quiz" data-question="The OOB error for a random forest is 12%. What does this estimate?">
-  <div class="q-opt" data-correct="false">The training error averaged over all trees</div>
-  <div class="q-opt" data-correct="true">The test error — each observation is predicted only by trees that did not see it during training</div>
-  <div class="q-opt" data-correct="false">The bias of the ensemble estimator</div>
-  <div class="q-opt" data-correct="false">The error on 12% of the training data that was held out</div>
+  <div class="q-opt" data-correct="false">The average training error across all trees in the ensemble</div>
+  <div class="q-opt" data-correct="true">An honest test-error estimate — each observation is scored only by trees trained without it</div>
+  <div class="q-opt" data-correct="false">The bias of the ensemble, measuring how far predictions are from the truth</div>
+  <div class="q-opt" data-correct="false">The error on 12% of the training data that was deliberately held out</div>
   <div class="q-exp">In each bootstrap sample, about 37% of observations are not included (out-of-bag). For each observation, we can predict it using only the trees trained without it — giving an honest test-like estimate. The average OOB error across all observations closely approximates the leave-one-out CV error and doesn't require a separate validation set.</div>
 </div>
 
 <div class="sta230-quiz" data-question="Variable importance in a random forest is measured by the 'mean decrease in Gini'. What does a high value mean?">
   <div class="q-opt" data-correct="false">The variable has a large coefficient in a linear model fitted to the forest predictions</div>
-  <div class="q-opt" data-correct="true">Splits on this variable consistently create purer child nodes — it is frequently used and useful across many trees</div>
+  <div class="q-opt" data-correct="true">This variable's splits consistently create purer child nodes and is frequently used across many trees</div>
   <div class="q-opt" data-correct="false">The variable is used in every tree's first split</div>
   <div class="q-opt" data-correct="false">The variable has low correlation with the outcome</div>
   <div class="q-exp">Variable importance = total decrease in Gini impurity from all splits on that variable, averaged over all trees. High importance means the variable is both frequently split on (it is useful) and creates pure splits (the classes are well-separated). Unlike a single tree's top split, this averages over many trees and is more stable. Note: it measures predictive importance, not causal importance.</div>

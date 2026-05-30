@@ -53,18 +53,18 @@ Cross-validation (F5) improves on this by reusing all data.
 
 ```{=html}
 <div class="sta230-quiz" data-question="You fit a linear model with p=10 predictors on n=50 training observations. The training MSE is 4.2. Approximately what is the optimism (expected gap to test MSE)?">
-  <div class="q-opt" data-correct="false">0.42</div>
-  <div class="q-opt" data-correct="false">4.2</div>
-  <div class="q-opt" data-correct="true">Cannot be computed without knowing σ²; the formula is 2pσ²/n</div>
-  <div class="q-opt" data-correct="false">The optimism is always zero for OLS</div>
+  <div class="q-opt" data-correct="false">0.42 — roughly 10% of the training MSE</div>
+  <div class="q-opt" data-correct="false">4.2 — equal to the training MSE itself</div>
+  <div class="q-opt" data-correct="true">Cannot be computed — σ² is unknown; the formula is 2pσ²/n</div>
+  <div class="q-opt" data-correct="false">Zero — OLS is unbiased so training error matches test error</div>
   <div class="q-exp">The optimism formula for OLS is 2pσ²/n. With σ² unknown, we must estimate it. If σ̂² ≈ 4.2 (MSE ≈ variance), then optimism ≈ 2·10·4.2/50 = 1.68 — a 40% underestimate of true test error. The key insight: more predictors → more optimism → training MSE more misleading.</div>
 </div>
 
 <div class="sta230-quiz" data-question="You randomly split your dataset 70/30 and get a test MSE of 12.3. You repeat the split with a different random seed and get 9.1. What is the main problem demonstrated here?">
-  <div class="q-opt" data-correct="false">The model is overfit</div>
-  <div class="q-opt" data-correct="false">The training set is too large</div>
-  <div class="q-opt" data-correct="true">High variance of the test MSE estimate due to a single random split</div>
-  <div class="q-opt" data-correct="false">The true test error is undefined</div>
+  <div class="q-opt" data-correct="false">The model is overfit — training error is much lower than test error</div>
+  <div class="q-opt" data-correct="false">The training set is too large, causing unstable coefficient estimates</div>
+  <div class="q-opt" data-correct="true">High variance in the test MSE estimate from a single random split</div>
+  <div class="q-opt" data-correct="false">The true test error is undefined without a fixed target population</div>
   <div class="q-exp">A single train/test split gives an unbiased but noisy estimate of the true test error. The variance of the estimate depends on which observations happened to be in the test set. Cross-validation averages over many splits, reducing this variance substantially.</div>
 </div>
 ```

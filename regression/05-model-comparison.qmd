@@ -79,17 +79,17 @@ Never report only training performance. Always compare to a baseline (e.g., pred
 ```{=html}
 <div class="sta230-quiz" data-question="You use the test set to compare OLS, ridge, and LASSO, then report the test RMSPE of the winner. What is wrong with this?">
   <div class="q-opt" data-correct="false">Nothing — comparing methods on the test set is the correct approach</div>
-  <div class="q-opt" data-correct="true">The test set was used for model selection, so the reported RMSPE is optimistically biased</div>
+  <div class="q-opt" data-correct="true">Selecting the best model using the test set makes the reported RMSPE optimistically biased</div>
   <div class="q-opt" data-correct="false">You cannot compare different model classes on the same test set</div>
   <div class="q-opt" data-correct="false">The test RMSPE is only valid if all models use the same lambda</div>
   <div class="q-exp">If you pick the model with the lowest test RMSPE, the reported performance is optimistic — you effectively selected the model that happened to fit the test data best. This is a subtle form of overfitting. The fix: use cross-validation on training data for model selection, then report performance on a truly held-out test set that was never used during model building.</div>
 </div>
 
 <div class="sta230-quiz" data-question="The null model (predicting the mean for every observation) gives RMSPE = 18 mmHg. Your LASSO model gives RMSPE = 16 mmHg. How should you interpret this?">
-  <div class="q-opt" data-correct="false">LASSO is an excellent model — 16 < 18</div>
-  <div class="q-opt" data-correct="false">The model is useless since it doesn't predict perfectly</div>
-  <div class="q-opt" data-correct="true">LASSO reduces RMSPE by about 11% over the null — modest improvement, worth interpreting in clinical context</div>
-  <div class="q-opt" data-correct="false">The null model should never be used as a baseline for RMSPE</div>
+  <div class="q-opt" data-correct="false">LASSO is excellent — any improvement over the null confirms strong clinical value</div>
+  <div class="q-opt" data-correct="false">The model is useless since it doesn't approach perfect prediction</div>
+  <div class="q-opt" data-correct="true">An ~11% reduction over the null is modest — clinical relevance requires domain interpretation</div>
+  <div class="q-opt" data-correct="false">The null model is an inappropriate baseline — only absolute RMSPE values are meaningful</div>
   <div class="q-exp">The null RMSPE (SD of Y) is the natural baseline — it's what you get by ignoring all predictors. Going from 18 to 16 mmHg (~11% reduction) is a meaningful but modest improvement. Whether it's clinically useful depends on the application. For individual patient risk prediction, 16 mmHg error may still be too imprecise. Always contextualise RMSPE against domain-specific requirements.</div>
 </div>
 ```

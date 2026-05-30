@@ -77,25 +77,25 @@ Always use `scale = TRUE` in `prcomp()`. Variables on different scales (age in y
 ```{=html}
 <div class="sta230-quiz" data-question="In STA220, factor analysis on the HAD scale found two factors (depression, anxiety). What is the main difference if you run PCA on the same items instead?">
   <div class="q-opt" data-correct="false">PCA would find more factors than FA because it uses all variance</div>
-  <div class="q-opt" data-correct="true">PCA finds directions of maximum variance without assuming a generative model — the components may be similar but are interpreted geometrically, not as latent constructs</div>
+  <div class="q-opt" data-correct="true">PCA maximises variance without a generative model — components are geometric projections, not latent constructs</div>
   <div class="q-opt" data-correct="false">PCA and FA always give identical results on the same data</div>
   <div class="q-opt" data-correct="false">PCA requires a response variable Y; FA does not</div>
   <div class="q-exp">FA assumes X = Λf + ε — latent factors causally produce the observed items. PCA makes no such assumption: it finds orthogonal directions that explain the most variance. On HAD data the first two PCs would likely align with the depression/anxiety split, but a PC is not a "latent factor" — it is a linear combination that maximises explained variance.</div>
 </div>
 
 <div class="sta230-quiz" data-question="You run prcomp(X, scale = TRUE) on five health variables. The eigenvalues are: 2.4, 1.1, 0.7, 0.5, 0.3. How much variance does PC1 explain?">
-  <div class="q-opt" data-correct="false">2.4%</div>
-  <div class="q-opt" data-correct="false">24%</div>
-  <div class="q-opt" data-correct="true">48% — eigenvalue 2.4 out of a total of 5.0 (= number of variables when scaled)</div>
-  <div class="q-opt" data-correct="false">It cannot be determined without the raw data</div>
+  <div class="q-opt" data-correct="false">2.4% — the raw eigenvalue expressed as a percentage</div>
+  <div class="q-opt" data-correct="false">24% — one fifth of the five eigenvalues</div>
+  <div class="q-opt" data-correct="true">48% — eigenvalue 2.4 divided by the total 5.0 (sum = number of scaled variables)</div>
+  <div class="q-opt" data-correct="false">Indeterminate — eigenvalues alone are insufficient without the raw data</div>
   <div class="q-exp">With scale = TRUE, the total variance equals the number of variables (each standardised variable has variance 1). Here total = 2.4 + 1.1 + 0.7 + 0.5 + 0.3 = 5.0. PC1 explains 2.4/5.0 = 48%. The first two PCs together explain (2.4 + 1.1)/5.0 = 70%.</div>
 </div>
 
 <div class="sta230-quiz" data-question="A biplot arrow for 'Waist' and an arrow for 'BMI' point in nearly the same direction. What does this indicate?">
-  <div class="q-opt" data-correct="false">Waist and BMI are uncorrelated in this dataset</div>
-  <div class="q-opt" data-correct="true">Waist and BMI are strongly positively correlated — they load similarly on the principal components</div>
-  <div class="q-opt" data-correct="false">Waist causes BMI or vice versa</div>
-  <div class="q-opt" data-correct="false">Both variables should be removed from the analysis</div>
+  <div class="q-opt" data-correct="false">Waist and BMI are completely uncorrelated — they contribute to separate components</div>
+  <div class="q-opt" data-correct="true">Waist and BMI are strongly positively correlated — both load similarly on the same components</div>
+  <div class="q-opt" data-correct="false">Waist causally determines BMI, or the other way around, in this dataset</div>
+  <div class="q-opt" data-correct="false">Both variables are redundant and should be removed from the analysis</div>
   <div class="q-exp">In a biplot, arrows pointing in the same direction indicate variables that move together (are positively correlated). This is exactly what the OLS section identified as multicollinearity between Waist and BMI — PCA reveals this structure visually. One practical use of PCA is to replace correlated predictors with uncorrelated PCs before regression.</div>
 </div>
 ```

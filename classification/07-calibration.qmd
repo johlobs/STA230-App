@@ -80,26 +80,26 @@ The Hosmer–Lemeshow (HL) test formally tests whether the calibration plot depa
 
 ```{=html}
 <div class="sta230-quiz" data-question="A model has AUC = 0.90 but the calibration plot shows all predicted probabilities between 0.3 and 0.6, while observed event rates range from 0.05 to 0.85. What is the problem?">
-  <div class="q-opt" data-correct="false">The model cannot rank patients correctly</div>
-  <div class="q-opt" data-correct="true">The model ranks patients well (high AUC) but the predicted probabilities are compressed — they do not represent actual event rates and cannot be used as absolute risk estimates</div>
-  <div class="q-opt" data-correct="false">The AUC and calibration always agree, so this situation is impossible</div>
-  <div class="q-opt" data-correct="false">The model is overfitting</div>
+  <div class="q-opt" data-correct="false">The model cannot rank patients by risk — its probability estimates are essentially random</div>
+  <div class="q-opt" data-correct="true">Good discrimination (high AUC) but compressed probabilities — they do not reflect actual event rates and mislead absolute-risk decisions</div>
+  <div class="q-opt" data-correct="false">AUC and calibration always agree — any discrepancy signals a data processing error</div>
+  <div class="q-opt" data-correct="false">The model has overfit the training data and cannot generalise to new patients</div>
   <div class="q-exp">AUC measures discrimination: the probability that a randomly chosen case ranks above a randomly chosen control. It is unaffected by systematic shifts in the probability scale. A model that always predicts 0.4 ± 0.1 may discriminate well (the relative ordering is correct) but is miscalibrated (the absolute values are wrong). For decision-making — "should I screen this patient with predicted risk 0.6?" — calibration is essential.</div>
 </div>
 
 <div class="sta230-quiz" data-question="The calibration plot shows that for patients with predicted probability 0.8, the observed event rate is 0.5. What does this tell you?">
-  <div class="q-opt" data-correct="false">The model is underestimating risk for high-risk patients</div>
-  <div class="q-opt" data-correct="true">The model is overestimating risk for high-risk patients — it assigns 0.8 but only 50% actually have the outcome</div>
-  <div class="q-opt" data-correct="false">The model is perfectly calibrated in this region</div>
-  <div class="q-opt" data-correct="false">The AUC must be below 0.5</div>
+  <div class="q-opt" data-correct="false">The model assigns too-low probabilities to high-risk patients — it is underestimating</div>
+  <div class="q-opt" data-correct="true">The model is overestimating risk here — it predicts 0.8 when the true observed rate is only 0.5</div>
+  <div class="q-opt" data-correct="false">The model is perfectly calibrated — a predicted 0.8 matches the observed 0.8 event rate</div>
+  <div class="q-opt" data-correct="false">The AUC must be poor — calibration failure necessarily implies poor discrimination too</div>
   <div class="q-exp">If the calibration point (0.8, 0.5) is below the diagonal, the model overclaims certainty. Patients it calls "80% likely" are actually only 50% likely. This is common with tree-based methods (random forests, XGBoost) which can be overconfident in regions with few training observations. Logistic regression tends to be better calibrated by default; tree methods often require post-hoc recalibration (e.g. Platt scaling, isotonic regression).</div>
 </div>
 
 <div class="sta230-quiz" data-question="The Hosmer–Lemeshow test gives p = 0.002 on a dataset with n = 50 000. What is the correct interpretation?">
-  <div class="q-opt" data-correct="false">The model is severely miscalibrated and should be discarded</div>
-  <div class="q-opt" data-correct="false">The model is perfectly calibrated — p > 0.001</div>
-  <div class="q-opt" data-correct="true">There is statistically significant miscalibration, but with n = 50 000 even trivially small deviations are detected — inspect the calibration plot to judge if the miscalibration is clinically meaningful</div>
-  <div class="q-opt" data-correct="false">The test is invalid for n > 10 000</div>
+  <div class="q-opt" data-correct="false">The model is severely miscalibrated and should be discarded immediately</div>
+  <div class="q-opt" data-correct="false">The model is well calibrated — p only needs to exceed 0.001 to confirm this</div>
+  <div class="q-opt" data-correct="true">Statistically significant, but n = 50 000 makes trivial deviations detectable — inspect the plot to judge clinical relevance</div>
+  <div class="q-opt" data-correct="false">The Hosmer-Lemeshow test is not valid for datasets with more than 10 000 observations</div>
   <div class="q-exp">The HL test is a chi-squared test and gains power as n increases. With 50 000 observations, even a 2% deviation from the diagonal will be significant. A p-value of 0.002 does not tell you whether the miscalibration matters clinically. Always look at the calibration plot: if the curve hugs the diagonal with only small deviations, the model may still be clinically useful despite a significant HL test.</div>
 </div>
 ```

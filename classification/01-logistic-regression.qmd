@@ -61,7 +61,7 @@ When one class is rare (e.g., only 11% have $Y=0$ in SWP_CTW), a naive classifie
 ```{=html}
 <div class="sta230-quiz" data-question="Logistic regression models P(Y=1|X). Why not just use linear regression and threshold at 0.5?">
   <div class="q-opt" data-correct="false">Linear regression cannot handle binary outcomes mathematically</div>
-  <div class="q-opt" data-correct="true">Linear regression predictions can fall outside [0,1] and assume a linear effect on probability rather than on the log-odds</div>
+  <div class="q-opt" data-correct="true">Linear regression can predict outside [0,1] and assumes a linear effect on probability, not on the log-odds</div>
   <div class="q-opt" data-correct="false">Logistic regression always gives better predictions than linear regression for binary outcomes</div>
   <div class="q-opt" data-correct="false">Linear regression requires normally distributed errors, which binary outcomes violate in the coefficients</div>
   <div class="q-exp">Linear regression fitted to a binary outcome (the 'linear probability model') can give predicted probabilities <0 or >1 and has heteroskedastic errors. More fundamentally, the effect of a predictor on probability should be non-linear: near p=0 or p=1, a unit change in X should have little effect; near p=0.5 the effect is largest. The logit link captures this non-linearity correctly.</div>
@@ -69,7 +69,7 @@ When one class is rare (e.g., only 11% have $Y=0$ in SWP_CTW), a naive classifie
 
 <div class="sta230-quiz" data-question="In SWP_CTW, 89% of participants have SWP=1. A model that always predicts SWP=1 achieves 89% accuracy. Why is this misleading?">
   <div class="q-opt" data-correct="false">Accuracy of 89% is always considered a good model</div>
-  <div class="q-opt" data-correct="true">The model never identifies any of the 11% at risk of not sustaining work — sensitivity for SWP=0 is 0%</div>
+  <div class="q-opt" data-correct="true">It never identifies the at-risk 11% — sensitivity for SWP=0 is zero; the minority class is ignored</div>
   <div class="q-opt" data-correct="false">The model is overfit because training and test accuracy are both 89%</div>
   <div class="q-opt" data-correct="false">Accuracy is only valid when classes are perfectly balanced</div>
   <div class="q-exp">With 89% majority class, predicting '1' for everyone achieves 89% accuracy with zero insight. In occupational health, correctly identifying the 11% who do NOT sustain work (SWP=0) is exactly the clinical goal — those are the people needing intervention. Sensitivity (recall for the minority class) and AUC are far more informative than accuracy in imbalanced settings.</div>

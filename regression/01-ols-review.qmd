@@ -71,7 +71,7 @@ $$\hat{\boldsymbol{\beta}} = \arg\min_{\boldsymbol{\beta}} \|\mathbf{y} - \mathb
 <div class="sta230-quiz" data-question="You add 10 irrelevant noise predictors to an OLS model. What happens to training R² and test MSE?">
   <div class="q-opt" data-correct="false">Both training R² and test MSE decrease</div>
   <div class="q-opt" data-correct="false">Training R² decreases, test MSE increases</div>
-  <div class="q-opt" data-correct="true">Training R² increases (or stays the same), test MSE increases</div>
+  <div class="q-opt" data-correct="true">Training R² stays the same or increases; test MSE increases</div>
   <div class="q-opt" data-correct="false">Both stay the same since the predictors are irrelevant</div>
   <div class="q-exp">Adding any predictor (even pure noise) can only increase or maintain training R² — OLS finds a non-zero coefficient that fits the training noise. On test data those noise coefficients hurt. Training fit improves, generalisation worsens — the classic overfitting pattern.</div>
 </div>
